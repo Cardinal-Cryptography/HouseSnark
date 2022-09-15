@@ -20,6 +20,7 @@ For this, run:
 Currently supported relations are:
  - `xor`
  - `merkle-tree`
+ - `linear-equation`
 
 You should receive three files: `<relation-id>.(vk|proof|input).bytes`, which then can be directly sent to the pallet.
 

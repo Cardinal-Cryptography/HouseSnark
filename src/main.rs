@@ -7,7 +7,7 @@ use clap::Parser;
 use crate::{
     config::{Cli, Command, GenerateCmd},
     rains_of_castamere::kill_all_snarks,
-    relations::{Artifacts, PureArtifacts, Relation, SnarkRelation, XorRelation},
+    relations::{Artifacts, LinearEqRelation, PureArtifacts, Relation, SnarkRelation, XorRelation},
 };
 
 mod config;
@@ -57,13 +57,20 @@ fn save_artifacts<Pairing: PairingEngine, FieldElement: CanonicalSerialize>(
 }
 
 fn generate_output_from(relation: Relation) {
-    let relation = match relation {
-        Relation::Xor => XorRelation::default(),
+    // we must call `id()` and `generate_artifacts()` in every branch to avoid boxing stuff
+    let (rel_name, artifacts) = match relation {
+        Relation::Xor => (
+            XorRelation::id(),
+            XorRelation::default().generate_artifacts(),
+        ),
         Relation::MerkleTree => todo!(),
+        Relation::LinearEquation => (
+            LinearEqRelation::id(),
+            LinearEqRelation::default().generate_artifacts(),
+        ),
     };
-    let artifacts = relation.generate_artifacts();
 
-    save_artifacts(relation.id(), artifacts);
+    save_artifacts(rel_name, artifacts);
 }
 
 fn red_wedding() {

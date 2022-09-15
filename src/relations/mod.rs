@@ -1,12 +1,14 @@
 // mod merkle_tree;
 // pub use merkle_tree::MerkleTreeRelation;
 
+mod linear;
 mod xor;
-pub use xor::XorRelation;
 
 use ark_ec::PairingEngine;
 use ark_groth16::{Proof, VerifyingKey};
 use clap::ValueEnum;
+pub use linear::LinearEqRelation;
+pub use xor::XorRelation;
 
 /// All implemented relations.
 ///
@@ -15,6 +17,7 @@ use clap::ValueEnum;
 pub enum Relation {
     Xor,
     MerkleTree,
+    LinearEquation,
 }
 
 /// Output of some SNARK relation.
@@ -34,7 +37,7 @@ pub trait SnarkRelation<Pairing: PairingEngine, FieldElement>: Default {
     /// String identifier of relation.
     ///
     /// By default, empty string.
-    fn id(&self) -> &'static str {
+    fn id() -> &'static str {
         ""
     }
 
