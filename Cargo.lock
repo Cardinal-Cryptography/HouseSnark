@@ -380,6 +380,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "ark-bls12-381",
+ "ark-ec",
  "ark-gm17",
  "ark-groth16",
  "ark-r1cs-std",
