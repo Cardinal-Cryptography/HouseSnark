@@ -5,10 +5,12 @@ use clap::Parser;
 
 use crate::{
     config::{Cli, Command, GenerateCmd},
+    rains_of_castamere::kill_all_snarks,
     relations::{Artifacts, MerkleTreeRelation, Relation, SnarkRelation, XorRelation},
 };
 
 mod config;
+mod rains_of_castamere;
 mod relations;
 
 type SerializedArtifacts = Artifacts<Vec<u8>, Vec<u8>, Vec<u8>>;
@@ -39,6 +41,8 @@ fn serialize_artifacts<VK: CanonicalSerialize, P: CanonicalSerialize, PI: Canoni
 }
 
 fn main() {
+    env_logger::init();
+
     let cli: Cli = Cli::parse();
     match cli.command {
         Command::Generate(GenerateCmd { relation }) => {
@@ -48,6 +52,9 @@ fn main() {
             };
             println!("{:?}", serialize_artifacts(&artifacts));
         }
-        Command::RedWedding => println!("red wedding"),
+        Command::RedWedding => match kill_all_snarks() {
+            Ok(_) => println!("Cleaning succeeded"),
+            Err(e) => eprintln!("Cleaning failed: {:?}", e),
+        },
     }
 }
