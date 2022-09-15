@@ -1,15 +1,13 @@
 use std::{default::Default, fs};
-use ark_ec::PairingEngine;
 
+use ark_ec::PairingEngine;
 use ark_serialize::CanonicalSerialize;
 use clap::Parser;
 
 use crate::{
     config::{Cli, Command, GenerateCmd},
     rains_of_castamere::kill_all_snarks,
-    relations::{
-        Artifacts, MerkleTreeRelation, PureArtifacts, Relation, SnarkRelation, XorRelation,
-    },
+    relations::{Artifacts, PureArtifacts, Relation, SnarkRelation, XorRelation},
 };
 
 mod config;

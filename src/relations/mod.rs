@@ -1,11 +1,12 @@
-mod merkle_tree;
+// mod merkle_tree;
+// pub use merkle_tree::MerkleTreeRelation;
+
 mod xor;
+pub use xor::XorRelation;
 
 use ark_ec::PairingEngine;
 use ark_groth16::{Proof, VerifyingKey};
 use clap::ValueEnum;
-pub use merkle_tree::MerkleTreeRelation;
-pub use xor::XorRelation;
 
 /// All implemented relations.
 ///

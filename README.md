@@ -23,6 +23,9 @@ Currently supported relations are:
 
 You should receive three files: `<relation-id>.(vk|proof|input).bytes`, which then can be directly sent to the pallet.
 
+**Note:** Currently, only Groth16 SNARKs are supported and used.
+However, it should be easy to add e.g. GM17.
+
 ## Cleaning
 
 In order to clean your directory from all outputs, run:
