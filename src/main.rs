@@ -16,9 +16,7 @@ fn main() {
         Command::Generate(GenerateCmd { relation }) => {
             let artifacts = match relation {
                 Relation::Xor => XorRelation::default().generate_artifacts(),
-                Relation::MerkleTree => {
-                    MerkleTreeRelation::default().generate_artifacts()
-                }
+                Relation::MerkleTree => MerkleTreeRelation::default().generate_artifacts(),
             };
             println!("{:?}", artifacts);
         }

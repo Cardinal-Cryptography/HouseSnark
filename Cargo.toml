@@ -8,6 +8,17 @@ anyhow = "1.0"
 clap = { version = "3.0", features = ["derive"] }
 log = "0.4"
 
+ark-std = { version = "^0.3.0", default-features = false }
+ark-serialize = { version = "^0.3.0", default-features = false }
+ark-relations = { version = "^0.3.0", default-features = false }
+ark-snark = { version = "^0.3.0", default-features = false }
+
+ark-r1cs-std = { version = "^0.3.0", default-features = false }
+
+ark-bls12-381 = { version = "^0.3.0" }
+ark-groth16 = { version = "^0.3.0", default-features = false }
+ark-gm17 = { version = "^0.3.0", default-features = false }
+
 [features]
 default = ["std"]
 std = []
