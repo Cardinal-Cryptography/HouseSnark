@@ -33,7 +33,7 @@ pub trait SnarkRelation<Pairing: PairingEngine, FieldElement>: Default {
     /// String identifier of relation.
     ///
     /// By default, empty string.
-    fn id() -> &'static str {
+    fn id(&self) -> &'static str {
         ""
     }
 

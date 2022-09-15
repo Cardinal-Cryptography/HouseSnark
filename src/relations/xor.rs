@@ -61,7 +61,7 @@ impl ConstraintSynthesizer<ConstraintF> for XorRelation {
 }
 
 impl SnarkRelation<Bls12_381, ConstraintF> for XorRelation {
-    fn id() -> &'static str {
+    fn id(&self) -> &'static str {
         "xor"
     }
 
