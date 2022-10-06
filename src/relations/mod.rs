@@ -1,6 +1,3 @@
-// mod merkle_tree;
-// pub use merkle_tree::MerkleTreeRelation;
-
 mod linear;
 mod xor;
 
@@ -16,7 +13,6 @@ pub use xor::XorRelation;
 #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug, ValueEnum)]
 pub enum Relation {
     Xor,
-    MerkleTree,
     LinearEquation,
 }
 

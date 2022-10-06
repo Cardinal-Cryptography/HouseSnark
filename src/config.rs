@@ -2,7 +2,7 @@ use clap::{Args, Parser, Subcommand};
 
 use crate::relations::Relation;
 
-#[derive(Debug, Clone, Parser)]
+#[derive(Copy, Clone, Eq, PartialEq, Hash, Debug, Parser)]
 #[clap(version = "1.0")]
 pub struct Cli {
     #[clap(subcommand)]
