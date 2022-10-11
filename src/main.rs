@@ -17,6 +17,7 @@ mod config;
 mod rains_of_castamere;
 mod relations;
 mod serialization;
+mod system;
 
 fn save_keys<Pairing: PairingEngine>(rel_name: &str, keys: PureKeys<Pairing>) {
     let ser_keys = serialize_keys(&keys);
@@ -67,12 +68,13 @@ fn main() {
 
     let cli: Cli = Cli::parse();
     match cli.command {
-        Command::GenerateKeys(GenerateKeysCmd { relation }) => {
+        Command::GenerateKeys(GenerateKeysCmd { relation, .. }) => {
             generate_keys_for::<_>(relation.as_snark_relation::<Bls12_381>())
         }
         Command::GenerateProof(GenerateProofCmd {
             relation,
             proving_key_file,
+            ..
         }) => generate_proving_artifacts_for::<_>(
             relation.as_snark_relation::<Bls12_381>(),
             proving_key_file,
