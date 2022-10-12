@@ -5,7 +5,9 @@ use clap::Parser;
 
 use crate::{
     config::{Cli, Command, GenerateKeysCmd, GenerateProofCmd},
-    environment::{Environment, Fr, GrothEnv, Proof, ProvingKey, VerifyingKey},
+    environment::{
+        Environment, Fr, GmEnv, GrothEnv, Proof, ProvingKey, ProvingSystem, VerifyingKey,
+    },
     rains_of_castamere::kill_all_snarks,
     relations::{PureKeys, PureProvingArtifacts, SnarkRelation},
     serialization::{serialize_keys, serialize_proving_artifacts},
@@ -80,17 +82,26 @@ fn main() {
 
     let cli: Cli = Cli::parse();
     match cli.command {
-        Command::GenerateKeys(GenerateKeysCmd { relation, .. }) => {
-            generate_keys_for::<_>(relation.as_snark_relation::<GrothEnv>())
-        }
+        Command::GenerateKeys(GenerateKeysCmd { relation, system }) => match system {
+            ProvingSystem::Groth16 => {
+                generate_keys_for::<_>(relation.as_snark_relation::<GrothEnv>())
+            }
+            ProvingSystem::Gm17 => generate_keys_for::<_>(relation.as_snark_relation::<GmEnv>()),
+        },
         Command::GenerateProof(GenerateProofCmd {
             relation,
+            system,
             proving_key_file,
-            ..
-        }) => generate_proving_artifacts_for::<_>(
-            relation.as_snark_relation::<GrothEnv>(),
-            proving_key_file,
-        ),
+        }) => match system {
+            ProvingSystem::Groth16 => generate_proving_artifacts_for::<_>(
+                relation.as_snark_relation::<GrothEnv>(),
+                proving_key_file,
+            ),
+            ProvingSystem::Gm17 => generate_proving_artifacts_for::<_>(
+                relation.as_snark_relation::<GmEnv>(),
+                proving_key_file,
+            ),
+        },
         Command::RedWedding => red_wedding(),
     }
 }
