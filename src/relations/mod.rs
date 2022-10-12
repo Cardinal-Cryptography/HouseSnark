@@ -6,7 +6,7 @@ use clap::ValueEnum;
 pub use linear::LinearEqRelation;
 pub use xor::XorRelation;
 
-use crate::system::{Environment, Fr, Proof, ProvingKey, VerifyingKey};
+use crate::environment::{Environment, Fr, Proof, ProvingKey, VerifyingKey};
 
 /// All implemented relations.
 ///

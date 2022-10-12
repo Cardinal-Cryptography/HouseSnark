@@ -1,5 +1,6 @@
 use ark_bls12_381::Bls12_381;
 use ark_ec::PairingEngine;
+use ark_gm17::GM17;
 use ark_groth16::Groth16;
 use ark_relations::r1cs::ConstraintSynthesizer;
 use ark_snark::SNARK;
@@ -11,6 +12,20 @@ use clap::ValueEnum;
 pub enum ProvingSystem {
     Groth16,
     Gm17,
+}
+
+pub struct GrothEnv;
+
+impl Environment for GrothEnv {
+    type PairingEngine = Bls12_381;
+    type System = Groth16<Bls12_381>;
+}
+
+pub struct GmEnv;
+
+impl Environment for GmEnv {
+    type PairingEngine = Bls12_381;
+    type System = GM17<Bls12_381>;
 }
 
 /// Some type aliases to make working with `Environment` a bit more concise.
@@ -41,11 +56,4 @@ pub trait Environment {
     ) -> Result<Proof<Self>, SystemError<Self>> {
         Self::System::prove(pk, circuit, rng)
     }
-}
-
-pub struct GrothEnv;
-
-impl Environment for GrothEnv {
-    type PairingEngine = Bls12_381;
-    type System = Groth16<Bls12_381>;
 }

@@ -5,17 +5,17 @@ use clap::Parser;
 
 use crate::{
     config::{Cli, Command, GenerateKeysCmd, GenerateProofCmd},
+    environment::{Environment, Fr, GrothEnv, Proof, ProvingKey, VerifyingKey},
     rains_of_castamere::kill_all_snarks,
     relations::{PureKeys, PureProvingArtifacts, SnarkRelation},
     serialization::{serialize_keys, serialize_proving_artifacts},
-    system::{Environment, Fr, GrothEnv, Proof, ProvingKey, VerifyingKey},
 };
 
 mod config;
+mod environment;
 mod rains_of_castamere;
 mod relations;
 mod serialization;
-mod system;
 
 fn save_keys<Env: Environment>(rel_name: &str, keys: PureKeys<Env>)
 where

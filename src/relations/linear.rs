@@ -7,8 +7,8 @@ use ark_relations::r1cs::{ConstraintSynthesizer, ConstraintSystemRef, SynthesisE
 use ark_std::rand::{prelude::StdRng, SeedableRng};
 
 use crate::{
+    environment::{Environment, ProvingKey},
     relations::{PureKeys, PureProvingArtifacts, SnarkRelation},
-    system::{Environment, ProvingKey},
 };
 
 /// Relation with:

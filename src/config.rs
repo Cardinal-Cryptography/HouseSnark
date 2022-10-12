@@ -2,7 +2,7 @@ use std::path::PathBuf;
 
 use clap::{Args, Parser, Subcommand};
 
-use crate::{relations::Relation, system::ProvingSystem};
+use crate::{environment::ProvingSystem, relations::Relation};
 
 #[derive(Clone, Eq, PartialEq, Hash, Debug, Parser)]
 #[clap(version = "1.0")]
