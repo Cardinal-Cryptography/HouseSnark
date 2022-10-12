@@ -1,9 +1,6 @@
 use std::{fs, path::PathBuf};
 
-use ark_bls12_381::Bls12_381;
-use ark_ec::PairingEngine;
-use ark_groth16::ProvingKey;
-use ark_serialize::CanonicalDeserialize;
+use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use clap::Parser;
 
 use crate::{
@@ -11,6 +8,7 @@ use crate::{
     rains_of_castamere::kill_all_snarks,
     relations::{PureKeys, PureProvingArtifacts, SnarkRelation},
     serialization::{serialize_keys, serialize_proving_artifacts},
+    system::{Environment, Fr, GrothEnv, Proof, ProvingKey, VerifyingKey},
 };
 
 mod config;
@@ -19,17 +17,22 @@ mod relations;
 mod serialization;
 mod system;
 
-fn save_keys<Pairing: PairingEngine>(rel_name: &str, keys: PureKeys<Pairing>) {
+fn save_keys<Env: Environment>(rel_name: &str, keys: PureKeys<Env>)
+where
+    VerifyingKey<Env>: CanonicalSerialize,
+    ProvingKey<Env>: CanonicalSerialize,
+{
     let ser_keys = serialize_keys(&keys);
 
     fs::write(format!("{}.vk.bytes", rel_name), ser_keys.verifying_key).unwrap();
     fs::write(format!("{}.pk.bytes", rel_name), ser_keys.proving_key).unwrap();
 }
 
-fn save_proving_artifacts<Pairing: PairingEngine>(
-    rel_name: &str,
-    artifacts: PureProvingArtifacts<Pairing>,
-) {
+fn save_proving_artifacts<Env: Environment>(rel_name: &str, artifacts: PureProvingArtifacts<Env>)
+where
+    Proof<Env>: CanonicalSerialize,
+    Fr<Env>: CanonicalSerialize,
+{
     let ser_artifacts = serialize_proving_artifacts(&artifacts);
 
     fs::write(format!("{}.proof.bytes", rel_name), ser_artifacts.proof).unwrap();
@@ -40,20 +43,29 @@ fn save_proving_artifacts<Pairing: PairingEngine>(
     .unwrap();
 }
 
-fn generate_keys_for<P: PairingEngine>(relation: impl SnarkRelation<P>) {
+fn generate_keys_for<Env: Environment>(relation: impl SnarkRelation<Env>)
+where
+    VerifyingKey<Env>: CanonicalSerialize,
+    ProvingKey<Env>: CanonicalSerialize,
+{
     let keys = relation.generate_keys();
-    save_keys(relation.id(), keys);
+    save_keys::<Env>(relation.id(), keys);
 }
 
-fn generate_proving_artifacts_for<P: PairingEngine>(
-    relation: impl SnarkRelation<P>,
+fn generate_proving_artifacts_for<Env: Environment>(
+    relation: impl SnarkRelation<Env>,
     pk_file: PathBuf,
-) {
+) where
+    ProvingKey<Env>: CanonicalDeserialize,
+    Proof<Env>: CanonicalSerialize,
+    Fr<Env>: CanonicalSerialize,
+{
     let pk_serialized = fs::read(pk_file).unwrap();
-    let proving_key = ProvingKey::<P>::deserialize(&*pk_serialized).unwrap();
+    let proving_key =
+        <ProvingKey<Env> as CanonicalDeserialize>::deserialize(&*pk_serialized).unwrap();
 
     let artifacts = relation.generate_proof(proving_key);
-    save_proving_artifacts(relation.id(), artifacts);
+    save_proving_artifacts::<Env>(relation.id(), artifacts);
 }
 
 fn red_wedding() {
@@ -69,14 +81,14 @@ fn main() {
     let cli: Cli = Cli::parse();
     match cli.command {
         Command::GenerateKeys(GenerateKeysCmd { relation, .. }) => {
-            generate_keys_for::<_>(relation.as_snark_relation::<Bls12_381>())
+            generate_keys_for::<_>(relation.as_snark_relation::<GrothEnv>())
         }
         Command::GenerateProof(GenerateProofCmd {
             relation,
             proving_key_file,
             ..
         }) => generate_proving_artifacts_for::<_>(
-            relation.as_snark_relation::<Bls12_381>(),
+            relation.as_snark_relation::<GrothEnv>(),
             proving_key_file,
         ),
         Command::RedWedding => red_wedding(),
