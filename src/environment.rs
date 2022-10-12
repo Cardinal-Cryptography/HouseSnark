@@ -19,6 +19,10 @@ pub struct GrothEnv;
 impl Environment for GrothEnv {
     type PairingEngine = Bls12_381;
     type System = Groth16<Bls12_381>;
+
+    fn id() -> &'static str {
+        "groth"
+    }
 }
 
 pub struct GmEnv;
@@ -26,6 +30,10 @@ pub struct GmEnv;
 impl Environment for GmEnv {
     type PairingEngine = Bls12_381;
     type System = GM17<Bls12_381>;
+
+    fn id() -> &'static str {
+        "gm"
+    }
 }
 
 /// Some type aliases to make working with `Environment` a bit more concise.
@@ -39,6 +47,9 @@ pub type SystemError<Env> = <<Env as Environment>::System as SNARK<Fr<Env>>>::Er
 pub trait Environment {
     type PairingEngine: PairingEngine;
     type System: SNARK<Fr<Self>>;
+
+    /// String identifier of the system.
+    fn id() -> &'static str;
 
     /// Alias for `Self::System::circuit_specific_setup`.
     fn setup<C: ConstraintSynthesizer<Fr<Self>>, R: RngCore + CryptoRng>(

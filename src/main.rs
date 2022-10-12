@@ -26,8 +26,10 @@ where
 {
     let ser_keys = serialize_keys(&keys);
 
-    fs::write(format!("{}.vk.bytes", rel_name), ser_keys.verifying_key).unwrap();
-    fs::write(format!("{}.pk.bytes", rel_name), ser_keys.proving_key).unwrap();
+    let prefix = format!("{}.{}", rel_name, Env::id());
+
+    fs::write(format!("{}.vk.bytes", prefix), ser_keys.verifying_key).unwrap();
+    fs::write(format!("{}.pk.bytes", prefix), ser_keys.proving_key).unwrap();
 }
 
 fn save_proving_artifacts<Env: Environment>(rel_name: &str, artifacts: PureProvingArtifacts<Env>)
@@ -37,9 +39,11 @@ where
 {
     let ser_artifacts = serialize_proving_artifacts(&artifacts);
 
-    fs::write(format!("{}.proof.bytes", rel_name), ser_artifacts.proof).unwrap();
+    let prefix = format!("{}.{}", rel_name, Env::id());
+
+    fs::write(format!("{}.proof.bytes", prefix), ser_artifacts.proof).unwrap();
     fs::write(
-        format!("{}.public_input.bytes", rel_name),
+        format!("{}.public_input.bytes", prefix),
         ser_artifacts.public_input,
     )
     .unwrap();

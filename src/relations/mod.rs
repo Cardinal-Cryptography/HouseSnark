@@ -46,7 +46,7 @@ pub type PureProvingArtifacts<Env> = ProvingArtifacts<Proof<Env>, Vec<Fr<Env>>>;
 
 /// Common interface for the relations.
 pub trait SnarkRelation<Env: Environment> {
-    /// String identifier of relation.
+    /// String identifier of the relation.
     fn id(&self) -> &'static str;
 
     /// Produce keys (in a pure form).
