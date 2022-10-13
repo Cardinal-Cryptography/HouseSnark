@@ -5,6 +5,7 @@ mod xor;
 use ark_ff::{One, Zero};
 use clap::ValueEnum;
 pub use linear::LinearEqRelation;
+pub use merkle_tree::MerkleTreeRelation;
 pub use xor::XorRelation;
 
 use crate::environment::{Environment, Fr, Proof, ProvingKey, VerifyingKey};

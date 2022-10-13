@@ -91,27 +91,27 @@ impl ConstraintSynthesizer<ConstraintF> for MerkleTreeRelation {
     }
 }
 
-// impl SnarkRelation<Bls12_381, ConstraintF> for MerkleTreeRelation {
-//     fn id(&self) -> &'static str {
-//         "merkle-tree"
-//     }
-//
-//     fn generate_artifacts(&self) -> PureArtifacts<Bls12_381, ConstraintF> {
-//         let mut rng = StdRng::from_seed([0u8; 32]);
-//
-//         let (pk, vk) = Groth16::<Bls12_381>::circuit_specific_setup(self.clone(), &mut rng)
-//             .unwrap_or_else(|e| panic!("Problems with setup: {:?}", e));
-//
-//         let proof = Groth16::prove(&pk, self.clone(), &mut rng)
-//             .unwrap_or_else(|e| panic!("Cannot prove: {:?}", e));
-//
-//         // this is some temp mock
-//         let mut public_input = [ConstraintF::zero(); 8];
-//
-//         PureArtifacts {
-//             verifying_key: vk,
-//             proof,
-//             public_input: public_input.to_vec(),
-//         }
-//     }
-// }
+impl SnarkRelation<Bls12_381, ConstraintF> for MerkleTreeRelation {
+    fn id() -> &'static str {
+        "merkle-tree"
+    }
+
+    fn generate_artifacts(&self) -> PureArtifacts<Bls12_381, ConstraintF> {
+        let mut rng = StdRng::from_seed([0u8; 32]);
+
+        let (pk, vk) = Groth16::<Bls12_381>::circuit_specific_setup(self.clone(), &mut rng)
+            .unwrap_or_else(|e| panic!("Problems with setup: {:?}", e));
+
+        let proof = Groth16::prove(&pk, self.clone(), &mut rng)
+            .unwrap_or_else(|e| panic!("Cannot prove: {:?}", e));
+
+        // this is some temp mock
+        let public_input = [ConstraintF::zero(); 8];
+
+        PureArtifacts {
+            verifying_key: vk,
+            proof,
+            public_input: public_input.to_vec(),
+        }
+    }
+}
