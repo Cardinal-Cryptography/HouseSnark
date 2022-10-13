@@ -1,4 +1,5 @@
 mod linear;
+mod merkle_tree;
 mod xor;
 
 use ark_ff::{One, Zero};
@@ -15,6 +16,7 @@ use crate::environment::{Environment, Fr, Proof, ProvingKey, VerifyingKey};
 pub enum Relation {
     Xor,
     LinearEquation,
+    MerkleTree,
 }
 
 impl Relation {
@@ -22,6 +24,7 @@ impl Relation {
         match self {
             Relation::Xor => Box::new(XorRelation::default()),
             Relation::LinearEquation => Box::new(LinearEqRelation::default()),
+            _ => todo!(),
         }
     }
 }
