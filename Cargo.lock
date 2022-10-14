@@ -440,6 +440,7 @@ dependencies = [
  "ark-crypto-primitives",
  "ark-ec",
  "ark-ed-on-bls12-381",
+ "ark-ff",
  "ark-gm17",
  "ark-groth16",
  "ark-r1cs-std",

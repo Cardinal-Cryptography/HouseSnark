@@ -1,16 +1,12 @@
-use ark_bls12_381::{Bls12_381, Fr};
-use ark_groth16::Groth16;
+use ark_ec::PairingEngine;
+use ark_ff::PrimeField;
+use ark_groth16::{Groth16, ProvingKey};
 use ark_r1cs_std::prelude::{AllocVar, EqGadget, UInt8};
-use ark_relations::r1cs::{ConstraintSynthesizer, ConstraintSystemRef};
+use ark_relations::r1cs::{ConstraintSynthesizer, ConstraintSystemRef, SynthesisError};
 use ark_snark::SNARK;
-use ark_std::{
-    rand::{prelude::StdRng, SeedableRng},
-    One, Zero,
-};
+use ark_std::rand::{prelude::StdRng, SeedableRng};
 
-use crate::relations::{PureArtifacts, SnarkRelation};
-
-pub type ConstraintF = Fr;
+use crate::relations::{byte_to_bits, PureKeys, PureProvingArtifacts, SnarkRelation};
 
 /// Relation with:
 ///  - 1 public input    (a | `public_xoree`)
@@ -42,11 +38,8 @@ impl Default for XorRelation {
     }
 }
 
-impl ConstraintSynthesizer<ConstraintF> for XorRelation {
-    fn generate_constraints(
-        self,
-        cs: ConstraintSystemRef<ConstraintF>,
-    ) -> ark_relations::r1cs::Result<()> {
+impl<Field: PrimeField> ConstraintSynthesizer<Field> for XorRelation {
+    fn generate_constraints(self, cs: ConstraintSystemRef<Field>) -> Result<(), SynthesisError> {
         let public_xoree = UInt8::new_input(ark_relations::ns!(cs, "public_summand"), || {
             Ok(&self.public_xoree)
         })?;
@@ -60,29 +53,33 @@ impl ConstraintSynthesizer<ConstraintF> for XorRelation {
     }
 }
 
-impl SnarkRelation<Bls12_381, ConstraintF> for XorRelation {
-    fn id() -> &'static str {
+impl<Pairing: PairingEngine> SnarkRelation<Pairing> for XorRelation {
+    fn id(&self) -> &'static str {
         "xor"
     }
 
-    fn generate_artifacts(&self) -> PureArtifacts<Bls12_381, ConstraintF> {
+    fn generate_keys(&self) -> PureKeys<Pairing> {
         let mut rng = StdRng::from_seed([0u8; 32]);
 
-        let (pk, vk) = Groth16::<Bls12_381>::circuit_specific_setup(*self, &mut rng)
-            .unwrap_or_else(|e| panic!("Problems with setup: {:?}", e));
+        let (proving_key, verifying_key) =
+            Groth16::<Pairing>::circuit_specific_setup(*self, &mut rng)
+                .unwrap_or_else(|e| panic!("Problems with setup: {:?}", e));
 
-        let mut public_input = [ConstraintF::zero(); 8];
-        for (idx, bit) in public_input.iter_mut().enumerate() {
-            if (self.public_xoree >> idx) & 1 == 1 {
-                *bit = ConstraintF::one();
-            }
+        PureKeys {
+            proving_key,
+            verifying_key,
         }
+    }
 
-        let proof = Groth16::prove(&pk, *self, &mut rng)
+    fn generate_proof(&self, proving_key: ProvingKey<Pairing>) -> PureProvingArtifacts<Pairing> {
+        let mut rng = StdRng::from_seed([0u8; 32]);
+
+        let public_input = byte_to_bits(self.public_xoree);
+
+        let proof = Groth16::prove(&proving_key, *self, &mut rng)
             .unwrap_or_else(|e| panic!("Cannot prove: {:?}", e));
 
-        PureArtifacts {
-            verifying_key: vk,
+        PureProvingArtifacts {
             proof,
             public_input: public_input.to_vec(),
         }
