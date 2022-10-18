@@ -1,12 +1,13 @@
-use ark_ec::PairingEngine;
 use ark_ff::PrimeField;
-use ark_groth16::{Groth16, ProvingKey};
 use ark_r1cs_std::prelude::{AllocVar, EqGadget, UInt8};
 use ark_relations::r1cs::{ConstraintSynthesizer, ConstraintSystemRef, SynthesisError};
-use ark_snark::SNARK;
 use ark_std::rand::{prelude::StdRng, SeedableRng};
 
-use crate::relations::{byte_to_bits, PureKeys, PureProvingArtifacts, SnarkRelation};
+use crate::{
+    environment::Environment,
+    relations::{byte_to_bits, PureKeys, PureProvingArtifacts, SnarkRelation},
+    ProvingKey,
+};
 
 /// Relation with:
 ///  - 1 public input    (a | `public_xoree`)
@@ -53,33 +54,32 @@ impl<Field: PrimeField> ConstraintSynthesizer<Field> for XorRelation {
     }
 }
 
-impl<Pairing: PairingEngine> SnarkRelation<Pairing> for XorRelation {
+impl<Env: Environment> SnarkRelation<Env> for XorRelation {
     fn id(&self) -> &'static str {
         "xor"
     }
 
-    fn generate_keys(&self) -> PureKeys<Pairing> {
+    fn generate_keys(&self) -> PureKeys<Env> {
         let mut rng = StdRng::from_seed([0u8; 32]);
 
         let (proving_key, verifying_key) =
-            Groth16::<Pairing>::circuit_specific_setup(*self, &mut rng)
-                .unwrap_or_else(|e| panic!("Problems with setup: {:?}", e));
+            Env::setup(*self, &mut rng).unwrap_or_else(|e| panic!("Problems with setup: {:?}", e));
 
-        PureKeys {
+        PureKeys::<Env> {
             proving_key,
             verifying_key,
         }
     }
 
-    fn generate_proof(&self, proving_key: ProvingKey<Pairing>) -> PureProvingArtifacts<Pairing> {
+    fn generate_proof(&self, proving_key: ProvingKey<Env>) -> PureProvingArtifacts<Env> {
         let mut rng = StdRng::from_seed([0u8; 32]);
 
         let public_input = byte_to_bits(self.public_xoree);
 
-        let proof = Groth16::prove(&proving_key, *self, &mut rng)
+        let proof = Env::prove(&proving_key, *self, &mut rng)
             .unwrap_or_else(|e| panic!("Cannot prove: {:?}", e));
 
-        PureProvingArtifacts {
+        PureProvingArtifacts::<Env> {
             proof,
             public_input: public_input.to_vec(),
         }

@@ -1,12 +1,12 @@
 mod linear;
 mod xor;
 
-use ark_ec::PairingEngine;
 use ark_ff::{One, Zero};
-use ark_groth16::{Proof, ProvingKey, VerifyingKey};
 use clap::ValueEnum;
 pub use linear::LinearEqRelation;
 pub use xor::XorRelation;
+
+use crate::environment::{Environment, Fr, Proof, ProvingKey, VerifyingKey};
 
 /// All implemented relations.
 ///
@@ -18,7 +18,7 @@ pub enum Relation {
 }
 
 impl Relation {
-    pub fn as_snark_relation<Pairing: PairingEngine>(self) -> Box<dyn SnarkRelation<Pairing>> {
+    pub fn as_snark_relation<Env: Environment>(self) -> Box<dyn SnarkRelation<Env>> {
         match self {
             Relation::Xor => Box::new(XorRelation::default()),
             Relation::LinearEquation => Box::new(LinearEqRelation::default()),
@@ -41,32 +41,31 @@ pub struct ProvingArtifacts<P, PI> {
 }
 
 /// Artifacts that are produced directly by relation, without any conversions.
-pub type PureKeys<Pairing> = Keys<VerifyingKey<Pairing>, ProvingKey<Pairing>>;
-pub type PureProvingArtifacts<Pairing> =
-    ProvingArtifacts<Proof<Pairing>, Vec<<Pairing as PairingEngine>::Fr>>;
+pub type PureKeys<Env> = Keys<VerifyingKey<Env>, ProvingKey<Env>>;
+pub type PureProvingArtifacts<Env> = ProvingArtifacts<Proof<Env>, Vec<Fr<Env>>>;
 
 /// Common interface for the relations.
-pub trait SnarkRelation<Pairing: PairingEngine> {
-    /// String identifier of relation.
+pub trait SnarkRelation<Env: Environment> {
+    /// String identifier of the relation.
     fn id(&self) -> &'static str;
 
     /// Produce keys (in a pure form).
-    fn generate_keys(&self) -> PureKeys<Pairing>;
+    fn generate_keys(&self) -> PureKeys<Env>;
 
     /// Produce proof and a public input (in a pure form).
-    fn generate_proof(&self, proving_key: ProvingKey<Pairing>) -> PureProvingArtifacts<Pairing>;
+    fn generate_proof(&self, proving_key: ProvingKey<Env>) -> PureProvingArtifacts<Env>;
 }
 
-impl<P: PairingEngine> SnarkRelation<P> for Box<dyn SnarkRelation<P>> {
+impl<Env: Environment> SnarkRelation<Env> for Box<dyn SnarkRelation<Env>> {
     fn id(&self) -> &'static str {
         self.as_ref().id()
     }
 
-    fn generate_keys(&self) -> PureKeys<P> {
+    fn generate_keys(&self) -> PureKeys<Env> {
         self.as_ref().generate_keys()
     }
 
-    fn generate_proof(&self, proving_key: ProvingKey<P>) -> PureProvingArtifacts<P> {
+    fn generate_proof(&self, proving_key: ProvingKey<Env>) -> PureProvingArtifacts<Env> {
         self.as_ref().generate_proof(proving_key)
     }
 }
