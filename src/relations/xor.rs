@@ -40,10 +40,10 @@ impl Default for XorRelation {
 
 impl<Field: PrimeField> ConstraintSynthesizer<Field> for XorRelation {
     fn generate_constraints(self, cs: ConstraintSystemRef<Field>) -> Result<(), SynthesisError> {
-        let public_xoree = UInt8::new_input(ark_relations::ns!(cs, "public_summand"), || {
+        let public_xoree = UInt8::new_input(ark_relations::ns!(cs, "public_xoree"), || {
             Ok(&self.public_xoree)
         })?;
-        let private_xoree = UInt8::new_witness(ark_relations::ns!(cs, "private_summand"), || {
+        let private_xoree = UInt8::new_witness(ark_relations::ns!(cs, "private_xoree"), || {
             Ok(&self.private_xoree)
         })?;
         let result = UInt8::new_constant(ark_relations::ns!(cs, "result"), &self.result)?;
