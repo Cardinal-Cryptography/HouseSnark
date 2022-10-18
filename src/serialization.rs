@@ -1,34 +1,30 @@
 use ark_serialize::CanonicalSerialize;
 
-use crate::Artifacts;
+use crate::relations::{Keys, ProvingArtifacts};
 
-pub type SerializedArtifacts = Artifacts<Vec<u8>, Vec<u8>, Vec<u8>>;
+pub type SerializedKeys = Keys<Vec<u8>, Vec<u8>>;
+pub type SerializedProvingArtifacts = ProvingArtifacts<Vec<u8>, Vec<u8>>;
 
-pub fn serialize_artifacts<
-    VK: CanonicalSerialize,
-    P: CanonicalSerialize,
-    PI: CanonicalSerialize,
->(
-    artifacts: &Artifacts<VK, P, PI>,
-) -> SerializedArtifacts {
-    let Artifacts {
-        verifying_key: vk,
-        public_input: input,
-        proof,
-    } = artifacts;
+fn serialize<T: CanonicalSerialize>(t: &T) -> Vec<u8> {
+    let mut bytes = vec![0; t.serialized_size()];
+    t.serialize(&mut bytes[..]).unwrap();
+    bytes.to_vec()
+}
 
-    let mut serialized_vk = vec![0; vk.serialized_size()];
-    vk.serialize(&mut serialized_vk[..]).unwrap();
+pub fn serialize_keys<VK: CanonicalSerialize, PK: CanonicalSerialize>(
+    keys: &Keys<VK, PK>,
+) -> SerializedKeys {
+    SerializedKeys {
+        verifying_key: serialize(&keys.verifying_key),
+        proving_key: serialize(&keys.proving_key),
+    }
+}
 
-    let mut serialized_proof = vec![0; proof.serialized_size()];
-    proof.serialize(&mut serialized_proof[..]).unwrap();
-
-    let mut serialized_input = vec![0; input.serialized_size()];
-    input.serialize(&mut serialized_input[..]).unwrap();
-
-    SerializedArtifacts {
-        verifying_key: serialized_vk,
-        proof: serialized_proof,
-        public_input: serialized_input,
+pub fn serialize_proving_artifacts<P: CanonicalSerialize, PI: CanonicalSerialize>(
+    artifacts: &ProvingArtifacts<P, PI>,
+) -> SerializedProvingArtifacts {
+    SerializedProvingArtifacts {
+        proof: serialize(&artifacts.proof),
+        public_input: serialize(&artifacts.public_input),
     }
 }

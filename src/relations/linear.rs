@@ -1,16 +1,15 @@
-use ark_bls12_381::{Bls12_381, Fr};
-use ark_groth16::Groth16;
+use ark_ec::PairingEngine;
+use ark_ff::PrimeField;
+use ark_groth16::{Groth16, ProvingKey};
 use ark_r1cs_std::{
     prelude::{AllocVar, EqGadget},
     uint32::UInt32,
 };
-use ark_relations::r1cs::{ConstraintSynthesizer, ConstraintSystemRef};
+use ark_relations::r1cs::{ConstraintSynthesizer, ConstraintSystemRef, SynthesisError};
 use ark_snark::SNARK;
 use ark_std::rand::{prelude::StdRng, SeedableRng};
 
-use crate::relations::{PureArtifacts, SnarkRelation};
-
-pub type ConstraintF = Fr;
+use crate::relations::{PureKeys, PureProvingArtifacts, SnarkRelation};
 
 /// Relation with:
 ///  - 1 private witness (x)
@@ -36,11 +35,8 @@ impl Default for LinearEqRelation {
     }
 }
 
-impl ConstraintSynthesizer<ConstraintF> for LinearEqRelation {
-    fn generate_constraints(
-        self,
-        cs: ConstraintSystemRef<ConstraintF>,
-    ) -> ark_relations::r1cs::Result<()> {
+impl<Field: PrimeField> ConstraintSynthesizer<Field> for LinearEqRelation {
+    fn generate_constraints(self, cs: ConstraintSystemRef<Field>) -> Result<(), SynthesisError> {
         // Watch out for overflows!!!
 
         let x = UInt32::new_witness(ark_relations::ns!(cs, "x"), || Ok(&self.x))?;
@@ -54,22 +50,31 @@ impl ConstraintSynthesizer<ConstraintF> for LinearEqRelation {
     }
 }
 
-impl SnarkRelation<Bls12_381, ConstraintF> for LinearEqRelation {
-    fn id() -> &'static str {
+impl<Pairing: PairingEngine> SnarkRelation<Pairing> for LinearEqRelation {
+    fn id(&self) -> &'static str {
         "linear-equation"
     }
 
-    fn generate_artifacts(&self) -> PureArtifacts<Bls12_381, ConstraintF> {
+    fn generate_keys(&self) -> PureKeys<Pairing> {
         let mut rng = StdRng::from_seed([0u8; 32]);
 
-        let (pk, vk) = Groth16::<Bls12_381>::circuit_specific_setup(*self, &mut rng)
-            .unwrap_or_else(|e| panic!("Problems with setup: {:?}", e));
+        let (proving_key, verifying_key) =
+            Groth16::<Pairing>::circuit_specific_setup(*self, &mut rng)
+                .unwrap_or_else(|e| panic!("Problems with setup: {:?}", e));
 
-        let proof = Groth16::prove(&pk, *self, &mut rng)
+        PureKeys {
+            verifying_key,
+            proving_key,
+        }
+    }
+
+    fn generate_proof(&self, proving_key: ProvingKey<Pairing>) -> PureProvingArtifacts<Pairing> {
+        let mut rng = StdRng::from_seed([0u8; 32]);
+
+        let proof = Groth16::prove(&proving_key, *self, &mut rng)
             .unwrap_or_else(|e| panic!("Cannot prove: {:?}", e));
 
-        PureArtifacts {
-            verifying_key: vk,
+        PureProvingArtifacts {
             proof,
             public_input: vec![],
         }
