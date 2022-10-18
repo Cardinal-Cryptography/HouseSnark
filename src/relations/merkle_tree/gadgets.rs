@@ -10,9 +10,8 @@ use ark_crypto_primitives::{
 };
 use ark_ed_on_bls12_381::{constraints::EdwardsVar, EdwardsProjective};
 
-use crate::relations::merkle_tree::{
-    hash_functions::{LeafHash, LeafWindow, TwoToOneHash, TwoToOneWindow},
-    ConstraintF,
+use crate::relations::merkle_tree::hash_functions::{
+    LeafHash, LeafWindow, TwoToOneHash, TwoToOneWindow,
 };
 
 pub type TwoToOneHashGadget = PedersenCRHCompressorGadget<
@@ -31,6 +30,7 @@ pub type LeafHashGadget = PedersenCRHCompressorGadget<
     TECompressorGadget,
 >;
 
-pub type LeafHashParamsVar = <LeafHashGadget as CRHGadget<LeafHash, ConstraintF>>::ParametersVar;
-pub type TwoToOneHashParamsVar =
+pub type LeafHashParamsVar<ConstraintF> =
+    <LeafHashGadget as CRHGadget<LeafHash, ConstraintF>>::ParametersVar;
+pub type TwoToOneHashParamsVar<ConstraintF> =
     <TwoToOneHashGadget as TwoToOneCRHGadget<TwoToOneHash, ConstraintF>>::ParametersVar;
