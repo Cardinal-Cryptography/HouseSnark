@@ -1,0 +1,29 @@
+[package]
+name = "house-snark"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "1.0"
+clap = { version = "3.0", features = ["derive"] }
+env_logger = "0.9.0"
+log = "0.4"
+
+ark-crypto-primitives = { version = "^0.3.0", default-features = true, features = [ "r1cs" ] }
+ark-ec = { version = "^0.3.0", default-features = false }
+ark-ff = { version = "^0.3.0", default-features = false }
+ark-std = { version = "^0.3.0", default-features = false }
+ark-serialize = { version = "^0.3.0", default-features = false }
+ark-relations = { version = "^0.3.0", default-features = false }
+ark-snark = { version = "^0.3.0", default-features = false }
+
+ark-r1cs-std = { version = "^0.3.0", default-features = false }
+
+ark-ed-on-bls12-381 = { version = "^0.3.0", features = ["r1cs"] }
+ark-bls12-381 = { version = "^0.3.0" }
+ark-groth16 = { version = "^0.3.0", default-features = false }
+ark-gm17 = { version = "^0.3.0", default-features = false }
+
+[features]
+default = ["std"]
+std = []
