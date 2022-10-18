@@ -41,7 +41,7 @@ pub struct GenerateProofCmd {
     pub relation: Relation,
 
     /// Which proving system to use.
-    #[clap(long, short, arg_enum)]
+    #[clap(long, short, arg_enum, default_value = "groth16")]
     pub system: ProvingSystem,
 
     /// Path to a file containing proving key.
