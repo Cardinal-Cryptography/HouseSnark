@@ -2,6 +2,7 @@ mod linear;
 mod merkle_tree;
 mod xor;
 
+use ark_bls12_381::Bls12_381;
 use ark_ff::{One, Zero};
 use clap::ValueEnum;
 pub use linear::LinearEqRelation;
@@ -21,11 +22,13 @@ pub enum Relation {
 }
 
 impl Relation {
-    pub fn as_snark_relation<Env: Environment>(self) -> Box<dyn SnarkRelation<Env>> {
+    pub fn as_snark_relation<Env: Environment<PairingEngine = Bls12_381>>(
+        self,
+    ) -> Box<dyn SnarkRelation<Env>> {
         match self {
             Relation::Xor => Box::new(XorRelation::default()),
             Relation::LinearEquation => Box::new(LinearEqRelation::default()),
-            _ => todo!(),
+            Relation::MerkleTree => Box::new(MerkleTreeRelation::default()),
         }
     }
 }

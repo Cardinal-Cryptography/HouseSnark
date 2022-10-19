@@ -5,13 +5,11 @@ use ark_crypto_primitives::{
 };
 use ark_r1cs_std::{boolean::Boolean, eq::EqGadget, prelude::AllocVar, uint8::UInt8};
 use ark_relations::r1cs::{ConstraintSynthesizer, ConstraintSystemRef, SynthesisError};
-use ark_std::{
-    rand::{prelude::StdRng, SeedableRng},
-    Zero,
-};
+use ark_std::rand::{prelude::StdRng, SeedableRng};
 
 use crate::{
     relations::{
+        byte_to_bits,
         merkle_tree::{
             gadgets::{
                 LeafHashGadget, LeafHashParamsVar, TwoToOneHashGadget, TwoToOneHashParamsVar,
@@ -22,7 +20,7 @@ use crate::{
         },
         SnarkRelation,
     },
-    Environment, Fr, ProvingKey, PureKeys, PureProvingArtifacts,
+    Environment, ProvingKey, PureKeys, PureProvingArtifacts,
 };
 
 /// The R1CS equivalent of the the Merkle tree root.
@@ -117,8 +115,7 @@ impl<Env: Environment<PairingEngine = Bls12_381>> SnarkRelation<Env> for MerkleT
         let proof = Env::prove(&proving_key, self.clone(), &mut rng)
             .unwrap_or_else(|e| panic!("Cannot prove: {:?}", e));
 
-        // this is some temp mock
-        let public_input = [<Fr<Env>>::zero(); 8];
+        let public_input = [vec![self.root], byte_to_bits(self.leaf).to_vec()].concat();
 
         PureProvingArtifacts::<Env> {
             proof,
