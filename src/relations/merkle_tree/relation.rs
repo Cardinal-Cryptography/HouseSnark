@@ -1,8 +1,8 @@
+use ark_bls12_381::Bls12_381;
 use ark_crypto_primitives::{
     crh::{TwoToOneCRH, TwoToOneCRHGadget},
     PathVar, CRH,
 };
-use ark_ff::PrimeField;
 use ark_r1cs_std::{boolean::Boolean, eq::EqGadget, prelude::AllocVar, uint8::UInt8};
 use ark_relations::r1cs::{ConstraintSynthesizer, ConstraintSystemRef, SynthesisError};
 use ark_std::{
@@ -18,6 +18,7 @@ use crate::{
             },
             hash_functions::{LeafHash, TwoToOneHash},
             tree::{default_tree, MerkleConfig, Root, SimplePath},
+            ConstraintF,
         },
         SnarkRelation,
     },
@@ -25,12 +26,10 @@ use crate::{
 };
 
 /// The R1CS equivalent of the the Merkle tree root.
-pub type RootVar<ConstraintF> =
-    <TwoToOneHashGadget as TwoToOneCRHGadget<TwoToOneHash, ConstraintF>>::OutputVar;
+pub type RootVar = <TwoToOneHashGadget as TwoToOneCRHGadget<TwoToOneHash, ConstraintF>>::OutputVar;
 
 /// The R1CS equivalent of the the Merkle tree path.
-pub type SimplePathVar<ConstraintF> =
-    PathVar<MerkleConfig, LeafHashGadget, TwoToOneHashGadget, ConstraintF>;
+pub type SimplePathVar = PathVar<MerkleConfig, LeafHashGadget, TwoToOneHashGadget, ConstraintF>;
 
 /// Relation for checking membership in a Merkle tree.
 ///
@@ -65,20 +64,21 @@ impl Default for MerkleTreeRelation {
     }
 }
 
-impl<Field: PrimeField> ConstraintSynthesizer<Field> for MerkleTreeRelation {
-    fn generate_constraints(self, cs: ConstraintSystemRef<Field>) -> Result<(), SynthesisError> {
-        let path = SimplePathVar::<Field>::new_witness(ark_relations::ns!(cs, "path_var"), || {
+impl ConstraintSynthesizer<ConstraintF> for MerkleTreeRelation {
+    fn generate_constraints(
+        self,
+        cs: ConstraintSystemRef<ConstraintF>,
+    ) -> Result<(), SynthesisError> {
+        let path = SimplePathVar::new_witness(ark_relations::ns!(cs, "path_var"), || {
             Ok(self.authentication_path)
         })?;
 
-        let root =
-            RootVar::<Field>::new_input(ark_relations::ns!(cs, "root_var"), || Ok(&self.root))?;
+        let root = RootVar::new_input(ark_relations::ns!(cs, "root_var"), || Ok(&self.root))?;
         let leaf = UInt8::new_input(ark_relations::ns!(cs, "leaf_var"), || Ok(&self.leaf))?;
 
-        let leaf_crh_params =
-            LeafHashParamsVar::<Field>::new_constant(cs.clone(), &self.leaf_crh_params)?;
+        let leaf_crh_params = LeafHashParamsVar::new_constant(cs.clone(), &self.leaf_crh_params)?;
         let two_to_one_crh_params =
-            TwoToOneHashParamsVar::<Field>::new_constant(cs, &self.two_to_one_crh_params)?;
+            TwoToOneHashParamsVar::new_constant(cs, &self.two_to_one_crh_params)?;
 
         let leaf_bytes = vec![leaf; 1];
 
@@ -94,7 +94,7 @@ impl<Field: PrimeField> ConstraintSynthesizer<Field> for MerkleTreeRelation {
     }
 }
 
-impl<Env: Environment> SnarkRelation<Env> for MerkleTreeRelation {
+impl<Env: Environment<PairingEngine = Bls12_381>> SnarkRelation<Env> for MerkleTreeRelation {
     fn id(&self) -> &'static str {
         "merkle-tree"
     }
