@@ -24,13 +24,13 @@ jobs:
 
 
       - name: Run format check for `house-snark`
-        run: cargo fmt --all --check
+        run: cd house-snark/ && cargo fmt --all --check
 
       - name: Run clippy for `house-snark`
-        run: cargo clippy --all-features -- --no-deps -D warnings
+        run: cd house-snark/ && cargo clippy --all-features -- --no-deps -D warnings
 
       - name: Run tests  for `house-snark`
-        run: cargo test
+        run: cd house-snark/ && cargo test
 
 
       - name: Run format check for `snarkxt`
