@@ -2,7 +2,8 @@ use std::path::PathBuf;
 
 use anyhow::{anyhow, Result};
 use clap::{Args, Parser, Subcommand};
-use pallet_snarcos::{ProvingSystem, VerificationKeyIdentifier};
+
+use crate::{aleph::runtime_types::pallet_snarcos::ProvingSystem, VerificationKeyIdentifier};
 
 #[derive(Clone, Eq, PartialEq, Debug, Parser)]
 pub(super) struct CliConfig {
