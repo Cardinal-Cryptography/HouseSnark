@@ -11,22 +11,21 @@ use subxt::{
 };
 
 use crate::{
-    aleph::runtime_types::pallet_snarcos::ProvingSystem,
+    aleph_api::{api, api::runtime_types::pallet_snarcos::ProvingSystem},
     config::{CliConfig, Command, StoreKeyCmd, VerifyCmd},
 };
 
-// The binary is supposed to be compiled from the root crate directory.
-#[subxt::subxt(
-    runtime_metadata_path = "metadata/aleph_metadata.scale",
-    derive_for_all_types = "Clone, Eq, PartialEq, Debug"
-)]
-pub mod aleph {}
+mod aleph_api;
 
 /// This corresponds to `pallet_snarcos::VerificationKeyIdentifier`.
 ///
 /// We copy this type alias to avoid a heavy dependency. In case of mismatch, subxt will detect it
 /// in compilation time.
 type VerificationKeyIdentifier = [u8; 4];
+
+type RawVerificationKey = Vec<u8>;
+type RawProof = Vec<u8>;
+type RawPublicInput = Vec<u8>;
 
 /// We should be quite compatible to Polkadot.
 type AlephConfig = PolkadotConfig;
@@ -40,14 +39,14 @@ async fn store_key<S: Signer<AlephConfig> + Send + Sync>(
     client: OnlineClient<AlephConfig>,
     signer: S,
     identifier: VerificationKeyIdentifier,
-    vk: Vec<u8>,
+    vk: RawVerificationKey,
 ) -> Result<()> {
-    let tx = aleph::tx().snarcos().store_key(identifier, vk);
+    let tx = api::tx().snarcos().store_key(identifier, vk);
     let hash = client.tx().sign_and_submit_default(&tx, &signer).await?;
 
     println!(
         "✅ Successfully submitted storing verification key request. \
-        Submission took place in the block: {:?}",
+        Submission took place in the block with hash: {:?}",
         hash
     );
     Ok(())
@@ -58,18 +57,18 @@ async fn verify<S: Signer<AlephConfig> + Send + Sync>(
     client: OnlineClient<AlephConfig>,
     signer: S,
     identifier: VerificationKeyIdentifier,
-    proof: Vec<u8>,
-    public_input: Vec<u8>,
+    proof: RawProof,
+    public_input: RawPublicInput,
     system: ProvingSystem,
 ) -> Result<()> {
-    let tx = aleph::tx()
+    let tx = api::tx()
         .snarcos()
         .verify(identifier, proof, public_input, system);
     let hash = client.tx().sign_and_submit_default(&tx, &signer).await?;
 
     println!(
         "✅ Successfully submitted proof verification request. \
-        Submission took place in the block: {:?}",
+        Submission took place in the block with hash: {:?}",
         hash
     );
     Ok(())
@@ -77,11 +76,11 @@ async fn verify<S: Signer<AlephConfig> + Send + Sync>(
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let cli_config: CliConfig = CliConfig::parse();
+    let cli_config = CliConfig::parse();
 
     let signer = PairSigner::new(
         Pair::from_string(&cli_config.signer, None)
-            .map_err(|_| anyhow!("Cannot create signer from the seed"))?,
+            .map_err(|e| anyhow!("Cannot create signer from the seed: {:?}", e))?,
     );
 
     let client = OnlineClient::<AlephConfig>::from_url(&cli_config.node).await?;

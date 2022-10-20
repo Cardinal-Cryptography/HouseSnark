@@ -3,7 +3,9 @@ use std::path::PathBuf;
 use anyhow::{anyhow, Result};
 use clap::{Args, Parser, Subcommand};
 
-use crate::{aleph::runtime_types::pallet_snarcos::ProvingSystem, VerificationKeyIdentifier};
+use crate::{
+    aleph_api::api::runtime_types::pallet_snarcos::ProvingSystem, VerificationKeyIdentifier,
+};
 
 #[derive(Clone, Eq, PartialEq, Debug, Parser)]
 pub(super) struct CliConfig {
@@ -71,9 +73,9 @@ fn parse_identifier(ident: &str) -> Result<VerificationKeyIdentifier> {
 
 /// Try to convert `&str` to `ProvingSystem`.
 fn parse_system(system: &str) -> Result<ProvingSystem> {
-    match system {
-        "Groth16" | "groth16" => Ok(ProvingSystem::Groth16),
-        "GM17" | "Gm17" | "gm17" => Ok(ProvingSystem::Gm17),
+    match system.to_lowercase().as_str() {
+        "groth16" => Ok(ProvingSystem::Groth16),
+        "gm17" => Ok(ProvingSystem::Gm17),
         _ => Err(anyhow!("Unknown proving system")),
     }
 }
