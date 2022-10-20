@@ -15,6 +15,7 @@ use crate::{
     config::{CliConfig, Command, StoreKeyCmd, VerifyCmd},
 };
 
+#[allow(clippy::all)]
 mod aleph_api;
 
 /// This corresponds to `pallet_snarcos::VerificationKeyIdentifier`.
