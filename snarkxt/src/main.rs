@@ -17,7 +17,7 @@ use crate::{
 
 // The binary is supposed to be compiled from the root crate directory.
 #[subxt::subxt(
-    runtime_metadata_path = "artifacts/aleph_metadata.scale",
+    runtime_metadata_path = "metadata/aleph_metadata.scale",
     derive_for_all_types = "Clone, Eq, PartialEq, Debug"
 )]
 pub mod aleph {}
