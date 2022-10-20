@@ -9,9 +9,13 @@ pub(super) struct CliConfig {
     #[clap(subcommand)]
     pub command: Command,
 
-    /// WS endpoint address of the node to connect to
-    #[clap(long, default_value = "127.0.0.1:9944")]
+    /// WS endpoint address of the node to connect to.
+    #[clap(long, default_value = "ws://127.0.0.1:9944")]
     pub node: String,
+
+    /// Seed of the submitting account.
+    #[clap(long, default_value = "//Alice")]
+    pub signer: String,
 }
 
 #[derive(Clone, Eq, PartialEq, Debug, Subcommand)]
