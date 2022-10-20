@@ -22,11 +22,22 @@ jobs:
           curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
           rustup component add clippy rustfmt
 
-      - name: Run format check
-        run: cargo fmt --all --check
 
-      - name: Run clippy
-        run: cargo clippy --all-features -- --no-deps -D warnings
+      - name: Run format check for `house-snark`
+        run: cd house-snark/ && cargo fmt --all --check
 
-      - name: Run tests
-        run: cargo test
+      - name: Run clippy for `house-snark`
+        run: cd house-snark/ && cargo clippy --all-features -- --no-deps -D warnings
+
+      - name: Run tests  for `house-snark`
+        run: cd house-snark/ && cargo test
+
+
+      - name: Run format check for `snarkxt`
+        run: cd snarkxt/ && cargo fmt --all --check
+
+      - name: Run clippy for `snarkxt`
+        run: cd snarkxt/ && cargo clippy --all-features -- --no-deps -D warnings
+
+      - name: Run tests  for `snarkxt`
+        run: cd snarkxt/ && cargo test
