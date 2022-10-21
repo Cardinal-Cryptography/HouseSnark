@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::rand::{rngs::StdRng, SeedableRng};
 use clap::Parser;
@@ -31,16 +33,15 @@ where
     save_keys::<Env>(relation.id(), pk, vk);
 }
 
-fn generate_proving_artifacts_for<Env: Environment>(
-    relation: Relation,
-    proving_key: ProvingKey<Env>,
-) where
+fn generate_proving_artifacts_for<Env: Environment>(relation: Relation, proving_key_file: PathBuf)
+where
     ProvingKey<Env>: CanonicalDeserialize,
     Proof<Env>: CanonicalSerialize,
     Fr<Env>: CanonicalSerialize,
 {
-    let mut rng = StdRng::from_seed([0u8; 32]);
+    let proving_key = read_proving_key::<Env>(proving_key_file);
 
+    let mut rng = StdRng::from_seed([0u8; 32]);
     let proof = Env::prove(&proving_key, relation, &mut rng)
         .unwrap_or_else(|e| panic!("Cannot prove: {:?}", e));
 
@@ -72,12 +73,10 @@ fn main() {
             proving_key_file,
         }) => match system {
             ProvingSystem::Groth16 => {
-                let proving_key = read_proving_key::<GrothEnv>(proving_key_file);
-                generate_proving_artifacts_for::<GrothEnv>(relation, proving_key)
+                generate_proving_artifacts_for::<GrothEnv>(relation, proving_key_file)
             }
             ProvingSystem::Gm17 => {
-                let proving_key = read_proving_key::<GmEnv>(proving_key_file);
-                generate_proving_artifacts_for::<GmEnv>(relation, proving_key)
+                generate_proving_artifacts_for::<GmEnv>(relation, proving_key_file)
             }
         },
 

@@ -17,8 +17,9 @@ pub enum Relation {
 }
 
 impl Relation {
+    /// Relation identifier.
     pub fn id(&self) -> String {
-        format!("{:?}", self)
+        format!("{:?}", self).to_lowercase()
     }
 }
 
@@ -49,6 +50,7 @@ impl GetPublicInput for Relation {
     }
 }
 
+/// Convert `u8` into an 8-tuple of bits over `F` (little endian).
 fn byte_to_bits<F: Zero + One + Copy>(byte: u8) -> [F; 8] {
     let mut bits = [F::zero(); 8];
     for (idx, bit) in bits.iter_mut().enumerate() {

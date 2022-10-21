@@ -21,13 +21,13 @@ pushd ../snarkxt/
 # Firstly, store the key in pallet's storage.
 cargo run --release -- store-key \
   --identifier yeah \
-  --vk-file ../xor.groth.vk.bytes
+  --vk-file ../house-snark/xor.groth.vk.bytes
 
 # Secondly, run proof verification.
 cargo run --release -- verify \
   --identifier yeah \
-  --proof-file ../xor.groth.proof.bytes \
-  --input-file ../xor.groth.public_input.bytes \
+  --proof-file ../house-snark/xor.groth.proof.bytes \
+  --input-file ../house-snark/xor.groth.public_input.bytes \
   --system groth16
 ```
 
