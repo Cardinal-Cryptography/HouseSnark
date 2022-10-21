@@ -1,3 +1,5 @@
+extern crate core;
+
 use std::path::PathBuf;
 
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
@@ -16,6 +18,7 @@ use crate::{
 
 mod config;
 mod environment;
+mod environment2;
 mod rains_of_castamere;
 mod relations;
 mod serialization;
