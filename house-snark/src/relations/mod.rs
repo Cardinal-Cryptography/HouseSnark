@@ -1,12 +1,11 @@
 mod linear;
 mod xor;
 
-use ark_ff::{One, Zero};
+use ark_ff::{One, PrimeField, Zero};
+use ark_relations::r1cs::{ConstraintSynthesizer, ConstraintSystemRef};
 use clap::ValueEnum;
 pub use linear::LinearEqRelation;
 pub use xor::XorRelation;
-
-use crate::environment::{Environment, Fr, Proof, ProvingKey, VerifyingKey};
 
 /// All implemented relations.
 ///
@@ -18,55 +17,35 @@ pub enum Relation {
 }
 
 impl Relation {
-    pub fn as_snark_relation<Env: Environment>(self) -> Box<dyn SnarkRelation<Env>> {
+    pub fn id(&self) -> String {
+        format!("{:?}", self)
+    }
+}
+
+impl<CircuitField: PrimeField> ConstraintSynthesizer<CircuitField> for Relation {
+    fn generate_constraints(
+        self,
+        cs: ConstraintSystemRef<CircuitField>,
+    ) -> ark_relations::r1cs::Result<()> {
         match self {
-            Relation::Xor => Box::new(XorRelation::default()),
-            Relation::LinearEquation => Box::new(LinearEqRelation::default()),
+            Relation::Xor => XorRelation::default().generate_constraints(cs),
+            Relation::LinearEquation => LinearEqRelation::default().generate_constraints(cs),
         }
     }
 }
 
-/// Pair of keys resulted from a setup process.
-#[derive(Clone, Eq, PartialEq, Hash, Debug)]
-pub struct Keys<VK, PK> {
-    pub verifying_key: VK,
-    pub proving_key: PK,
-}
-
-/// Proof accompanied by a public input.
-#[derive(Clone, Eq, PartialEq, Hash, Debug)]
-pub struct ProvingArtifacts<P, PI> {
-    pub proof: P,
-    pub public_input: PI,
-}
-
-/// Artifacts that are produced directly by relation, without any conversions.
-pub type PureKeys<Env> = Keys<VerifyingKey<Env>, ProvingKey<Env>>;
-pub type PureProvingArtifacts<Env> = ProvingArtifacts<Proof<Env>, Vec<Fr<Env>>>;
-
-/// Common interface for the relations.
-pub trait SnarkRelation<Env: Environment> {
-    /// String identifier of the relation.
-    fn id(&self) -> &'static str;
-
-    /// Produce keys (in a pure form).
-    fn generate_keys(&self) -> PureKeys<Env>;
-
-    /// Produce proof and a public input (in a pure form).
-    fn generate_proof(&self, proving_key: ProvingKey<Env>) -> PureProvingArtifacts<Env>;
-}
-
-impl<Env: Environment> SnarkRelation<Env> for Box<dyn SnarkRelation<Env>> {
-    fn id(&self) -> &'static str {
-        self.as_ref().id()
+pub trait GetPublicInput {
+    fn public_input<CircuitField: PrimeField>(&self) -> Vec<CircuitField> {
+        vec![]
     }
+}
 
-    fn generate_keys(&self) -> PureKeys<Env> {
-        self.as_ref().generate_keys()
-    }
-
-    fn generate_proof(&self, proving_key: ProvingKey<Env>) -> PureProvingArtifacts<Env> {
-        self.as_ref().generate_proof(proving_key)
+impl GetPublicInput for Relation {
+    fn public_input<CircuitField: PrimeField>(&self) -> Vec<CircuitField> {
+        match self {
+            Relation::Xor => XorRelation::default().public_input(),
+            Relation::LinearEquation => LinearEqRelation::default().public_input(),
+        }
     }
 }
 

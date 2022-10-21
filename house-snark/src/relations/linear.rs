@@ -4,12 +4,8 @@ use ark_r1cs_std::{
     uint32::UInt32,
 };
 use ark_relations::r1cs::{ConstraintSynthesizer, ConstraintSystemRef, SynthesisError};
-use ark_std::rand::{prelude::StdRng, SeedableRng};
 
-use crate::{
-    environment::{Environment, ProvingKey},
-    relations::{PureKeys, PureProvingArtifacts, SnarkRelation},
-};
+use crate::GetPublicInput;
 
 /// Relation with:
 ///  - 1 private witness (x)
@@ -50,32 +46,4 @@ impl<Field: PrimeField> ConstraintSynthesizer<Field> for LinearEqRelation {
     }
 }
 
-impl<Env: Environment> SnarkRelation<Env> for LinearEqRelation {
-    fn id(&self) -> &'static str {
-        "linear-equation"
-    }
-
-    fn generate_keys(&self) -> PureKeys<Env> {
-        let mut rng = StdRng::from_seed([0u8; 32]);
-
-        let (proving_key, verifying_key) =
-            Env::setup(*self, &mut rng).unwrap_or_else(|e| panic!("Problems with setup: {:?}", e));
-
-        PureKeys::<Env> {
-            verifying_key,
-            proving_key,
-        }
-    }
-
-    fn generate_proof(&self, proving_key: ProvingKey<Env>) -> PureProvingArtifacts<Env> {
-        let mut rng = StdRng::from_seed([0u8; 32]);
-
-        let proof = Env::prove(&proving_key, *self, &mut rng)
-            .unwrap_or_else(|e| panic!("Cannot prove: {:?}", e));
-
-        PureProvingArtifacts::<Env> {
-            proof,
-            public_input: vec![],
-        }
-    }
-}
+impl GetPublicInput for LinearEqRelation {}

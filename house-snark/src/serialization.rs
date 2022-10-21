@@ -1,9 +1,8 @@
-use ark_serialize::CanonicalSerialize;
+use std::{fs, path::PathBuf};
 
-use crate::relations::{Keys, ProvingArtifacts};
+use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 
-pub type SerializedKeys = Keys<Vec<u8>, Vec<u8>>;
-pub type SerializedProvingArtifacts = ProvingArtifacts<Vec<u8>, Vec<u8>>;
+use crate::{Environment, Fr, Proof, ProvingKey, VerifyingKey};
 
 fn serialize<T: CanonicalSerialize>(t: &T) -> Vec<u8> {
     let mut bytes = vec![0; t.serialized_size()];
@@ -11,20 +10,36 @@ fn serialize<T: CanonicalSerialize>(t: &T) -> Vec<u8> {
     bytes.to_vec()
 }
 
-pub fn serialize_keys<VK: CanonicalSerialize, PK: CanonicalSerialize>(
-    keys: &Keys<VK, PK>,
-) -> SerializedKeys {
-    SerializedKeys {
-        verifying_key: serialize(&keys.verifying_key),
-        proving_key: serialize(&keys.proving_key),
-    }
+pub fn save_keys<Env: Environment>(rel_name: String, pk: ProvingKey<Env>, vk: VerifyingKey<Env>)
+where
+    VerifyingKey<Env>: CanonicalSerialize,
+    ProvingKey<Env>: CanonicalSerialize,
+{
+    let prefix = format!("{}.{}", rel_name, Env::id());
+    fs::write(format!("{}.vk.bytes", prefix), serialize(&vk)).unwrap();
+    fs::write(format!("{}.pk.bytes", prefix), serialize(&pk)).unwrap();
 }
 
-pub fn serialize_proving_artifacts<P: CanonicalSerialize, PI: CanonicalSerialize>(
-    artifacts: &ProvingArtifacts<P, PI>,
-) -> SerializedProvingArtifacts {
-    SerializedProvingArtifacts {
-        proof: serialize(&artifacts.proof),
-        public_input: serialize(&artifacts.public_input),
-    }
+pub fn save_proving_artifacts<Env: Environment>(
+    rel_name: String,
+    proof: Proof<Env>,
+    input: Vec<Fr<Env>>,
+) where
+    Proof<Env>: CanonicalSerialize,
+    Fr<Env>: CanonicalSerialize,
+{
+    let prefix = format!("{}.{}", rel_name, Env::id());
+    fs::write(format!("{}.proof.bytes", prefix), serialize(&proof)).unwrap();
+    fs::write(format!("{}.public_input.bytes", prefix), serialize(&input)).unwrap();
+}
+
+pub fn read_proving_key<Env: Environment>(proving_key_file: PathBuf) -> ProvingKey<Env>
+where
+    ProvingKey<Env>: CanonicalDeserialize,
+{
+    let pk_serialized =
+        fs::read(proving_key_file).expect("Cannot read proving key from the provided path");
+
+    <ProvingKey<Env> as CanonicalDeserialize>::deserialize(&*pk_serialized)
+        .expect("Cannot deserialize proving key")
 }
