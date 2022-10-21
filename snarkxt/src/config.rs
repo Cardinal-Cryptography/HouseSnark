@@ -32,29 +32,29 @@ pub(super) enum Command {
 
 #[derive(Clone, Eq, PartialEq, Debug, Args)]
 pub(super) struct StoreKeyCmd {
-    #[clap(long, parse(try_from_str = parse_identifier))]
+    #[clap(long, value_parser = parse_identifier)]
     pub identifier: VerificationKeyIdentifier,
 
     /// Path to a file containing the verification key.
-    #[clap(long, parse(from_os_str))]
+    #[clap(long)]
     pub vk_file: PathBuf,
 }
 
 #[derive(Clone, Eq, PartialEq, Debug, Args)]
 pub(super) struct VerifyCmd {
-    #[clap(long, parse(try_from_str = parse_identifier))]
+    #[clap(long, value_parser = parse_identifier)]
     pub identifier: VerificationKeyIdentifier,
 
     /// Path to a file containing the proof.
-    #[clap(long, parse(from_os_str))]
+    #[clap(long)]
     pub proof_file: PathBuf,
 
     /// Path to a file containing the public input.
-    #[clap(long, parse(from_os_str))]
+    #[clap(long)]
     pub input_file: PathBuf,
 
     /// Which proving system should be used.
-    #[clap(long, parse(try_from_str = parse_system))]
+    #[clap(long, value_parser = parse_system)]
     pub system: ProvingSystem,
 }
 
@@ -78,4 +78,10 @@ fn parse_system(system: &str) -> Result<ProvingSystem> {
         "gm17" => Ok(ProvingSystem::Gm17),
         _ => Err(anyhow!("Unknown proving system")),
     }
+}
+
+#[test]
+fn verify_cli() {
+    use clap::CommandFactory;
+    CliConfig::command().debug_assert()
 }
