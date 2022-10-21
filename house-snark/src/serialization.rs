@@ -10,14 +10,19 @@ fn serialize<T: CanonicalSerialize>(t: &T) -> Vec<u8> {
     bytes.to_vec()
 }
 
+fn save_bytes(bytes: Vec<u8>, prefix: &str, identifier: &str) {
+    let path = format!("{}.{}.bytes", prefix, identifier);
+    fs::write(path, bytes).unwrap_or_else(|_| panic!("Failed to save {}", identifier));
+}
+
 pub fn save_keys<Env: Environment>(rel_name: String, pk: ProvingKey<Env>, vk: VerifyingKey<Env>)
 where
     VerifyingKey<Env>: CanonicalSerialize,
     ProvingKey<Env>: CanonicalSerialize,
 {
     let prefix = format!("{}.{}", rel_name, Env::id());
-    fs::write(format!("{}.vk.bytes", prefix), serialize(&vk)).unwrap();
-    fs::write(format!("{}.pk.bytes", prefix), serialize(&pk)).unwrap();
+    save_bytes(serialize(&vk), &prefix, "vk");
+    save_bytes(serialize(&pk), &prefix, "pk");
 }
 
 pub fn save_proving_artifacts<Env: Environment>(
@@ -29,8 +34,8 @@ pub fn save_proving_artifacts<Env: Environment>(
     Fr<Env>: CanonicalSerialize,
 {
     let prefix = format!("{}.{}", rel_name, Env::id());
-    fs::write(format!("{}.proof.bytes", prefix), serialize(&proof)).unwrap();
-    fs::write(format!("{}.public_input.bytes", prefix), serialize(&input)).unwrap();
+    save_bytes(serialize(&proof), &prefix, "proof");
+    save_bytes(serialize(&input), &prefix, "public_input");
 }
 
 pub fn read_proving_key<Env: Environment>(proving_key_file: PathBuf) -> ProvingKey<Env>

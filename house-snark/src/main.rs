@@ -57,7 +57,15 @@ fn red_wedding() {
     }
 }
 
+fn setup_eyre() {
+    if std::env::var("RUST_LIB_BACKTRACE").is_err() {
+        std::env::set_var("RUST_LIB_BACKTRACE", "1")
+    }
+    color_eyre::install().expect("Cannot install `eyre`");
+}
+
 fn main() {
+    setup_eyre();
     env_logger::init();
 
     let cli: Cli = Cli::parse();
