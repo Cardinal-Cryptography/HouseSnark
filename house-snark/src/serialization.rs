@@ -19,8 +19,8 @@ pub fn save_srs(srs: Vec<u8>, env_id: String) {
 
 pub fn save_keys(rel_name: String, env_id: String, pk: Vec<u8>, vk: Vec<u8>) {
     let prefix = format!("{}.{}", rel_name, env_id);
-    save_bytes(serialize(&vk), &prefix, "vk");
-    save_bytes(serialize(&pk), &prefix, "pk");
+    save_bytes(pk, &prefix, "pk");
+    save_bytes(vk, &prefix, "vk");
 }
 
 pub fn save_proving_artifacts(rel_name: String, env_id: String, proof: Vec<u8>, input: Vec<u8>) {

@@ -177,7 +177,7 @@ pub mod traits {
         fn generate_keys<C: ConstraintSynthesizer<CircuitField>>(
             srs: &Self::Srs,
             circuit: C,
-        ) -> (Self::VerifyingKey, Self::ProvingKey);
+        ) -> (Self::ProvingKey, Self::VerifyingKey);
     }
 
     pub trait NonUniversalSystem: ProvingSystem {
