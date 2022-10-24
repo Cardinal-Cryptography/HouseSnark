@@ -35,7 +35,7 @@ fn main() {
     match cli.command {
         Command::GenerateSrs(GenerateSrsCmd { env }) => {
             let srs = env.generate_srs();
-            save_srs(srs, env.system_id());
+            save_srs(&srs, &env.system_id());
         }
 
         Command::GenerateKeysFromSrs(GenerateKeysFromSrsCmd {
@@ -45,12 +45,12 @@ fn main() {
         }) => {
             let srs = read_srs(srs_file);
             let keys = env.generate_keys(relation, srs);
-            save_keys(relation.id(), env.system_id(), keys.pk, keys.vk);
+            save_keys(&relation.id(), &env.system_id(), &keys.pk, &keys.vk);
         }
 
         Command::GenerateKeys(GenerateKeysCmd { relation, env }) => {
             let keys = env.generate_keys(relation);
-            save_keys(relation.id(), env.system_id(), keys.pk, keys.vk);
+            save_keys(&relation.id(), &env.system_id(), &keys.pk, &keys.vk);
         }
 
         Command::GenerateProof(GenerateProofCmd {
@@ -61,7 +61,7 @@ fn main() {
             let proving_key = read_proving_key(proving_key_file);
             let proof = env.prove(relation, proving_key);
             let public_input = serialize(&relation.public_input::<CircuitField>());
-            save_proving_artifacts(relation.id(), env.system_id(), proof, public_input);
+            save_proving_artifacts(&relation.id(), &env.system_id(), &proof, &public_input);
         }
 
         Command::RedWedding => match kill_all_snarks() {

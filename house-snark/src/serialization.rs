@@ -8,22 +8,22 @@ pub fn serialize<T: CanonicalSerialize>(t: &T) -> Vec<u8> {
     bytes.to_vec()
 }
 
-fn save_bytes(bytes: Vec<u8>, prefix: &str, identifier: &str) {
+fn save_bytes(bytes: &[u8], prefix: &str, identifier: &str) {
     let path = format!("{}.{}.bytes", prefix, identifier);
     fs::write(path, bytes).unwrap_or_else(|_| panic!("Failed to save {}", identifier));
 }
 
-pub fn save_srs(srs: Vec<u8>, env_id: String) {
-    save_bytes(srs, &env_id, "srs");
+pub fn save_srs(srs: &[u8], env_id: &str) {
+    save_bytes(srs, env_id, "srs");
 }
 
-pub fn save_keys(rel_name: String, env_id: String, pk: Vec<u8>, vk: Vec<u8>) {
+pub fn save_keys(rel_name: &str, env_id: &str, pk: &[u8], vk: &[u8]) {
     let prefix = format!("{}.{}", rel_name, env_id);
     save_bytes(pk, &prefix, "pk");
     save_bytes(vk, &prefix, "vk");
 }
 
-pub fn save_proving_artifacts(rel_name: String, env_id: String, proof: Vec<u8>, input: Vec<u8>) {
+pub fn save_proving_artifacts(rel_name: &str, env_id: &str, proof: &[u8], input: &[u8]) {
     let prefix = format!("{}.{}", rel_name, env_id);
     save_bytes(proof, &prefix, "proof");
     save_bytes(input, &prefix, "public_input");
