@@ -5,7 +5,7 @@ use clap::{Args, Parser, Subcommand, ValueEnum};
 
 use crate::{
     environment::{
-        Environment, NonUniversalProvingSystem, SomeSystemClass, UniversalProvingSystem,
+        Environment, NonUniversalProvingSystem, SomeProvingSystem, UniversalProvingSystem,
     },
     relations::Relation,
 };
@@ -90,7 +90,7 @@ pub struct GenerateProofCmd {
     /// Accepts either `NonUniversalProvingSystem` or `UniversalProvingSystem` which will be
     /// converted to `Environment<SomeSystemClass>`.
     #[clap(long = "system", short = 's', value_enum, default_value = "groth16", value_parser = parse_some)]
-    pub env: Environment<SomeSystemClass>,
+    pub env: Environment<SomeProvingSystem>,
 
     /// Path to a file containing proving key.
     #[clap(long, short)]
@@ -99,22 +99,24 @@ pub struct GenerateProofCmd {
 
 fn parse_universal(system: &str) -> Result<Environment<UniversalProvingSystem>> {
     let system = UniversalProvingSystem::from_str(system, true).map_err(Error::msg)?;
-    Ok(Environment::<SomeSystemClass>::with_universal_hint(system))
-}
-
-fn parse_non_universal(system: &str) -> Result<Environment<NonUniversalProvingSystem>> {
-    let system = NonUniversalProvingSystem::from_str(system, true).map_err(Error::msg)?;
-    Ok(Environment::<SomeSystemClass>::with_non_universal_hint(
+    Ok(Environment::<SomeProvingSystem>::with_universal_hint(
         system,
     ))
 }
 
-fn parse_some(system: &str) -> Result<Environment<SomeSystemClass>> {
+fn parse_non_universal(system: &str) -> Result<Environment<NonUniversalProvingSystem>> {
+    let system = NonUniversalProvingSystem::from_str(system, true).map_err(Error::msg)?;
+    Ok(Environment::<SomeProvingSystem>::with_non_universal_hint(
+        system,
+    ))
+}
+
+fn parse_some(system: &str) -> Result<Environment<SomeProvingSystem>> {
     let maybe_universal = UniversalProvingSystem::from_str(system, true)
-        .map(Environment::<SomeSystemClass>::with_universal_hint)
+        .map(Environment::<SomeProvingSystem>::with_universal_hint)
         .map(|e| e.forget_class());
     let maybe_non_universal = NonUniversalProvingSystem::from_str(system, true)
-        .map(Environment::<SomeSystemClass>::with_non_universal_hint)
+        .map(Environment::<SomeProvingSystem>::with_non_universal_hint)
         .map(|e| e.forget_class());
     maybe_universal.or(maybe_non_universal).map_err(Error::msg)
 }
