@@ -1,4 +1,4 @@
-use std::marker::PhantomData;
+use std::{fmt::Debug, marker::PhantomData};
 
 use ark_gm17::GM17;
 use ark_groth16::Groth16;
@@ -8,15 +8,7 @@ use clap::ValueEnum;
 use either::Either;
 use traits::ProvingSystem;
 
-use crate::{
-    environment2::{
-        system_class::{
-            NonUniversalSystemClass, SomeSystemClass, SystemClass, UniversalSystemClass,
-        },
-        traits::NonUniversalSystem,
-    },
-    serialization::serialize,
-};
+use crate::{environment2::traits::NonUniversalSystem, serialization::serialize};
 
 /// All available non universal proving systems.
 #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug, ValueEnum)]
@@ -35,23 +27,39 @@ pub enum UniversalProvingSystem {
 pub type PairingEngine = ark_bls12_381::Bls12_381;
 pub type CircuitField = ark_bls12_381::Fr;
 
+pub trait SystemClass {}
+
+#[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
+pub enum SomeSystemClass {}
+
+impl SystemClass for NonUniversalProvingSystem {}
+impl SystemClass for UniversalProvingSystem {}
+impl SystemClass for SomeSystemClass {}
+
+#[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
 pub struct Environment<S: SystemClass> {
     hint: Either<NonUniversalProvingSystem, UniversalProvingSystem>,
     _phantom: PhantomData<S>,
 }
 
 impl<Class: SystemClass> Environment<Class> {
+    pub fn system_id(&self) -> String {
+        either::for_both!(&self.hint, h => format!("{:?}", h)).to_lowercase()
+    }
+
     pub fn with_non_universal_hint(
         hint: NonUniversalProvingSystem,
-    ) -> Environment<NonUniversalSystemClass> {
-        Environment::<NonUniversalSystemClass> {
+    ) -> Environment<NonUniversalProvingSystem> {
+        Environment::<NonUniversalProvingSystem> {
             hint: Either::Left(hint),
             _phantom: Default::default(),
         }
     }
 
-    pub fn with_universal_hint(hint: UniversalProvingSystem) -> Environment<UniversalSystemClass> {
-        Environment::<UniversalSystemClass> {
+    pub fn with_universal_hint(
+        hint: UniversalProvingSystem,
+    ) -> Environment<UniversalProvingSystem> {
+        Environment::<UniversalProvingSystem> {
             hint: Either::Right(hint),
             _phantom: Default::default(),
         }
@@ -92,11 +100,11 @@ impl<Class: SystemClass> Environment<Class> {
 }
 
 pub struct RawKeys {
-    pk: Vec<u8>,
-    vk: Vec<u8>,
+    pub pk: Vec<u8>,
+    pub vk: Vec<u8>,
 }
 
-impl Environment<NonUniversalSystemClass> {
+impl Environment<NonUniversalProvingSystem> {
     pub fn generate_keys<C: ConstraintSynthesizer<CircuitField>>(&self, circuit: C) -> RawKeys {
         match self.hint.left().unwrap() {
             NonUniversalProvingSystem::Groth16 => {
@@ -120,8 +128,8 @@ impl Environment<NonUniversalSystemClass> {
     }
 }
 
-impl Environment<UniversalSystemClass> {
-    pub fn generate_srs(&self) -> RawKeys {
+impl Environment<UniversalProvingSystem> {
+    pub fn generate_srs(&self) -> Vec<u8> {
         match self.hint.right().unwrap() {
             UniversalProvingSystem::Unimplemented => {
                 unimplemented!()
@@ -140,18 +148,6 @@ impl Environment<UniversalSystemClass> {
             }
         }
     }
-}
-
-pub mod system_class {
-    pub trait SystemClass {}
-
-    pub enum NonUniversalSystemClass {}
-    pub enum UniversalSystemClass {}
-    pub enum SomeSystemClass {}
-
-    impl SystemClass for NonUniversalSystemClass {}
-    impl SystemClass for UniversalSystemClass {}
-    impl SystemClass for SomeSystemClass {}
 }
 
 pub mod traits {
