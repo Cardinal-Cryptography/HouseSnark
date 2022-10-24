@@ -1,21 +1,14 @@
 extern crate core;
 
-use std::path::PathBuf;
-
-use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
-use ark_std::rand::{rngs::StdRng, SeedableRng};
 use clap::Parser;
 
 use crate::{
     config::{
         Cli, Command, GenerateKeysCmd, GenerateKeysFromSrsCmd, GenerateProofCmd, GenerateSrsCmd,
     },
-    environment::{
-        Environment, Fr, GmEnv, GrothEnv, Proof, ProvingKey, ProvingSystem, VerifyingKey,
-    },
-    environment2::{CircuitField, NonUniversalProvingSystem, UniversalProvingSystem},
+    environment::CircuitField,
     rains_of_castamere::kill_all_snarks,
-    relations::{GetPublicInput, Relation},
+    relations::GetPublicInput,
     serialization::{
         read_proving_key, read_srs, save_keys, save_proving_artifacts, save_srs, serialize,
     },
@@ -23,7 +16,6 @@ use crate::{
 
 mod config;
 mod environment;
-mod environment2;
 mod rains_of_castamere;
 mod relations;
 mod serialization;

@@ -1,10 +1,6 @@
 use std::{fs, path::PathBuf};
 
-use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
-
-use crate::{
-    environment2, Environment, Fr, Proof, ProvingKey, UniversalProvingSystem, VerifyingKey,
-};
+use ark_serialize::CanonicalSerialize;
 
 pub fn serialize<T: CanonicalSerialize>(t: &T) -> Vec<u8> {
     let mut bytes = vec![0; t.serialized_size()];

@@ -4,8 +4,7 @@ use anyhow::{Error, Result};
 use clap::{Args, Parser, Subcommand, ValueEnum};
 
 use crate::{
-    environment::ProvingSystem,
-    environment2::{
+    environment::{
         Environment, NonUniversalProvingSystem, SomeSystemClass, UniversalProvingSystem,
     },
     relations::Relation,
@@ -112,10 +111,10 @@ fn parse_non_universal(system: &str) -> Result<Environment<NonUniversalProvingSy
 
 fn parse_some(system: &str) -> Result<Environment<SomeSystemClass>> {
     let maybe_universal = UniversalProvingSystem::from_str(system, true)
-        .map(|s| Environment::<SomeSystemClass>::with_universal_hint(s))
+        .map(Environment::<SomeSystemClass>::with_universal_hint)
         .map(|e| e.forget_class());
     let maybe_non_universal = NonUniversalProvingSystem::from_str(system, true)
-        .map(|s| Environment::<SomeSystemClass>::with_non_universal_hint(s))
+        .map(Environment::<SomeSystemClass>::with_non_universal_hint)
         .map(|e| e.forget_class());
     maybe_universal.or(maybe_non_universal).map_err(Error::msg)
 }
