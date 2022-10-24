@@ -61,7 +61,7 @@ pub struct GenerateKeysFromSrsCmd {
     pub env: Environment<UniversalProvingSystem>,
 
     /// Path to a file containing SRS.
-    #[clap(long, short)]
+    #[clap(long)]
     pub srs_file: PathBuf,
 }
 
