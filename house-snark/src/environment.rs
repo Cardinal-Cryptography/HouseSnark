@@ -205,66 +205,55 @@ mod trait_implementations {
     use crate::{
         environment::{
             traits::{NonUniversalSystem, ProvingSystem, UniversalSystem},
-            Groth16, Marlin, MarlinPolynomialCommitment, PairingEngine, GM17,
+            Groth16, Marlin, MarlinPolynomialCommitment, GM17,
         },
         CircuitField,
     };
 
+    fn dummy_rng() -> StdRng {
+        StdRng::from_seed([0u8; 32])
+    }
+
     // Unfortunately, Groth16, GM17 and Marlin don't have any common supertrait, and therefore,
-    // without macros, we cannot provide any blanket implementation without running into damned
-    // `upstream crates may add a new impl of trait` error
-    // (see https://github.com/rust-lang/rfcs/issues/2758).
-    // Tfu.
+    // we cannot provide any blanket implementation without running into damned `upstream crates may
+    // add a new impl of trait` error (see https://github.com/rust-lang/rfcs/issues/2758).
+    // Tfu. Disgusting.
 
-    impl ProvingSystem for Groth16 {
-        type Proof = ark_groth16::Proof<PairingEngine>;
-        type ProvingKey = ark_groth16::ProvingKey<PairingEngine>;
-        type VerifyingKey = ark_groth16::VerifyingKey<PairingEngine>;
+    /// This macro takes a type `system` as the only argument and provides `ProvingSystem` and
+    /// `NonUniversalSystem` implementations for it.
+    ///
+    /// `system` should implement `SNARK<CircuitField>` trait.  
+    macro_rules! impl_non_universal_system_for_snark {
+        ($system:ty) => {
+            impl ProvingSystem for $system {
+                type Proof = <$system as SNARK<CircuitField>>::Proof;
+                type ProvingKey = <$system as SNARK<CircuitField>>::ProvingKey;
+                type VerifyingKey = <$system as SNARK<CircuitField>>::VerifyingKey;
 
-        fn prove<C: ConstraintSynthesizer<CircuitField>>(
-            pk: &Self::ProvingKey,
-            circuit: C,
-        ) -> Self::Proof {
-            let mut rng = StdRng::from_seed([0u8; 32]);
-            <Groth16 as SNARK<CircuitField>>::prove(pk, circuit, &mut rng)
-                .expect("Failed to generate proof")
-        }
+                fn prove<C: ConstraintSynthesizer<CircuitField>>(
+                    pk: &Self::ProvingKey,
+                    circuit: C,
+                ) -> Self::Proof {
+                    let mut rng = dummy_rng();
+                    <$system as SNARK<CircuitField>>::prove(pk, circuit, &mut rng)
+                        .expect("Failed to generate keys")
+                }
+            }
+
+            impl NonUniversalSystem for $system {
+                fn generate_keys<C: ConstraintSynthesizer<CircuitField>>(
+                    circuit: C,
+                ) -> (Self::ProvingKey, Self::VerifyingKey) {
+                    let mut rng = dummy_rng();
+                    <$system as SNARK<CircuitField>>::circuit_specific_setup(circuit, &mut rng)
+                        .expect("Failed to generate keys")
+                }
+            }
+        };
     }
 
-    impl NonUniversalSystem for Groth16 {
-        fn generate_keys<C: ConstraintSynthesizer<CircuitField>>(
-            circuit: C,
-        ) -> (Self::ProvingKey, Self::VerifyingKey) {
-            let mut rng = StdRng::from_seed([0u8; 32]);
-            <Groth16 as SNARK<CircuitField>>::circuit_specific_setup(circuit, &mut rng)
-                .expect("Failed to generate keys")
-        }
-    }
-
-    impl ProvingSystem for GM17 {
-        type Proof = ark_gm17::Proof<PairingEngine>;
-        type ProvingKey = ark_gm17::ProvingKey<PairingEngine>;
-        type VerifyingKey = ark_gm17::VerifyingKey<PairingEngine>;
-
-        fn prove<C: ConstraintSynthesizer<CircuitField>>(
-            pk: &Self::ProvingKey,
-            circuit: C,
-        ) -> Self::Proof {
-            let mut rng = StdRng::from_seed([0u8; 32]);
-            <GM17 as SNARK<CircuitField>>::prove(pk, circuit, &mut rng)
-                .expect("Failed to generate proof")
-        }
-    }
-
-    impl NonUniversalSystem for GM17 {
-        fn generate_keys<C: ConstraintSynthesizer<CircuitField>>(
-            circuit: C,
-        ) -> (Self::ProvingKey, Self::VerifyingKey) {
-            let mut rng = StdRng::from_seed([0u8; 32]);
-            <GM17 as SNARK<CircuitField>>::circuit_specific_setup(circuit, &mut rng)
-                .expect("Failed to generate keys")
-        }
-    }
+    impl_non_universal_system_for_snark!(Groth16);
+    impl_non_universal_system_for_snark!(GM17);
 
     impl ProvingSystem for Marlin {
         type Proof = ark_marlin::Proof<CircuitField, MarlinPolynomialCommitment>;
@@ -275,7 +264,7 @@ mod trait_implementations {
             pk: &Self::ProvingKey,
             circuit: C,
         ) -> Self::Proof {
-            let mut rng = StdRng::from_seed([0u8; 32]);
+            let mut rng = dummy_rng();
             Marlin::prove(pk, circuit, &mut rng).expect("Failed to generate proof")
         }
     }
@@ -284,7 +273,7 @@ mod trait_implementations {
         type Srs = ark_marlin::UniversalSRS<CircuitField, MarlinPolynomialCommitment>;
 
         fn generate_srs() -> Self::Srs {
-            let mut rng = StdRng::from_seed([0u8; 32]);
+            let mut rng = dummy_rng();
             Marlin::universal_setup(10, 10, 10, &mut rng).expect("Failed to generate SRS")
         }
 
