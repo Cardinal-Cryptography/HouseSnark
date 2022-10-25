@@ -31,23 +31,24 @@ pub type SimplePathVar = PathVar<MerkleConfig, LeafHashGadget, TwoToOneHashGadge
 
 /// Relation for checking membership in a Merkle tree.
 ///
-/// Contains:
-///  - 1 private witness (path)
-///  - 2 public inputs   (root and member)
-///  - 2 constants       (hash function parameters)
-///
 /// `MerkleTreeRelation` comes with the default instantiation, where it represents a membership
 /// proof for the first leaf (at index 0) in a tree over 8 bytes (`[0u8,..,7u8]`). The underlying
 /// tree (together with its hash function parameters) is generated from the function
 /// `default_tree()`.
 #[derive(Clone)]
 pub struct MerkleTreeRelation {
+    /// Private witness.
     pub authentication_path: SimplePath,
 
+    /// Root of the tree (public input).
     pub root: Root,
+    /// Leaf which membership is to be proven (public input).
     pub leaf: u8,
 
+    /// Collision-resistant hash function for leafs (constant parameter).
     pub leaf_crh_params: <LeafHash as CRH>::Parameters,
+    /// Collision-resistant hash function translating child hashes to parent hash
+    /// (constant parameter).
     pub two_to_one_crh_params: <TwoToOneHash as TwoToOneCRH>::Parameters,
 }
 
