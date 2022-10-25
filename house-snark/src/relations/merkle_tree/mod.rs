@@ -12,6 +12,4 @@ mod hash_functions;
 mod relation;
 mod tree;
 
-type ConstraintF = ark_bls12_381::Fr;
-
 pub use relation::MerkleTreeRelation;

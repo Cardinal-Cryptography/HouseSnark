@@ -2,14 +2,15 @@ mod linear;
 mod merkle_tree;
 mod xor;
 
-use ark_bls12_381::Bls12_381;
-use ark_ff::{One, Zero};
+use ark_ff::{One, PrimeField, Zero};
+use ark_relations::r1cs::{ConstraintSynthesizer, ConstraintSystemRef};
+use ark_serialize::CanonicalSerialize;
 use clap::ValueEnum;
 pub use linear::LinearEqRelation;
 pub use merkle_tree::MerkleTreeRelation;
 pub use xor::XorRelation;
 
-use crate::environment::{Environment, Fr, Proof, ProvingKey, VerifyingKey};
+use crate::CircuitField;
 
 /// All implemented relations.
 ///
@@ -22,61 +23,42 @@ pub enum Relation {
 }
 
 impl Relation {
-    pub fn as_snark_relation<Env: Environment<PairingEngine = Bls12_381>>(
+    /// Relation identifier.
+    pub fn id(&self) -> String {
+        format!("{:?}", self).to_lowercase()
+    }
+}
+
+impl ConstraintSynthesizer<CircuitField> for Relation {
+    fn generate_constraints(
         self,
-    ) -> Box<dyn SnarkRelation<Env>> {
+        cs: ConstraintSystemRef<CircuitField>,
+    ) -> ark_relations::r1cs::Result<()> {
         match self {
-            Relation::Xor => Box::new(XorRelation::default()),
-            Relation::LinearEquation => Box::new(LinearEqRelation::default()),
-            Relation::MerkleTree => Box::new(MerkleTreeRelation::default()),
+            Relation::Xor => XorRelation::default().generate_constraints(cs),
+            Relation::LinearEquation => LinearEqRelation::default().generate_constraints(cs),
+            Relation::MerkleTree => MerkleTreeRelation::default().generate_constraints(cs),
         }
     }
 }
 
-/// Pair of keys resulted from a setup process.
-#[derive(Clone, Eq, PartialEq, Hash, Debug)]
-pub struct Keys<VK, PK> {
-    pub verifying_key: VK,
-    pub proving_key: PK,
-}
-
-/// Proof accompanied by a public input.
-#[derive(Clone, Eq, PartialEq, Hash, Debug)]
-pub struct ProvingArtifacts<P, PI> {
-    pub proof: P,
-    pub public_input: PI,
-}
-
-/// Artifacts that are produced directly by relation, without any conversions.
-pub type PureKeys<Env> = Keys<VerifyingKey<Env>, ProvingKey<Env>>;
-pub type PureProvingArtifacts<Env> = ProvingArtifacts<Proof<Env>, Vec<Fr<Env>>>;
-
-/// Common interface for the relations.
-pub trait SnarkRelation<Env: Environment> {
-    /// String identifier of the relation.
-    fn id(&self) -> &'static str;
-
-    /// Produce keys (in a pure form).
-    fn generate_keys(&self) -> PureKeys<Env>;
-
-    /// Produce proof and a public input (in a pure form).
-    fn generate_proof(&self, proving_key: ProvingKey<Env>) -> PureProvingArtifacts<Env>;
-}
-
-impl<Env: Environment> SnarkRelation<Env> for Box<dyn SnarkRelation<Env>> {
-    fn id(&self) -> &'static str {
-        self.as_ref().id()
-    }
-
-    fn generate_keys(&self) -> PureKeys<Env> {
-        self.as_ref().generate_keys()
-    }
-
-    fn generate_proof(&self, proving_key: ProvingKey<Env>) -> PureProvingArtifacts<Env> {
-        self.as_ref().generate_proof(proving_key)
+pub trait GetPublicInput<CircuitField: PrimeField + CanonicalSerialize> {
+    fn public_input(&self) -> Vec<CircuitField> {
+        vec![]
     }
 }
 
+impl GetPublicInput<CircuitField> for Relation {
+    fn public_input(&self) -> Vec<CircuitField> {
+        match self {
+            Relation::Xor => XorRelation::default().public_input(),
+            Relation::LinearEquation => LinearEqRelation::default().public_input(),
+            Relation::MerkleTree => MerkleTreeRelation::default().public_input(),
+        }
+    }
+}
+
+/// Convert `u8` into an 8-tuple of bits over `F` (little endian).
 fn byte_to_bits<F: Zero + One + Copy>(byte: u8) -> [F; 8] {
     let mut bits = [F::zero(); 8];
     for (idx, bit) in bits.iter_mut().enumerate() {

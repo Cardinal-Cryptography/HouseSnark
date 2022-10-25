@@ -1,16 +1,17 @@
-use std::{fs, path::PathBuf};
+extern crate core;
 
-use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use clap::Parser;
 
 use crate::{
-    config::{Cli, Command, GenerateKeysCmd, GenerateProofCmd},
-    environment::{
-        Environment, Fr, GmEnv, GrothEnv, Proof, ProvingKey, ProvingSystem, VerifyingKey,
+    config::{
+        Cli, Command, GenerateKeysCmd, GenerateKeysFromSrsCmd, GenerateProofCmd, GenerateSrsCmd,
     },
+    environment::CircuitField,
     rains_of_castamere::kill_all_snarks,
-    relations::{PureKeys, PureProvingArtifacts, SnarkRelation},
-    serialization::{serialize_keys, serialize_proving_artifacts},
+    relations::GetPublicInput,
+    serialization::{
+        read_proving_key, read_srs, save_keys, save_proving_artifacts, save_srs, serialize,
+    },
 };
 
 mod config;
@@ -19,93 +20,53 @@ mod rains_of_castamere;
 mod relations;
 mod serialization;
 
-fn save_keys<Env: Environment>(rel_name: &str, keys: PureKeys<Env>)
-where
-    VerifyingKey<Env>: CanonicalSerialize,
-    ProvingKey<Env>: CanonicalSerialize,
-{
-    let ser_keys = serialize_keys(&keys);
-
-    let prefix = format!("{}.{}", rel_name, Env::id());
-
-    fs::write(format!("{}.vk.bytes", prefix), ser_keys.verifying_key).unwrap();
-    fs::write(format!("{}.pk.bytes", prefix), ser_keys.proving_key).unwrap();
-}
-
-fn save_proving_artifacts<Env: Environment>(rel_name: &str, artifacts: PureProvingArtifacts<Env>)
-where
-    Proof<Env>: CanonicalSerialize,
-    Fr<Env>: CanonicalSerialize,
-{
-    let ser_artifacts = serialize_proving_artifacts(&artifacts);
-
-    let prefix = format!("{}.{}", rel_name, Env::id());
-
-    fs::write(format!("{}.proof.bytes", prefix), ser_artifacts.proof).unwrap();
-    fs::write(
-        format!("{}.public_input.bytes", prefix),
-        ser_artifacts.public_input,
-    )
-    .unwrap();
-}
-
-fn generate_keys_for<Env: Environment>(relation: impl SnarkRelation<Env>)
-where
-    VerifyingKey<Env>: CanonicalSerialize,
-    ProvingKey<Env>: CanonicalSerialize,
-{
-    let keys = relation.generate_keys();
-    save_keys::<Env>(relation.id(), keys);
-}
-
-fn generate_proving_artifacts_for<Env: Environment>(
-    relation: impl SnarkRelation<Env>,
-    pk_file: PathBuf,
-) where
-    ProvingKey<Env>: CanonicalDeserialize,
-    Proof<Env>: CanonicalSerialize,
-    Fr<Env>: CanonicalSerialize,
-{
-    let pk_serialized = fs::read(pk_file).unwrap();
-    let proving_key =
-        <ProvingKey<Env> as CanonicalDeserialize>::deserialize(&*pk_serialized).unwrap();
-
-    let artifacts = relation.generate_proof(proving_key);
-    save_proving_artifacts::<Env>(relation.id(), artifacts);
-}
-
-fn red_wedding() {
-    match kill_all_snarks() {
-        Ok(_) => println!("Cleaning succeeded"),
-        Err(e) => eprintln!("Cleaning failed: {:?}", e),
+fn setup_eyre() {
+    if std::env::var("RUST_LIB_BACKTRACE").is_err() {
+        std::env::set_var("RUST_LIB_BACKTRACE", "1")
     }
+    color_eyre::install().expect("Cannot install `eyre`");
 }
 
 fn main() {
+    setup_eyre();
     env_logger::init();
 
     let cli: Cli = Cli::parse();
     match cli.command {
-        Command::GenerateKeys(GenerateKeysCmd { relation, system }) => match system {
-            ProvingSystem::Groth16 => {
-                generate_keys_for::<_>(relation.as_snark_relation::<GrothEnv>())
-            }
-            ProvingSystem::Gm17 => generate_keys_for::<_>(relation.as_snark_relation::<GmEnv>()),
-        },
+        Command::GenerateSrs(GenerateSrsCmd { system }) => {
+            let srs = system.generate_srs();
+            save_srs(&srs, &system.id());
+        }
+
+        Command::GenerateKeysFromSrs(GenerateKeysFromSrsCmd {
+            relation,
+            system,
+            srs_file,
+        }) => {
+            let srs = read_srs(srs_file);
+            let keys = system.generate_keys(relation, srs);
+            save_keys(&relation.id(), &system.id(), &keys.pk, &keys.vk);
+        }
+
+        Command::GenerateKeys(GenerateKeysCmd { relation, system }) => {
+            let keys = system.generate_keys(relation);
+            save_keys(&relation.id(), &system.id(), &keys.pk, &keys.vk);
+        }
+
         Command::GenerateProof(GenerateProofCmd {
             relation,
             system,
             proving_key_file,
-        }) => match system {
-            ProvingSystem::Groth16 => generate_proving_artifacts_for::<_>(
-                relation.as_snark_relation::<GrothEnv>(),
-                proving_key_file,
-            ),
-            ProvingSystem::Gm17 => generate_proving_artifacts_for::<_>(
-                relation.as_snark_relation::<GmEnv>(),
-                proving_key_file,
-            ),
+        }) => {
+            let proving_key = read_proving_key(proving_key_file);
+            let proof = system.prove(relation, proving_key);
+            let public_input = serialize(&relation.public_input());
+            save_proving_artifacts(&relation.id(), &system.id(), &proof, &public_input);
+        }
+
+        Command::RedWedding => match kill_all_snarks() {
+            Ok(_) => println!("Cleaning succeeded"),
+            Err(e) => eprintln!("Cleaning failed: {:?}", e),
         },
-        Command::RedWedding => red_wedding(),
     }
 }

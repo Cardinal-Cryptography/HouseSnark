@@ -1,8 +1,12 @@
 use std::path::PathBuf;
 
-use clap::{Args, Parser, Subcommand};
+use anyhow::{Error, Result};
+use clap::{Args, Parser, Subcommand, ValueEnum};
 
-use crate::{environment::ProvingSystem, relations::Relation};
+use crate::{
+    environment::{NonUniversalProvingSystem, SomeProvingSystem, UniversalProvingSystem},
+    relations::Relation,
+};
 
 #[derive(Clone, Eq, PartialEq, Hash, Debug, Parser)]
 #[clap(version = "1.0")]
@@ -13,38 +17,89 @@ pub struct Cli {
 
 #[derive(Clone, Eq, PartialEq, Hash, Debug, Subcommand)]
 pub enum Command {
-    /// Generate verifying and proving key into separate binary files.
+    /// Generate SRS and save it to a binary file.
+    GenerateSrs(GenerateSrsCmd),
+
+    /// Generate verifying and proving key from SRS and save them to separate binary files.
+    GenerateKeysFromSrs(GenerateKeysFromSrsCmd),
+
+    /// Generate verifying and proving key and save them to separate binary files.
     GenerateKeys(GenerateKeysCmd),
 
-    /// Generate proof and public input into separate binary files.
+    /// Generate proof and public input and save them to separate binary files.
     GenerateProof(GenerateProofCmd),
 
     /// Kill all Snarks!
+    ///
+    /// Remove all artifacts from the current directory.
     RedWedding,
 }
 
 #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug, Args)]
-pub struct GenerateKeysCmd {
-    /// Which relation to work on.
-    #[clap(long, short, arg_enum)]
+pub struct GenerateSrsCmd {
+    /// Proving system to use.
+    #[clap(long, short, value_enum, default_value = "unimplemented")]
+    pub system: UniversalProvingSystem,
+}
+
+#[derive(Clone, Eq, PartialEq, Hash, Debug, Args)]
+pub struct GenerateKeysFromSrsCmd {
+    /// Relation to work with.
+    #[clap(long, short, value_enum)]
     pub relation: Relation,
 
-    /// Which proving system to use.
-    #[clap(long, short, arg_enum, default_value = "groth16")]
-    pub system: ProvingSystem,
+    /// Proving system to use.
+    #[clap(long, short, value_enum, default_value = "unimplemented")]
+    pub system: UniversalProvingSystem,
+
+    /// Path to a file containing SRS.
+    #[clap(long)]
+    pub srs_file: PathBuf,
+}
+
+#[derive(Copy, Clone, Eq, PartialEq, Hash, Debug, Args)]
+pub struct GenerateKeysCmd {
+    /// Relation to work with.
+    #[clap(long, short, value_enum)]
+    pub relation: Relation,
+
+    /// Proving system to use.
+    #[clap(long, short, value_enum, default_value = "groth16")]
+    pub system: NonUniversalProvingSystem,
 }
 
 #[derive(Clone, Eq, PartialEq, Hash, Debug, Args)]
 pub struct GenerateProofCmd {
-    /// Which relation to work on.
-    #[clap(long, short, arg_enum)]
+    /// Relation to work with.
+    #[clap(long, short, value_enum)]
     pub relation: Relation,
 
-    /// Which proving system to use.
-    #[clap(long, short, arg_enum, default_value = "groth16")]
-    pub system: ProvingSystem,
+    /// Proving system to use.
+    ///
+    /// Accepts either `NonUniversalProvingSystem` or `UniversalProvingSystem`.
+    #[clap(long, short, value_enum, default_value = "groth16", value_parser = parse_some_system)]
+    pub system: SomeProvingSystem,
 
     /// Path to a file containing proving key.
-    #[clap(long, short, parse(from_os_str))]
+    #[clap(long, short)]
     pub proving_key_file: PathBuf,
+}
+
+fn parse_some_system(system: &str) -> Result<SomeProvingSystem> {
+    let maybe_universal =
+        UniversalProvingSystem::from_str(system, true).map(SomeProvingSystem::Universal);
+    let maybe_non_universal =
+        NonUniversalProvingSystem::from_str(system, true).map(SomeProvingSystem::NonUniversal);
+    maybe_universal.or(maybe_non_universal).map_err(Error::msg)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn verify_cli() {
+        use clap::CommandFactory;
+        Cli::command().debug_assert()
+    }
 }

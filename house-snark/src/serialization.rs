@@ -1,30 +1,38 @@
+use std::{fs, path::PathBuf};
+
 use ark_serialize::CanonicalSerialize;
 
-use crate::relations::{Keys, ProvingArtifacts};
-
-pub type SerializedKeys = Keys<Vec<u8>, Vec<u8>>;
-pub type SerializedProvingArtifacts = ProvingArtifacts<Vec<u8>, Vec<u8>>;
-
-fn serialize<T: CanonicalSerialize>(t: &T) -> Vec<u8> {
+pub fn serialize<T: CanonicalSerialize>(t: &T) -> Vec<u8> {
     let mut bytes = vec![0; t.serialized_size()];
-    t.serialize(&mut bytes[..]).unwrap();
+    t.serialize(&mut bytes[..]).expect("Failed to serialize");
     bytes.to_vec()
 }
 
-pub fn serialize_keys<VK: CanonicalSerialize, PK: CanonicalSerialize>(
-    keys: &Keys<VK, PK>,
-) -> SerializedKeys {
-    SerializedKeys {
-        verifying_key: serialize(&keys.verifying_key),
-        proving_key: serialize(&keys.proving_key),
-    }
+fn save_bytes(bytes: &[u8], prefix: &str, identifier: &str) {
+    let path = format!("{}.{}.bytes", prefix, identifier);
+    fs::write(path, bytes).unwrap_or_else(|_| panic!("Failed to save {}", identifier));
 }
 
-pub fn serialize_proving_artifacts<P: CanonicalSerialize, PI: CanonicalSerialize>(
-    artifacts: &ProvingArtifacts<P, PI>,
-) -> SerializedProvingArtifacts {
-    SerializedProvingArtifacts {
-        proof: serialize(&artifacts.proof),
-        public_input: serialize(&artifacts.public_input),
-    }
+pub fn save_srs(srs: &[u8], env_id: &str) {
+    save_bytes(srs, env_id, "srs");
+}
+
+pub fn save_keys(rel_name: &str, env_id: &str, pk: &[u8], vk: &[u8]) {
+    let prefix = format!("{}.{}", rel_name, env_id);
+    save_bytes(pk, &prefix, "pk");
+    save_bytes(vk, &prefix, "vk");
+}
+
+pub fn save_proving_artifacts(rel_name: &str, env_id: &str, proof: &[u8], input: &[u8]) {
+    let prefix = format!("{}.{}", rel_name, env_id);
+    save_bytes(proof, &prefix, "proof");
+    save_bytes(input, &prefix, "public_input");
+}
+
+pub fn read_srs(srs_file: PathBuf) -> Vec<u8> {
+    fs::read(srs_file).expect("Failed to read SRS from the provided path")
+}
+
+pub fn read_proving_key(proving_key_file: PathBuf) -> Vec<u8> {
+    fs::read(proving_key_file).expect("Failed to read proving key from the provided path")
 }

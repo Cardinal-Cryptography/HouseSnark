@@ -8,18 +8,30 @@ Each of them can generate outputs useful for interacting with `snarcos` pallet i
 
 Outputs are generated as binary files with extension `.bytes`.
 The artifacts include:
+ - SRS
  - verifying key
  - proving key
  - proof
  - public input
 
-For this, run:
+For now, default public input is returned together with a proof.
+
+### Example scenario (non-universal system)
+
 ```shell
-> cargo run --release -- generate-keys --relation <relation-id>
-> cargo run --release -- generate-proof --relation <relation-id> --proving-key-file <relation-id>.pk.bytes
+> cargo run --release -- generate-keys   --system groth16 --relation <relation-id>
+> cargo run --release -- generate-proof  --system groth16 --relation <relation-id> --proving-key-file <relation-id>.pk.bytes
 ```
 
-For now, default public input will be returned together with a proof.
+### Example scenario (universal system)
+
+```shell
+> cargo run --release -- generate-srs             --system marlin
+> cargo run --release -- generate-keys-from-srs   --system marlin --relation <relation-id> --srs-file marlin.srs.bytes
+> cargo run --release -- generate-proof           --system marlin --relation <relation-id> --proving-key-file <relation-id>.pk.bytes
+```
+
+### Supported relations
 
 Currently supported relations are:
  - `xor`
@@ -28,7 +40,7 @@ Currently supported relations are:
 The files will be named according to the pattern: `<relation-id>.(vk|pk|proof|input).bytes`.
 They can be directly sent to the pallet.
 
-**Note:** Currently, only Groth16 SNARKs are supported and used.
+**Note:** Currently, only Groth16 and GM17 SNARKs are supported and used.
 
 ## Cleaning
 
