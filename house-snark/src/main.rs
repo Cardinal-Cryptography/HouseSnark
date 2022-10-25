@@ -1,5 +1,7 @@
 extern crate core;
 
+use std::fmt::Debug;
+
 use clap::Parser;
 
 use crate::{
@@ -27,41 +29,45 @@ fn setup_eyre() {
     color_eyre::install().expect("Cannot install `eyre`");
 }
 
+fn system_id<S: Debug>(system: &S) -> String {
+    format!("{:?}", system).to_lowercase()
+}
+
 fn main() {
     setup_eyre();
     env_logger::init();
 
     let cli: Cli = Cli::parse();
     match cli.command {
-        Command::GenerateSrs(GenerateSrsCmd { env }) => {
-            let srs = env.generate_srs();
-            save_srs(&srs, &env.system_id());
+        Command::GenerateSrs(GenerateSrsCmd { system }) => {
+            let srs = system.generate_srs();
+            save_srs(&srs, &system_id(&system));
         }
 
         Command::GenerateKeysFromSrs(GenerateKeysFromSrsCmd {
             relation,
-            env,
+            system,
             srs_file,
         }) => {
             let srs = read_srs(srs_file);
-            let keys = env.generate_keys(relation, srs);
-            save_keys(&relation.id(), &env.system_id(), &keys.pk, &keys.vk);
+            let keys = system.generate_keys(relation, srs);
+            save_keys(&relation.id(), &system_id(&system), &keys.pk, &keys.vk);
         }
 
-        Command::GenerateKeys(GenerateKeysCmd { relation, env }) => {
-            let keys = env.generate_keys(relation);
-            save_keys(&relation.id(), &env.system_id(), &keys.pk, &keys.vk);
+        Command::GenerateKeys(GenerateKeysCmd { relation, system }) => {
+            let keys = system.generate_keys(relation);
+            save_keys(&relation.id(), &system_id(&system), &keys.pk, &keys.vk);
         }
 
         Command::GenerateProof(GenerateProofCmd {
             relation,
-            env,
+            system,
             proving_key_file,
         }) => {
             let proving_key = read_proving_key(proving_key_file);
-            let proof = env.prove(relation, proving_key);
+            let proof = system.prove(relation, proving_key);
             let public_input = serialize(&relation.public_input::<CircuitField>());
-            save_proving_artifacts(&relation.id(), &env.system_id(), &proof, &public_input);
+            save_proving_artifacts(&relation.id(), &system_id(&system), &proof, &public_input);
         }
 
         Command::RedWedding => match kill_all_snarks() {

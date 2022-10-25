@@ -4,9 +4,7 @@ use anyhow::{Error, Result};
 use clap::{Args, Parser, Subcommand, ValueEnum};
 
 use crate::{
-    environment::{
-        Environment, NonUniversalProvingSystem, SomeProvingSystem, UniversalProvingSystem,
-    },
+    environment::{NonUniversalProvingSystem, SomeProvingSystem, UniversalProvingSystem},
     relations::Relation,
 };
 
@@ -39,12 +37,9 @@ pub enum Command {
 
 #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug, Args)]
 pub struct GenerateSrsCmd {
-    /// Proving system to use. Must be universal.
-    ///
-    /// Accepts `UniversalProvingSystem` which will be converted to an
-    /// `Environment<UniversalProvingSystem>`.
-    #[clap(long = "system", short = 's', value_enum, default_value = "unimplemented", value_parser = parse_universal)]
-    pub env: Environment<UniversalProvingSystem>,
+    /// Proving system to use.
+    #[clap(long, short, value_enum, default_value = "unimplemented")]
+    pub system: UniversalProvingSystem,
 }
 
 #[derive(Clone, Eq, PartialEq, Hash, Debug, Args)]
@@ -53,12 +48,9 @@ pub struct GenerateKeysFromSrsCmd {
     #[clap(long, short, value_enum)]
     pub relation: Relation,
 
-    /// Proving system to use. Must be universal.
-    ///
-    /// Accepts `UniversalProvingSystem` which will be converted to an
-    /// `Environment<UniversalProvingSystem>`.
-    #[clap(long = "system", short = 's', value_enum, default_value = "unimplemented", value_parser = parse_universal)]
-    pub env: Environment<UniversalProvingSystem>,
+    /// Proving system to use.
+    #[clap(long, short, value_enum, default_value = "unimplemented")]
+    pub system: UniversalProvingSystem,
 
     /// Path to a file containing SRS.
     #[clap(long)]
@@ -71,12 +63,9 @@ pub struct GenerateKeysCmd {
     #[clap(long, short, value_enum)]
     pub relation: Relation,
 
-    /// Proving system to use. Must be non universal.
-    ///
-    /// Accepts `NonUniversalProvingSystem` which will be converted to an
-    /// `Environment<NonUniversalProvingSystem>`.
-    #[clap(long = "system", short = 's', value_enum, default_value = "groth16", value_parser = parse_non_universal)]
-    pub env: Environment<NonUniversalProvingSystem>,
+    /// Proving system to use.
+    #[clap(long, short, value_enum, default_value = "groth16")]
+    pub system: NonUniversalProvingSystem,
 }
 
 #[derive(Clone, Eq, PartialEq, Hash, Debug, Args)]
@@ -87,37 +76,20 @@ pub struct GenerateProofCmd {
 
     /// Proving system to use.
     ///
-    /// Accepts either `NonUniversalProvingSystem` or `UniversalProvingSystem` which will be
-    /// converted to `Environment<SomeSystemClass>`.
-    #[clap(long = "system", short = 's', value_enum, default_value = "groth16", value_parser = parse_some)]
-    pub env: Environment<SomeProvingSystem>,
+    /// Accepts either `NonUniversalProvingSystem` or `UniversalProvingSystem`.
+    #[clap(long, short, value_enum, default_value = "groth16", value_parser = parse_some_system)]
+    pub system: SomeProvingSystem,
 
     /// Path to a file containing proving key.
     #[clap(long, short)]
     pub proving_key_file: PathBuf,
 }
 
-fn parse_universal(system: &str) -> Result<Environment<UniversalProvingSystem>> {
-    let system = UniversalProvingSystem::from_str(system, true).map_err(Error::msg)?;
-    Ok(Environment::<SomeProvingSystem>::with_universal_hint(
-        system,
-    ))
-}
-
-fn parse_non_universal(system: &str) -> Result<Environment<NonUniversalProvingSystem>> {
-    let system = NonUniversalProvingSystem::from_str(system, true).map_err(Error::msg)?;
-    Ok(Environment::<SomeProvingSystem>::with_non_universal_hint(
-        system,
-    ))
-}
-
-fn parse_some(system: &str) -> Result<Environment<SomeProvingSystem>> {
-    let maybe_universal = UniversalProvingSystem::from_str(system, true)
-        .map(Environment::<SomeProvingSystem>::with_universal_hint)
-        .map(|e| e.forget_class());
-    let maybe_non_universal = NonUniversalProvingSystem::from_str(system, true)
-        .map(Environment::<SomeProvingSystem>::with_non_universal_hint)
-        .map(|e| e.forget_class());
+fn parse_some_system(system: &str) -> Result<SomeProvingSystem> {
+    let maybe_universal =
+        UniversalProvingSystem::from_str(system, true).map(SomeProvingSystem::Universal);
+    let maybe_non_universal =
+        NonUniversalProvingSystem::from_str(system, true).map(SomeProvingSystem::NonUniversal);
     maybe_universal.or(maybe_non_universal).map_err(Error::msg)
 }
 
