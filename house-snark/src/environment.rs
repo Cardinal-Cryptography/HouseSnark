@@ -35,6 +35,13 @@ pub enum SomeProvingSystem {
 
 /// Common API for all systems.
 impl SomeProvingSystem {
+    pub fn id(&self) -> String {
+        match self {
+            SomeProvingSystem::NonUniversal(s) => s.id(),
+            SomeProvingSystem::Universal(s) => s.id(),
+        }
+    }
+
     /// Generates proof for `circuit` using proving key `pk`. Returns serialized proof.
     pub fn prove<C: ConstraintSynthesizer<CircuitField>>(
         &self,
@@ -73,6 +80,10 @@ pub struct RawKeys {
 
 /// API available only for non universal proving systems.
 impl NonUniversalProvingSystem {
+    pub fn id(&self) -> String {
+        format!("{:?}", self).to_lowercase()
+    }
+
     /// Generates proving and verifying key for `circuit`. Returns serialized keys.
     pub fn generate_keys<C: ConstraintSynthesizer<CircuitField>>(&self, circuit: C) -> RawKeys {
         match self {
@@ -99,6 +110,10 @@ impl NonUniversalProvingSystem {
 
 /// API available only for universal proving systems.
 impl UniversalProvingSystem {
+    pub fn id(&self) -> String {
+        format!("{:?}", self).to_lowercase()
+    }
+
     /// Generates SRS. Returns in serialized version.
     pub fn generate_srs(&self) -> Vec<u8> {
         match self {

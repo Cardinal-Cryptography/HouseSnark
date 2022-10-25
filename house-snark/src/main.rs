@@ -1,7 +1,5 @@
 extern crate core;
 
-use std::fmt::Debug;
-
 use clap::Parser;
 
 use crate::{
@@ -29,10 +27,6 @@ fn setup_eyre() {
     color_eyre::install().expect("Cannot install `eyre`");
 }
 
-fn system_id<S: Debug>(system: &S) -> String {
-    format!("{:?}", system).to_lowercase()
-}
-
 fn main() {
     setup_eyre();
     env_logger::init();
@@ -41,7 +35,7 @@ fn main() {
     match cli.command {
         Command::GenerateSrs(GenerateSrsCmd { system }) => {
             let srs = system.generate_srs();
-            save_srs(&srs, &system_id(&system));
+            save_srs(&srs, &system.id());
         }
 
         Command::GenerateKeysFromSrs(GenerateKeysFromSrsCmd {
@@ -51,12 +45,12 @@ fn main() {
         }) => {
             let srs = read_srs(srs_file);
             let keys = system.generate_keys(relation, srs);
-            save_keys(&relation.id(), &system_id(&system), &keys.pk, &keys.vk);
+            save_keys(&relation.id(), &system.id(), &keys.pk, &keys.vk);
         }
 
         Command::GenerateKeys(GenerateKeysCmd { relation, system }) => {
             let keys = system.generate_keys(relation);
-            save_keys(&relation.id(), &system_id(&system), &keys.pk, &keys.vk);
+            save_keys(&relation.id(), &system.id(), &keys.pk, &keys.vk);
         }
 
         Command::GenerateProof(GenerateProofCmd {
@@ -67,7 +61,7 @@ fn main() {
             let proving_key = read_proving_key(proving_key_file);
             let proof = system.prove(relation, proving_key);
             let public_input = serialize(&relation.public_input::<CircuitField>());
-            save_proving_artifacts(&relation.id(), &system_id(&system), &proof, &public_input);
+            save_proving_artifacts(&relation.id(), &system.id(), &proof, &public_input);
         }
 
         Command::RedWedding => match kill_all_snarks() {
