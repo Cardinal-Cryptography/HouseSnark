@@ -35,6 +35,11 @@ pub type SimplePathVar = PathVar<MerkleConfig, LeafHashGadget, TwoToOneHashGadge
 ///  - 1 private witness (path)
 ///  - 2 public inputs   (root and member)
 ///  - 2 constants       (hash function parameters)
+///
+/// `MerkleTreeRelation` comes with the default instantiation, where it represents a membership
+/// proof for the first leaf (at index 0) in a tree over 8 bytes (`[0u8,..,7u8]`). The underlying
+/// tree (together with its hash function parameters) is generated from the function
+/// `default_tree()`.
 #[derive(Clone)]
 pub struct MerkleTreeRelation {
     pub authentication_path: SimplePath,
@@ -50,7 +55,7 @@ impl Default for MerkleTreeRelation {
     fn default() -> Self {
         let (tree, leaf_crh_params, two_to_one_crh_params, leaves) = default_tree();
 
-        let leaf_idx = 3;
+        let leaf_idx = 0;
 
         MerkleTreeRelation {
             authentication_path: tree.generate_proof(leaf_idx).unwrap(),
