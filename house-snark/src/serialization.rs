@@ -30,9 +30,9 @@ pub fn save_proving_artifacts(rel_name: &str, env_id: &str, proof: &[u8], input:
 }
 
 pub fn read_srs(srs_file: PathBuf) -> Vec<u8> {
-    fs::read(srs_file).expect("Cannot read SRS from the provided path")
+    fs::read(srs_file).expect("Failed to read SRS from the provided path")
 }
 
 pub fn read_proving_key(proving_key_file: PathBuf) -> Vec<u8> {
-    fs::read(proving_key_file).expect("Cannot read proving key from the provided path")
+    fs::read(proving_key_file).expect("Failed to read proving key from the provided path")
 }
