@@ -40,6 +40,18 @@ pub struct GenerateSrsCmd {
     /// Proving system to use.
     #[clap(long, short, value_enum, default_value = "marlin")]
     pub system: UniversalProvingSystem,
+
+    /// Maximum supported number of constraints.
+    #[clap(long, default_value = "100")]
+    pub num_constraints: usize,
+
+    /// Maximum supported number of variables.
+    #[clap(long, default_value = "100")]
+    pub num_variables: usize,
+
+    /// Maximum supported polynomial degree.
+    #[clap(long, default_value = "100")]
+    pub degree: usize,
 }
 
 #[derive(Clone, Eq, PartialEq, Hash, Debug, Args)]

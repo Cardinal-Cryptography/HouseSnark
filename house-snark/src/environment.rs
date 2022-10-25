@@ -118,14 +118,26 @@ impl UniversalProvingSystem {
     }
 
     /// Generates SRS. Returns in serialized version.
-    pub fn generate_srs(&self) -> Vec<u8> {
+    pub fn generate_srs(
+        &self,
+        num_constraints: usize,
+        num_variables: usize,
+        degree: usize,
+    ) -> Vec<u8> {
         match self {
-            UniversalProvingSystem::Marlin => self._generate_srs::<Marlin>(),
+            UniversalProvingSystem::Marlin => {
+                self._generate_srs::<Marlin>(num_constraints, num_variables, degree)
+            }
         }
     }
 
-    fn _generate_srs<S: UniversalSystem>(&self) -> Vec<u8> {
-        let srs = S::generate_srs();
+    fn _generate_srs<S: UniversalSystem>(
+        &self,
+        num_constraints: usize,
+        num_variables: usize,
+        degree: usize,
+    ) -> Vec<u8> {
+        let srs = S::generate_srs(num_constraints, num_variables, degree);
         serialize(&srs)
     }
 
@@ -179,7 +191,7 @@ pub mod traits {
         type Srs: CanonicalSerialize + CanonicalDeserialize;
 
         /// Generates SRS.
-        fn generate_srs() -> Self::Srs;
+        fn generate_srs(num_constraints: usize, num_variables: usize, degree: usize) -> Self::Srs;
 
         /// Generates proving and verifying key for `circuit` using `srs`.
         fn generate_keys<C: ConstraintSynthesizer<CircuitField>>(
@@ -272,9 +284,10 @@ mod trait_implementations {
     impl UniversalSystem for Marlin {
         type Srs = ark_marlin::UniversalSRS<CircuitField, MarlinPolynomialCommitment>;
 
-        fn generate_srs() -> Self::Srs {
+        fn generate_srs(num_constraints: usize, num_variables: usize, degree: usize) -> Self::Srs {
             let mut rng = dummy_rng();
-            Marlin::universal_setup(100, 100, 100, &mut rng).expect("Failed to generate SRS")
+            Marlin::universal_setup(num_constraints, num_variables, degree, &mut rng)
+                .expect("Failed to generate SRS")
         }
 
         fn generate_keys<C: ConstraintSynthesizer<CircuitField>>(
