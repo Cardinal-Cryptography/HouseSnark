@@ -145,8 +145,8 @@ impl UniversalProvingSystem {
         circuit: C,
         srs: Vec<u8>,
     ) -> RawKeys {
-        let srs = <<S as UniversalSystem>::Srs>::deserialize(&*srs)
-            .expect("Failed to deserialize proving key");
+        let srs =
+            <<S as UniversalSystem>::Srs>::deserialize(&*srs).expect("Failed to deserialize srs");
         let (pk, vk) = S::generate_keys(circuit, &srs);
         RawKeys {
             pk: serialize(&pk),
@@ -274,7 +274,7 @@ mod trait_implementations {
 
         fn generate_srs() -> Self::Srs {
             let mut rng = dummy_rng();
-            Marlin::universal_setup(10, 10, 10, &mut rng).expect("Failed to generate SRS")
+            Marlin::universal_setup(100, 100, 100, &mut rng).expect("Failed to generate SRS")
         }
 
         fn generate_keys<C: ConstraintSynthesizer<CircuitField>>(

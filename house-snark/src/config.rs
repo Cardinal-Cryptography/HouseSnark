@@ -38,7 +38,7 @@ pub enum Command {
 #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug, Args)]
 pub struct GenerateSrsCmd {
     /// Proving system to use.
-    #[clap(long, short, value_enum, default_value = "unimplemented")]
+    #[clap(long, short, value_enum, default_value = "marlin")]
     pub system: UniversalProvingSystem,
 }
 
@@ -49,7 +49,7 @@ pub struct GenerateKeysFromSrsCmd {
     pub relation: Relation,
 
     /// Proving system to use.
-    #[clap(long, short, value_enum, default_value = "unimplemented")]
+    #[clap(long, short, value_enum, default_value = "marlin")]
     pub system: UniversalProvingSystem,
 
     /// Path to a file containing SRS.
