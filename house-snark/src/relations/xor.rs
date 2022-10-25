@@ -50,8 +50,8 @@ impl<Field: PrimeField> ConstraintSynthesizer<Field> for XorRelation {
     }
 }
 
-impl GetPublicInput for XorRelation {
-    fn public_input<CircuitField: PrimeField + CanonicalSerialize>(&self) -> Vec<CircuitField> {
+impl<CircuitField: PrimeField + CanonicalSerialize> GetPublicInput<CircuitField> for XorRelation {
+    fn public_input(&self) -> Vec<CircuitField> {
         byte_to_bits(self.public_xoree).to_vec()
     }
 }

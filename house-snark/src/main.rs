@@ -60,7 +60,7 @@ fn main() {
         }) => {
             let proving_key = read_proving_key(proving_key_file);
             let proof = system.prove(relation, proving_key);
-            let public_input = serialize(&relation.public_input::<CircuitField>());
+            let public_input = serialize(&relation.public_input());
             save_proving_artifacts(&relation.id(), &system.id(), &proof, &public_input);
         }
 

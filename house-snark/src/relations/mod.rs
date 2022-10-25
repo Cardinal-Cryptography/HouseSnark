@@ -1,4 +1,5 @@
 mod linear;
+mod merkle_tree;
 mod xor;
 
 use ark_ff::{One, PrimeField, Zero};
@@ -6,7 +7,10 @@ use ark_relations::r1cs::{ConstraintSynthesizer, ConstraintSystemRef};
 use ark_serialize::CanonicalSerialize;
 use clap::ValueEnum;
 pub use linear::LinearEqRelation;
+pub use merkle_tree::MerkleTreeRelation;
 pub use xor::XorRelation;
+
+use crate::CircuitField;
 
 /// All implemented relations.
 ///
@@ -15,6 +19,7 @@ pub use xor::XorRelation;
 pub enum Relation {
     Xor,
     LinearEquation,
+    MerkleTree,
 }
 
 impl Relation {
@@ -24,7 +29,7 @@ impl Relation {
     }
 }
 
-impl<CircuitField: PrimeField> ConstraintSynthesizer<CircuitField> for Relation {
+impl ConstraintSynthesizer<CircuitField> for Relation {
     fn generate_constraints(
         self,
         cs: ConstraintSystemRef<CircuitField>,
@@ -32,21 +37,23 @@ impl<CircuitField: PrimeField> ConstraintSynthesizer<CircuitField> for Relation 
         match self {
             Relation::Xor => XorRelation::default().generate_constraints(cs),
             Relation::LinearEquation => LinearEqRelation::default().generate_constraints(cs),
+            Relation::MerkleTree => MerkleTreeRelation::default().generate_constraints(cs),
         }
     }
 }
 
-pub trait GetPublicInput {
-    fn public_input<CircuitField: PrimeField + CanonicalSerialize>(&self) -> Vec<CircuitField> {
+pub trait GetPublicInput<CircuitField: PrimeField + CanonicalSerialize> {
+    fn public_input(&self) -> Vec<CircuitField> {
         vec![]
     }
 }
 
-impl GetPublicInput for Relation {
-    fn public_input<CircuitField: PrimeField + CanonicalSerialize>(&self) -> Vec<CircuitField> {
+impl GetPublicInput<CircuitField> for Relation {
+    fn public_input(&self) -> Vec<CircuitField> {
         match self {
             Relation::Xor => XorRelation::default().public_input(),
             Relation::LinearEquation => LinearEqRelation::default().public_input(),
+            Relation::MerkleTree => MerkleTreeRelation::default().public_input(),
         }
     }
 }

@@ -4,6 +4,7 @@ use ark_r1cs_std::{
     uint32::UInt32,
 };
 use ark_relations::r1cs::{ConstraintSynthesizer, ConstraintSystemRef, SynthesisError};
+use ark_serialize::CanonicalSerialize;
 
 use crate::GetPublicInput;
 
@@ -46,4 +47,7 @@ impl<Field: PrimeField> ConstraintSynthesizer<Field> for LinearEqRelation {
     }
 }
 
-impl GetPublicInput for LinearEqRelation {}
+impl<CircuitField: PrimeField + CanonicalSerialize> GetPublicInput<CircuitField>
+    for LinearEqRelation
+{
+}
