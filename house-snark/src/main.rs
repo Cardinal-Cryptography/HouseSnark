@@ -1,17 +1,17 @@
-use std::path::PathBuf;
+extern crate core;
 
-use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
-use ark_std::rand::{rngs::StdRng, SeedableRng};
 use clap::Parser;
 
 use crate::{
-    config::{Cli, Command, GenerateKeysCmd, GenerateProofCmd},
-    environment::{
-        Environment, Fr, GmEnv, GrothEnv, Proof, ProvingKey, ProvingSystem, VerifyingKey,
+    config::{
+        Cli, Command, GenerateKeysCmd, GenerateKeysFromSrsCmd, GenerateProofCmd, GenerateSrsCmd,
     },
+    environment::CircuitField,
     rains_of_castamere::kill_all_snarks,
-    relations::{GetPublicInput, Relation},
-    serialization::{read_proving_key, save_keys, save_proving_artifacts},
+    relations::GetPublicInput,
+    serialization::{
+        read_proving_key, read_srs, save_keys, save_proving_artifacts, save_srs, serialize,
+    },
 };
 
 mod config;
@@ -19,43 +19,6 @@ mod environment;
 mod rains_of_castamere;
 mod relations;
 mod serialization;
-
-fn generate_keys_for<Env: Environment>(relation: Relation)
-where
-    VerifyingKey<Env>: CanonicalSerialize,
-    ProvingKey<Env>: CanonicalSerialize,
-{
-    let mut rng = StdRng::from_seed([0u8; 32]);
-
-    let (pk, vk) =
-        Env::setup(relation, &mut rng).unwrap_or_else(|e| panic!("Problems with setup: {:?}", e));
-
-    save_keys::<Env>(relation.id(), pk, vk);
-}
-
-fn generate_proving_artifacts_for<Env: Environment>(relation: Relation, proving_key_file: PathBuf)
-where
-    ProvingKey<Env>: CanonicalDeserialize,
-    Proof<Env>: CanonicalSerialize,
-    Fr<Env>: CanonicalSerialize,
-{
-    let proving_key = read_proving_key::<Env>(proving_key_file);
-
-    let mut rng = StdRng::from_seed([0u8; 32]);
-    let proof = Env::prove(&proving_key, relation, &mut rng)
-        .unwrap_or_else(|e| panic!("Cannot prove: {:?}", e));
-
-    let public_input = relation.public_input();
-
-    save_proving_artifacts::<Env>(relation.id(), proof, public_input);
-}
-
-fn red_wedding() {
-    match kill_all_snarks() {
-        Ok(_) => println!("Cleaning succeeded"),
-        Err(e) => eprintln!("Cleaning failed: {:?}", e),
-    }
-}
 
 fn setup_eyre() {
     if std::env::var("RUST_LIB_BACKTRACE").is_err() {
@@ -70,24 +33,40 @@ fn main() {
 
     let cli: Cli = Cli::parse();
     match cli.command {
-        Command::GenerateKeys(GenerateKeysCmd { relation, system }) => match system {
-            ProvingSystem::Groth16 => generate_keys_for::<GrothEnv>(relation),
-            ProvingSystem::Gm17 => generate_keys_for::<GmEnv>(relation),
-        },
+        Command::GenerateSrs(GenerateSrsCmd { system }) => {
+            let srs = system.generate_srs();
+            save_srs(&srs, &system.id());
+        }
+
+        Command::GenerateKeysFromSrs(GenerateKeysFromSrsCmd {
+            relation,
+            system,
+            srs_file,
+        }) => {
+            let srs = read_srs(srs_file);
+            let keys = system.generate_keys(relation, srs);
+            save_keys(&relation.id(), &system.id(), &keys.pk, &keys.vk);
+        }
+
+        Command::GenerateKeys(GenerateKeysCmd { relation, system }) => {
+            let keys = system.generate_keys(relation);
+            save_keys(&relation.id(), &system.id(), &keys.pk, &keys.vk);
+        }
 
         Command::GenerateProof(GenerateProofCmd {
             relation,
             system,
             proving_key_file,
-        }) => match system {
-            ProvingSystem::Groth16 => {
-                generate_proving_artifacts_for::<GrothEnv>(relation, proving_key_file)
-            }
-            ProvingSystem::Gm17 => {
-                generate_proving_artifacts_for::<GmEnv>(relation, proving_key_file)
-            }
-        },
+        }) => {
+            let proving_key = read_proving_key(proving_key_file);
+            let proof = system.prove(relation, proving_key);
+            let public_input = serialize(&relation.public_input::<CircuitField>());
+            save_proving_artifacts(&relation.id(), &system.id(), &proof, &public_input);
+        }
 
-        Command::RedWedding => red_wedding(),
+        Command::RedWedding => match kill_all_snarks() {
+            Ok(_) => println!("Cleaning succeeded"),
+            Err(e) => eprintln!("Cleaning failed: {:?}", e),
+        },
     }
 }

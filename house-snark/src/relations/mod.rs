@@ -3,6 +3,7 @@ mod xor;
 
 use ark_ff::{One, PrimeField, Zero};
 use ark_relations::r1cs::{ConstraintSynthesizer, ConstraintSystemRef};
+use ark_serialize::CanonicalSerialize;
 use clap::ValueEnum;
 pub use linear::LinearEqRelation;
 pub use xor::XorRelation;
@@ -36,13 +37,13 @@ impl<CircuitField: PrimeField> ConstraintSynthesizer<CircuitField> for Relation 
 }
 
 pub trait GetPublicInput {
-    fn public_input<CircuitField: PrimeField>(&self) -> Vec<CircuitField> {
+    fn public_input<CircuitField: PrimeField + CanonicalSerialize>(&self) -> Vec<CircuitField> {
         vec![]
     }
 }
 
 impl GetPublicInput for Relation {
-    fn public_input<CircuitField: PrimeField>(&self) -> Vec<CircuitField> {
+    fn public_input<CircuitField: PrimeField + CanonicalSerialize>(&self) -> Vec<CircuitField> {
         match self {
             Relation::Xor => XorRelation::default().public_input(),
             Relation::LinearEquation => LinearEqRelation::default().public_input(),

@@ -1,50 +1,38 @@
 use std::{fs, path::PathBuf};
 
-use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
+use ark_serialize::CanonicalSerialize;
 
-use crate::{Environment, Fr, Proof, ProvingKey, VerifyingKey};
-
-fn serialize<T: CanonicalSerialize>(t: &T) -> Vec<u8> {
+pub fn serialize<T: CanonicalSerialize>(t: &T) -> Vec<u8> {
     let mut bytes = vec![0; t.serialized_size()];
-    t.serialize(&mut bytes[..]).unwrap();
+    t.serialize(&mut bytes[..]).expect("Failed to serialize");
     bytes.to_vec()
 }
 
-fn save_bytes(bytes: Vec<u8>, prefix: &str, identifier: &str) {
+fn save_bytes(bytes: &[u8], prefix: &str, identifier: &str) {
     let path = format!("{}.{}.bytes", prefix, identifier);
     fs::write(path, bytes).unwrap_or_else(|_| panic!("Failed to save {}", identifier));
 }
 
-pub fn save_keys<Env: Environment>(rel_name: String, pk: ProvingKey<Env>, vk: VerifyingKey<Env>)
-where
-    VerifyingKey<Env>: CanonicalSerialize,
-    ProvingKey<Env>: CanonicalSerialize,
-{
-    let prefix = format!("{}.{}", rel_name, Env::id());
-    save_bytes(serialize(&vk), &prefix, "vk");
-    save_bytes(serialize(&pk), &prefix, "pk");
+pub fn save_srs(srs: &[u8], env_id: &str) {
+    save_bytes(srs, env_id, "srs");
 }
 
-pub fn save_proving_artifacts<Env: Environment>(
-    rel_name: String,
-    proof: Proof<Env>,
-    input: Vec<Fr<Env>>,
-) where
-    Proof<Env>: CanonicalSerialize,
-    Fr<Env>: CanonicalSerialize,
-{
-    let prefix = format!("{}.{}", rel_name, Env::id());
-    save_bytes(serialize(&proof), &prefix, "proof");
-    save_bytes(serialize(&input), &prefix, "public_input");
+pub fn save_keys(rel_name: &str, env_id: &str, pk: &[u8], vk: &[u8]) {
+    let prefix = format!("{}.{}", rel_name, env_id);
+    save_bytes(pk, &prefix, "pk");
+    save_bytes(vk, &prefix, "vk");
 }
 
-pub fn read_proving_key<Env: Environment>(proving_key_file: PathBuf) -> ProvingKey<Env>
-where
-    ProvingKey<Env>: CanonicalDeserialize,
-{
-    let pk_serialized =
-        fs::read(proving_key_file).expect("Cannot read proving key from the provided path");
+pub fn save_proving_artifacts(rel_name: &str, env_id: &str, proof: &[u8], input: &[u8]) {
+    let prefix = format!("{}.{}", rel_name, env_id);
+    save_bytes(proof, &prefix, "proof");
+    save_bytes(input, &prefix, "public_input");
+}
 
-    <ProvingKey<Env> as CanonicalDeserialize>::deserialize(&*pk_serialized)
-        .expect("Cannot deserialize proving key")
+pub fn read_srs(srs_file: PathBuf) -> Vec<u8> {
+    fs::read(srs_file).expect("Failed to read SRS from the provided path")
+}
+
+pub fn read_proving_key(proving_key_file: PathBuf) -> Vec<u8> {
+    fs::read(proving_key_file).expect("Failed to read proving key from the provided path")
 }
