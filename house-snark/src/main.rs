@@ -33,8 +33,13 @@ fn main() {
 
     let cli: Cli = Cli::parse();
     match cli.command {
-        Command::GenerateSrs(GenerateSrsCmd { system }) => {
-            let srs = system.generate_srs();
+        Command::GenerateSrs(GenerateSrsCmd {
+            system,
+            num_constraints,
+            num_variables,
+            degree,
+        }) => {
+            let srs = system.generate_srs(num_constraints, num_variables, degree);
             save_srs(&srs, &system.id());
         }
 

@@ -36,6 +36,7 @@ For now, default public input is returned together with a proof.
 Currently supported relations are:
  - `xor`
  - `linear-equation`
+ - `merkle-tree`
 
 The files will be named according to the pattern: `<relation-id>.(vk|pk|proof|input).bytes`.
 They can be directly sent to the pallet.
