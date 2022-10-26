@@ -4,11 +4,13 @@ use std::{fs, path::PathBuf};
 
 use anyhow::{anyhow, Result};
 use clap::Parser;
+use store_key::store_key;
 use subxt::{
     ext::sp_core::{sr25519::Pair, Pair as _},
     tx::{PairSigner, Signer},
     OnlineClient, PolkadotConfig,
 };
+use verify::verify;
 
 use crate::{
     aleph_api::{api, api::runtime_types::pallet_snarcos::ProvingSystem},
@@ -17,6 +19,8 @@ use crate::{
 
 #[allow(clippy::all)]
 mod aleph_api;
+mod store_key;
+mod verify;
 
 /// This corresponds to `pallet_snarcos::VerificationKeyIdentifier`.
 ///
@@ -33,46 +37,6 @@ type AlephConfig = PolkadotConfig;
 
 fn read_bytes(file: &PathBuf) -> Result<Vec<u8>> {
     fs::read(file).map_err(|e| e.into())
-}
-
-/// Calls `pallet_snarcos::store_key` with `identifier` and `vk`.
-async fn store_key<S: Signer<AlephConfig> + Send + Sync>(
-    client: OnlineClient<AlephConfig>,
-    signer: S,
-    identifier: VerificationKeyIdentifier,
-    vk: RawVerificationKey,
-) -> Result<()> {
-    let tx = api::tx().snarcos().store_key(identifier, vk);
-    let hash = client.tx().sign_and_submit_default(&tx, &signer).await?;
-
-    println!(
-        "✅ Successfully submitted storing verification key request. \
-        Submission took place in the block with hash: {:?}",
-        hash
-    );
-    Ok(())
-}
-
-/// Calls `pallet_snarcos::verify` with `identifier`, `proof`, `public_input` and `system`.
-async fn verify<S: Signer<AlephConfig> + Send + Sync>(
-    client: OnlineClient<AlephConfig>,
-    signer: S,
-    identifier: VerificationKeyIdentifier,
-    proof: RawProof,
-    public_input: RawPublicInput,
-    system: ProvingSystem,
-) -> Result<()> {
-    let tx = api::tx()
-        .snarcos()
-        .verify(identifier, proof, public_input, system);
-    let hash = client.tx().sign_and_submit_default(&tx, &signer).await?;
-
-    println!(
-        "✅ Successfully submitted proof verification request. \
-        Submission took place in the block with hash: {:?}",
-        hash
-    );
-    Ok(())
 }
 
 #[tokio::main]
