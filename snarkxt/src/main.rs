@@ -4,33 +4,27 @@ use std::{fs, path::PathBuf};
 
 use anyhow::{anyhow, Result};
 use clap::Parser;
-use store_key::store_key;
+use pallet_actions::{store_key, verify};
 use subxt::{
     ext::sp_core::{sr25519::Pair, Pair as _},
-    tx::{PairSigner, Signer},
+    tx::PairSigner,
     OnlineClient, PolkadotConfig,
 };
-use verify::verify;
 
 use crate::{
-    aleph_api::{api, api::runtime_types::pallet_snarcos::ProvingSystem},
+    aleph_api::api::runtime_types::pallet_snarcos::ProvingSystem,
     config::{CliConfig, Command, StoreKeyCmd, VerifyCmd},
 };
 
 #[allow(clippy::all)]
 mod aleph_api;
-mod store_key;
-mod verify;
+mod pallet_actions;
 
 /// This corresponds to `pallet_snarcos::VerificationKeyIdentifier`.
 ///
 /// We copy this type alias to avoid a heavy dependency. In case of mismatch, subxt will detect it
 /// in compilation time.
 type VerificationKeyIdentifier = [u8; 4];
-
-type RawVerificationKey = Vec<u8>;
-type RawProof = Vec<u8>;
-type RawPublicInput = Vec<u8>;
 
 /// We should be quite compatible to Polkadot.
 type AlephConfig = PolkadotConfig;
