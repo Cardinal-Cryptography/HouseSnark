@@ -294,7 +294,10 @@ mod trait_implementations {
             circuit: C,
             srs: &Self::Srs,
         ) -> (Self::ProvingKey, Self::VerifyingKey) {
-            Marlin::index(srs, circuit).expect("Failed to generate keys")
+            Marlin::index(srs, circuit).expect(
+                "Failed to generate keys from SRS (it might be the case, that the circuit is \
+                larger than the SRS allows).",
+            )
         }
     }
 }
