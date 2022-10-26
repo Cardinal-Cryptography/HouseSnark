@@ -19,6 +19,10 @@ pub(super) struct CliConfig {
     /// Seed of the submitting account.
     #[clap(long, default_value = "//Alice")]
     pub signer: String,
+
+    /// Whether we want to just submit an extrinsic, without waiting for a confirmation event.
+    #[clap(long)]
+    pub skip_confirm: bool,
 }
 
 #[derive(Clone, Eq, PartialEq, Debug, Subcommand)]

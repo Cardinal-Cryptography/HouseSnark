@@ -4,6 +4,7 @@ use std::{fs, path::PathBuf};
 
 use anyhow::{anyhow, Result};
 use clap::Parser;
+use confirmation::submit_and_confirm;
 use pallet_actions::{store_key, verify};
 use subxt::{
     ext::sp_core::{sr25519::Pair, Pair as _},
@@ -18,6 +19,7 @@ use crate::{
 
 #[allow(clippy::all)]
 mod aleph_api;
+mod confirmation;
 mod pallet_actions;
 
 /// This corresponds to `pallet_snarcos::VerificationKeyIdentifier`.
@@ -50,7 +52,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             vk_file,
         }) => {
             let vk = read_bytes(&vk_file)?;
-            store_key(client, signer, identifier, vk).await
+            if cli_config.skip_confirm {
+                store_key(client, signer, identifier, vk).await
+            } else {
+                submit_and_confirm().await
+            }
         }
         Command::Verify(VerifyCmd {
             identifier,
@@ -60,7 +66,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }) => {
             let proof = read_bytes(&proof_file)?;
             let input = read_bytes(&input_file)?;
-            verify(client, signer, identifier, proof, input, system).await
+            if cli_config.skip_confirm {
+                verify(client, signer, identifier, proof, input, system).await
+            } else {
+                submit_and_confirm().await
+            }
         }
     }
     .map_err(|e| e.into())
