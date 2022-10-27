@@ -48,6 +48,9 @@ pub async fn verify<S: Signer<AlephConfig> + Send + Sync>(
     submit_tx::<_, _, VerificationSucceeded>(client, signer, tx).await
 }
 
+/// Signs `tx` with `signer` and submits it with `client`. Waits until the transaction is finalized
+/// and inspects corresponding events. If there is no `system.ExtrinsicFailed` present, looks for
+/// `SuccessEvent`. Returns `Ok(_)` iff this last lookup succeeds.
 async fn submit_tx<
     S: Signer<AlephConfig> + Send + Sync,
     CallData: Encode,
