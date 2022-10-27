@@ -80,8 +80,13 @@ fn parse_system(system: &str) -> Result<ProvingSystem> {
     }
 }
 
-#[test]
-fn verify_cli() {
-    use clap::CommandFactory;
-    CliConfig::command().debug_assert()
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn verify_cli() {
+        use clap::CommandFactory;
+        CliConfig::command().debug_assert()
+    }
 }
