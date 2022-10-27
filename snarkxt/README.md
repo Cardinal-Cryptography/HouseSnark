@@ -33,39 +33,47 @@ cargo run --release -- verify \
 
 ## How to use it? - Full manual
 ```shell
-Usage: snarkxt [OPTIONS] <COMMAND>
+USAGE:
+    snarkxt [OPTIONS] <SUBCOMMAND>
 
-Commands:
-  store-key  Store a verification key under an identifier in the pallet's storage
-  verify     Verify a proof against public input with a stored verification key
-  help       Print this message or the help of the given subcommand(s)
+OPTIONS:
+    -h, --help               Print help information
+        --node <NODE>        WS endpoint address of the node to connect to [default:
+                             ws://127.0.0.1:9944]
+        --signer <SIGNER>    Seed of the submitting account [default: //Alice]
 
-Options:
-      --node <NODE>      WS endpoint address of the node to connect to [default: ws://127.0.0.1:9944]
-      --signer <SIGNER>  Seed of the submitting account [default: //Alice]
-      --skip-confirm     Whether we want to just submit an extrinsic, without waiting for a confirmation event
-  -h, --help             Print help information
-
-------------------------------------------------------------------------------------------
-
-Usage: snarkxt store-key --identifier <IDENTIFIER> --vk-file <VK_FILE>
-
-Options:
-      --identifier <IDENTIFIER>  
-      --vk-file <VK_FILE>        Path to a file containing the verification key
-  -h, --help                     Print help information
+SUBCOMMANDS:
+    help         Print this message or the help of the given subcommand(s)
+    store-key    Store a verification key under an identifier in the pallet's storage
+    verify       Verify a proof against public input with a stored verification key
 
 ------------------------------------------------------------------------------------------
 
-Usage: snarkxt verify --identifier <IDENTIFIER> --proof-file <PROOF_FILE> --input-file <INPUT_FILE> --system <SYSTEM>
+snarkxt-store-key 
+Store a verification key under an identifier in the pallet's storage
 
-Options:
-      --identifier <IDENTIFIER>  
-      --proof-file <PROOF_FILE>  Path to a file containing the proof
-      --input-file <INPUT_FILE>  Path to a file containing the public input
-      --system <SYSTEM>          Which proving system should be used
-  -h, --help                     Print help information
+USAGE:
+    snarkxt store-key --identifier <IDENTIFIER> --vk-file <VK_FILE>
 
+OPTIONS:
+    -h, --help                       Print help information
+        --identifier <IDENTIFIER>    
+        --vk-file <VK_FILE>          Path to a file containing the verification key
+
+------------------------------------------------------------------------------------------
+
+snarkxt-verify 
+Verify a proof against public input with a stored verification key
+
+USAGE:
+    snarkxt verify --identifier <IDENTIFIER> --proof-file <PROOF_FILE> --input-file <INPUT_FILE> --system <SYSTEM>
+
+OPTIONS:
+    -h, --help                       Print help information
+        --identifier <IDENTIFIER>    
+        --input-file <INPUT_FILE>    Path to a file containing the public input
+        --proof-file <PROOF_FILE>    Path to a file containing the proof
+        --system <SYSTEM>            Which proving system should be used
 ```
 
 ## What to do if the compilation process fails?
