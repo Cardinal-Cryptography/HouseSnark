@@ -69,24 +69,25 @@ async fn submit_tx<
     {
         Ok(tx_events) => {
             if let Ok(Some(_)) = tx_events.find_first::<SuccessEvent>() {
-                println!("✅ Extrinsic has been successful: {}", SuccessEvent::EVENT);
+                println!(
+                    "✅ Extrinsic has been successful: `{}` event observed in the block with hash: `{:?}`",
+                    SuccessEvent::EVENT,
+                    tx_events.block_hash()
+                );
                 Ok(())
             } else {
-                eprintln!(
-                    "❔ Extrinsic was finalized, but there is no error nor confirmation event"
-                );
-                Err(anyhow!("Unknown status"))
+                Err(anyhow!(
+                    "❔ Extrinsic was finalized, but there is no error nor confirmation event. \
+                    Inspect the block with hash: `{:?}`",
+                    tx_events.block_hash()
+                ))
             }
         }
-        Err(error) => {
-            if let Error::Runtime(DispatchError::Module(ref error)) = error {
-                eprintln!(
-                    "❌ Extrinsic failed with an error: {}.\n\n{}",
-                    error.error,
-                    error.description.join("\n")
-                )
-            };
-            Err(error.into())
-        }
+        Err(Error::Runtime(DispatchError::Module(error))) => Err(anyhow!(
+            "❌ Extrinsic failed with an error: {}.\n{}",
+            error.error,
+            error.description.join("\n")
+        )),
+        Err(error) => Err(error.into()),
     }
 }
