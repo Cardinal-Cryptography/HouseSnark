@@ -37,7 +37,7 @@ pub struct MerkleTreeRelationArgs {
     #[clap(long, value_delimiter = ',')]
     pub leaves: Vec<u8>,
 
-    /// Leaf of which membership is to be proven (public input).
+    /// Leaf of which membership is to be proven, must be one of the leaves
     #[clap(long)]
     pub leaf: u8,
 }
