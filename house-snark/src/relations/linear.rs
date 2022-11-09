@@ -5,6 +5,7 @@ use ark_r1cs_std::{
 };
 use ark_relations::r1cs::{ConstraintSynthesizer, ConstraintSystemRef, SynthesisError};
 use ark_serialize::CanonicalSerialize;
+use clap::Args;
 
 use crate::GetPublicInput;
 
@@ -12,23 +13,19 @@ use crate::GetPublicInput;
 ///  - 1 private witness (x)
 ///  - 2 constant        (a, y)
 /// such that: 2*x + a = y.
-#[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
+#[derive(Copy, Clone, Eq, PartialEq, Hash, Debug, Args)]
 pub struct LinearEqRelation {
+    #[clap(long, default_value = "7")]
     pub x: u32,
+    #[clap(long, default_value = "5")]
     pub a: u32,
+    #[clap(long, default_value = "19")]
     pub y: u32,
 }
 
 impl LinearEqRelation {
     pub fn new(x: u32, a: u32, y: u32) -> Self {
         Self { x, a, y }
-    }
-}
-
-impl Default for LinearEqRelation {
-    // 2*7 + 5 = 19
-    fn default() -> Self {
-        LinearEqRelation::new(7, 5, 19)
     }
 }
 

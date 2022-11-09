@@ -19,8 +19,8 @@ For now, default public input is returned together with a proof.
 ### Example scenario (non-universal system)
 
 ```shell
-> cargo run --release -- generate-keys   --system groth16 --relation <relation-id>
-> cargo run --release -- generate-proof  --system groth16 --relation <relation-id> --proving-key-file <relation-id>.pk.bytes
+> cargo run --release -- generate-keys --system groth16 xor --public-xoree 2 --private-xoree 3 --result 1
+> cargo run --release -- generate-proof  --system groth16 --proving-key-file xor.groth16.pk.bytes xor
 ```
 
 ### Example scenario (universal system)

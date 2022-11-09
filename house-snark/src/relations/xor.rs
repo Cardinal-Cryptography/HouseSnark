@@ -15,11 +15,11 @@ use crate::relations::{byte_to_bits, GetPublicInput};
 pub struct XorRelation {
     // ToDo: Especially for Groth16, it is better to provide public input as a field element.
     // Otherwise, we have to provide it to circuit bit by bit.
-    #[clap(long, short = 'a')]
+    #[clap(long, short = 'a', default_value = "2")]
     pub public_xoree: u8,
-    #[clap(long, short = 'b')]
+    #[clap(long, short = 'b', default_value = "3")]
     pub private_xoree: u8,
-    #[clap(long, short = 'c')]
+    #[clap(long, short = 'c', default_value = "1")]
     pub result: u8,
 }
 
@@ -32,13 +32,6 @@ impl XorRelation {
         }
     }
 }
-
-// TODO: remove
-// impl Default for XorRelation {
-//     fn default() -> Self {
-//         XorRelation::new(2, 3, 1)
-//     }
-// }
 
 impl<Field: PrimeField> ConstraintSynthesizer<Field> for XorRelation {
     fn generate_constraints(self, cs: ConstraintSystemRef<Field>) -> Result<(), SynthesisError> {

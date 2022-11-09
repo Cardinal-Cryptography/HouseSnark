@@ -5,7 +5,7 @@ mod xor;
 use ark_ff::{One, PrimeField, Zero};
 use ark_relations::r1cs::{ConstraintSynthesizer, ConstraintSystemRef};
 use ark_serialize::CanonicalSerialize;
-use clap::{Args, FromArgMatches, Subcommand, ValueEnum};
+use clap::Subcommand;
 pub use linear::LinearEqRelation;
 pub use merkle_tree::MerkleTreeRelation;
 pub use xor::XorRelation;
@@ -18,14 +18,18 @@ use crate::CircuitField;
 #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug, Subcommand)]
 pub enum Relation {
     Xor(XorRelation),
-    LinearEquation,
+    LinearEquation(LinearEqRelation),
     MerkleTree,
 }
 
 impl Relation {
     /// Relation identifier.
     pub fn id(&self) -> String {
-        format!("{:?}", self).to_lowercase()
+        match &self {
+            Relation::Xor(_) => String::from("xor"),
+            Relation::LinearEquation(_) => String::from("linear_equation"),
+            Relation::MerkleTree => String::from("merkle_tree"),
+        }
     }
 }
 
@@ -40,7 +44,9 @@ impl ConstraintSynthesizer<CircuitField> for Relation {
                 private_xoree,
                 result,
             }) => XorRelation::new(public_xoree, private_xoree, result).generate_constraints(cs),
-            Relation::LinearEquation => LinearEqRelation::default().generate_constraints(cs),
+            Relation::LinearEquation(LinearEqRelation { x, a, y }) => {
+                LinearEqRelation::new(x, a, y).generate_constraints(cs)
+            }
             Relation::MerkleTree => MerkleTreeRelation::default().generate_constraints(cs),
         }
     }
@@ -55,8 +61,8 @@ pub trait GetPublicInput<CircuitField: PrimeField + CanonicalSerialize> {
 impl GetPublicInput<CircuitField> for Relation {
     fn public_input(&self) -> Vec<CircuitField> {
         match self {
-            Relation::Xor(XorRelation { public_xoree, .. }) => byte_to_bits(*public_xoree).to_vec(),
-            Relation::LinearEquation => LinearEqRelation::default().public_input(),
+            Relation::Xor(relation @ XorRelation { .. }) => relation.public_input(),
+            Relation::LinearEquation(relation @ LinearEqRelation { .. }) => relation.public_input(),
             Relation::MerkleTree => MerkleTreeRelation::default().public_input(),
         }
     }
