@@ -48,8 +48,8 @@ impl ConstraintSynthesizer<CircuitField> for Relation {
                 LinearEqRelation::new(x, a, y).generate_constraints(cs)
             }
             Relation::MerkleTree(args @ MerkleTreeRelationArgs { .. }) => {
-                let relation: MerkleTreeRelation = args.into();
-                relation.generate_constraints(cs)
+                <MerkleTreeRelationArgs as Into<MerkleTreeRelation>>::into(args)
+                    .generate_constraints(cs)
             }
         }
     }
@@ -66,9 +66,9 @@ impl GetPublicInput<CircuitField> for Relation {
         match self {
             Relation::Xor(relation @ XorRelation { .. }) => relation.public_input(),
             Relation::LinearEquation(relation @ LinearEqRelation { .. }) => relation.public_input(),
-            Relation::MerkleTree(relation @ MerkleTreeRelationArgs { .. }) => {
-                // relation.public_input()
-                todo!()
+            Relation::MerkleTree(args @ MerkleTreeRelationArgs { .. }) => {
+                <MerkleTreeRelationArgs as Into<MerkleTreeRelation>>::into(args.to_owned())
+                    .public_input()
             }
         }
     }
@@ -83,4 +83,12 @@ fn byte_to_bits<F: Zero + One + Copy>(byte: u8) -> [F; 8] {
         }
     }
     bits
+}
+
+/// Takes a string an converts it to a 32 byte array
+/// missing bytes are padded with 0's
+fn string_to_padded_bytes(s: String) -> [u8; 32] {
+    let mut bytes: Vec<u8> = s.as_bytes().into();
+    bytes.resize(32, 0);
+    bytes.try_into().expect("this should never fail")
 }

@@ -9,7 +9,7 @@ use clap::Args;
 
 use crate::GetPublicInput;
 
-// ToDo: add slope argument
+// TODO: add slope argument
 
 /// Relation with:
 ///  - 1 private witness (x)

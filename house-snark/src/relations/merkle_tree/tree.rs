@@ -22,14 +22,12 @@ pub type Root = <TwoToOneHash as TwoToOneCRH>::Output;
 /// A membership proof for a given byte.
 pub type SimplePath = Path<MerkleConfig>;
 
-// Creates a merkle tree over an array of 8 bytes (with values from [0..7]).
-//
-// Returns a tuple of:
-//  - the tree
-//  - the parameters of leaf hashing function
-//  - the parameters of node combining hashing function
-//  - the array of leaf values
-
+/// Creates a merkle tree from a vector of it's leaves
+///
+/// Returns a tuple of:
+///  - the tree
+///  - the parameters of leaf hashing function
+///  - the parameters of node combining hashing function
 pub fn new_tree(
     leaves: Vec<u8>,
     seed: [u8; 32],
@@ -37,7 +35,6 @@ pub fn new_tree(
     SimpleMerkleTree,
     Parameters<EdwardsProjective>,
     Parameters<EdwardsProjective>,
-    Vec<u8>,
 ) {
     let mut rng = StdRng::from_seed(seed);
 
@@ -46,5 +43,5 @@ pub fn new_tree(
 
     let tree = SimpleMerkleTree::new(&leaf_crh_params, &two_to_one_crh_params, &leaves).unwrap();
 
-    (tree, leaf_crh_params, two_to_one_crh_params, leaves)
+    (tree, leaf_crh_params, two_to_one_crh_params)
 }
