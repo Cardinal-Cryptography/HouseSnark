@@ -12,4 +12,4 @@ mod hash_functions;
 mod relation;
 mod tree;
 
-pub use relation::MerkleTreeRelation;
+pub use relation::{MerkleTreeRelation, MerkleTreeRelationArgs};

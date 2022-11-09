@@ -7,7 +7,7 @@ use ark_relations::r1cs::{ConstraintSynthesizer, ConstraintSystemRef};
 use ark_serialize::CanonicalSerialize;
 use clap::Subcommand;
 pub use linear::LinearEqRelation;
-pub use merkle_tree::MerkleTreeRelation;
+pub use merkle_tree::{MerkleTreeRelation, MerkleTreeRelationArgs};
 pub use xor::XorRelation;
 
 use crate::CircuitField;
@@ -15,11 +15,11 @@ use crate::CircuitField;
 /// All implemented relations.
 ///
 /// They should have corresponding definition in submodule.
-#[derive(Copy, Clone, Eq, PartialEq, Hash, Debug, Subcommand)]
+#[derive(Clone, Eq, PartialEq, Hash, Debug, Subcommand)]
 pub enum Relation {
     Xor(XorRelation),
     LinearEquation(LinearEqRelation),
-    MerkleTree,
+    MerkleTree(MerkleTreeRelationArgs),
 }
 
 impl Relation {
@@ -28,7 +28,7 @@ impl Relation {
         match &self {
             Relation::Xor(_) => String::from("xor"),
             Relation::LinearEquation(_) => String::from("linear_equation"),
-            Relation::MerkleTree => String::from("merkle_tree"),
+            Relation::MerkleTree(_) => String::from("merkle_tree"),
         }
     }
 }
@@ -47,7 +47,10 @@ impl ConstraintSynthesizer<CircuitField> for Relation {
             Relation::LinearEquation(LinearEqRelation { x, a, y }) => {
                 LinearEqRelation::new(x, a, y).generate_constraints(cs)
             }
-            Relation::MerkleTree => MerkleTreeRelation::default().generate_constraints(cs),
+            Relation::MerkleTree(args @ MerkleTreeRelationArgs { .. }) => {
+                let relation: MerkleTreeRelation = args.into();
+                relation.generate_constraints(cs)
+            }
         }
     }
 }
@@ -63,7 +66,10 @@ impl GetPublicInput<CircuitField> for Relation {
         match self {
             Relation::Xor(relation @ XorRelation { .. }) => relation.public_input(),
             Relation::LinearEquation(relation @ LinearEqRelation { .. }) => relation.public_input(),
-            Relation::MerkleTree => MerkleTreeRelation::default().public_input(),
+            Relation::MerkleTree(relation @ MerkleTreeRelationArgs { .. }) => {
+                // relation.public_input()
+                todo!()
+            }
         }
     }
 }

@@ -64,7 +64,7 @@ pub struct GenerateKeysFromSrsCmd {
     pub srs_file: PathBuf,
 }
 
-#[derive(Copy, Clone, Eq, PartialEq, Hash, Debug, Args)]
+#[derive(Clone, Eq, PartialEq, Hash, Debug, Args)]
 pub struct GenerateKeysCmd {
     /// Relation to work with.
     #[clap(subcommand)]
