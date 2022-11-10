@@ -39,13 +39,9 @@ impl ConstraintSynthesizer<CircuitField> for Relation {
         cs: ConstraintSystemRef<CircuitField>,
     ) -> ark_relations::r1cs::Result<()> {
         match self {
-            Relation::Xor(XorRelation {
-                public_xoree,
-                private_xoree,
-                result,
-            }) => XorRelation::new(public_xoree, private_xoree, result).generate_constraints(cs),
-            Relation::LinearEquation(LinearEqRelation { x, a, y }) => {
-                LinearEqRelation::new(x, a, y).generate_constraints(cs)
+            Relation::Xor(relation @ XorRelation { .. }) => relation.generate_constraints(cs),
+            Relation::LinearEquation(relation @ LinearEqRelation { .. }) => {
+                relation.generate_constraints(cs)
             }
             Relation::MerkleTree(args @ MerkleTreeRelationArgs { .. }) => {
                 <MerkleTreeRelationArgs as Into<MerkleTreeRelation>>::into(args)
