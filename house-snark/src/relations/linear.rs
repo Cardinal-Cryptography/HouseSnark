@@ -27,12 +27,6 @@ pub struct LinearEqRelation {
     pub y: u32,
 }
 
-impl LinearEqRelation {
-    pub fn new(x: u32, a: u32, y: u32) -> Self {
-        Self { x, a, y }
-    }
-}
-
 impl<Field: PrimeField> ConstraintSynthesizer<Field> for LinearEqRelation {
     fn generate_constraints(self, cs: ConstraintSystemRef<Field>) -> Result<(), SynthesisError> {
         // Watch out for overflows!!!

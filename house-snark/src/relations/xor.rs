@@ -25,16 +25,6 @@ pub struct XorRelation {
     pub result: u8,
 }
 
-impl XorRelation {
-    pub fn new(public_xoree: u8, private_xoree: u8, result: u8) -> Self {
-        Self {
-            public_xoree,
-            private_xoree,
-            result,
-        }
-    }
-}
-
 impl<Field: PrimeField> ConstraintSynthesizer<Field> for XorRelation {
     fn generate_constraints(self, cs: ConstraintSystemRef<Field>) -> Result<(), SynthesisError> {
         let public_xoree = UInt8::new_input(ark_relations::ns!(cs, "public_xoree"), || {
