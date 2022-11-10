@@ -11,6 +11,8 @@ use crate::GetPublicInput;
 
 // TODO: add slope argument
 
+/// Linear equation relation: 2*x + a = y
+///
 /// Relation with:
 ///  - 1 private witness (x)
 ///  - 2 constant        (a, y)

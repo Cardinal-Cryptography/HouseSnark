@@ -6,6 +6,8 @@ use clap::Args;
 
 use crate::relations::{byte_to_bits, GetPublicInput};
 
+/// XOR relation: a ⊕ b = c
+///
 /// Relation with:
 ///  - 1 public input    (a | `public_xoree`)
 ///  - 1 private witness (b | `private_xoree`)
