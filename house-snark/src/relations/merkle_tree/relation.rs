@@ -27,13 +27,14 @@ pub type RootVar = <TwoToOneHashGadget as TwoToOneCRHGadget<TwoToOneHash, Circui
 /// The R1CS equivalent of the the Merkle tree path.
 pub type SimplePathVar = PathVar<MerkleConfig, LeafHashGadget, TwoToOneHashGadget, CircuitField>;
 
+/// Arguments for creating a MerkeTreeRelation
 #[derive(Clone, Eq, PartialEq, Hash, Debug, Args)]
 pub struct MerkleTreeRelationArgs {
     /// Seed bytes for rng, the more the marrier
     #[clap(long)]
     pub seed: Option<String>,
 
-    /// Tree leaves
+    /// Tree leaves, used to calculate the tree root
     #[clap(long, value_delimiter = ',')]
     pub leaves: Vec<u8>,
 
