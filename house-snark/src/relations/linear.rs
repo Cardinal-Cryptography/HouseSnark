@@ -40,9 +40,8 @@ impl<Field: PrimeField> ConstraintSynthesizer<Field> for LinearEqRelation {
 
         let y = UInt32::new_constant(ark_relations::ns!(cs, "y"), &self.y)?;
 
-        let mut left = vec![x]
-            .into_iter()
-            .flat_map(|x| std::iter::repeat(x).take(self.a as usize))
+        let mut left = std::iter::repeat(x)
+            .take(self.a as usize)
             .collect::<Vec<UInt32<Field>>>();
 
         left.push(b);
