@@ -25,6 +25,13 @@ XOR relation example
 > cargo run --release -- generate-proof  --system groth16 --proving-key-file xor.groth16.pk.bytes xor --public-xoree 2 --private-xoree 3 --result 1
 ```
 
+Linear equation relation example
+
+```shell
+> cargo run --release -- generate-keys --system groth16 linear-equation --a 2 --x 7 --b 5 --y 19
+> cargo run --release -- generate-proof  --system groth16 --proving-key-file linear_equation.groth16.pk.bytes linear-equation --a 2 --x 7 --b 5 --y 19
+```
+
 Merkle tree relation example
 
 ```
