@@ -1,6 +1,7 @@
 mod linear;
 mod merkle_tree;
 mod xor;
+mod deposit;
 
 use ark_ff::{One, PrimeField, Zero};
 use ark_relations::r1cs::{ConstraintSynthesizer, ConstraintSystemRef};
@@ -9,6 +10,7 @@ use clap::Subcommand;
 pub use linear::LinearEqRelation;
 pub use merkle_tree::{MerkleTreeRelation, MerkleTreeRelationArgs};
 pub use xor::XorRelation;
+pub use deposit::DepositRelation;
 
 use crate::CircuitField;
 
