@@ -5,31 +5,29 @@ use ark_r1cs_std::{
 };
 use ark_relations::r1cs::{ConstraintSynthesizer, ConstraintSystemRef, SynthesisError};
 use ark_serialize::CanonicalSerialize;
+use clap::Args;
 
 use crate::GetPublicInput;
 
+/// Linear equation relation: a*x + b = y
+///
 /// Relation with:
 ///  - 1 private witness (x)
-///  - 2 constant        (a, y)
-/// such that: 2*x + a = y.
-#[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
+///  - 3 constants        (a, b, y)
+#[derive(Copy, Clone, Eq, PartialEq, Hash, Debug, Args)]
 pub struct LinearEqRelation {
-    pub x: u32,
+    /// constant (a slope)
+    #[clap(long, default_value = "2")]
     pub a: u32,
+    /// private witness
+    #[clap(long, default_value = "7")]
+    pub x: u32,
+    /// constant(an intercept)
+    #[clap(long, default_value = "5")]
+    pub b: u32,
+    /// constant
+    #[clap(long, default_value = "19")]
     pub y: u32,
-}
-
-impl LinearEqRelation {
-    pub fn new(x: u32, a: u32, y: u32) -> Self {
-        Self { x, a, y }
-    }
-}
-
-impl Default for LinearEqRelation {
-    // 2*7 + 5 = 19
-    fn default() -> Self {
-        LinearEqRelation::new(7, 5, 19)
-    }
 }
 
 impl<Field: PrimeField> ConstraintSynthesizer<Field> for LinearEqRelation {
@@ -38,12 +36,17 @@ impl<Field: PrimeField> ConstraintSynthesizer<Field> for LinearEqRelation {
 
         let x = UInt32::new_witness(ark_relations::ns!(cs, "x"), || Ok(&self.x))?;
 
-        let a = UInt32::new_constant(ark_relations::ns!(cs, "a"), &self.a)?;
+        let b = UInt32::new_constant(ark_relations::ns!(cs, "b"), &self.b)?;
+
         let y = UInt32::new_constant(ark_relations::ns!(cs, "y"), &self.y)?;
 
-        let xx_a = UInt32::addmany(&[x.clone(), x, a])?;
+        let mut left = std::iter::repeat(x)
+            .take(self.a as usize)
+            .collect::<Vec<UInt32<Field>>>();
 
-        xx_a.enforce_equal(&y)
+        left.push(b);
+
+        UInt32::addmany(&left)?.enforce_equal(&y)
     }
 }
 

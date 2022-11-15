@@ -19,16 +19,12 @@ pub struct Cli {
 pub enum Command {
     /// Generate SRS and save it to a binary file.
     GenerateSrs(GenerateSrsCmd),
-
     /// Generate verifying and proving key from SRS and save them to separate binary files.
     GenerateKeysFromSrs(GenerateKeysFromSrsCmd),
-
     /// Generate verifying and proving key and save them to separate binary files.
     GenerateKeys(GenerateKeysCmd),
-
     /// Generate proof and public input and save them to separate binary files.
     GenerateProof(GenerateProofCmd),
-
     /// Kill all Snarks!
     ///
     /// Remove all artifacts from the current directory.
@@ -57,9 +53,8 @@ pub struct GenerateSrsCmd {
 #[derive(Clone, Eq, PartialEq, Hash, Debug, Args)]
 pub struct GenerateKeysFromSrsCmd {
     /// Relation to work with.
-    #[clap(long, short, value_enum)]
+    #[clap(subcommand)]
     pub relation: Relation,
-
     /// Proving system to use.
     #[clap(long, short, value_enum, default_value = "marlin")]
     pub system: UniversalProvingSystem,
@@ -69,10 +64,10 @@ pub struct GenerateKeysFromSrsCmd {
     pub srs_file: PathBuf,
 }
 
-#[derive(Copy, Clone, Eq, PartialEq, Hash, Debug, Args)]
+#[derive(Clone, Eq, PartialEq, Hash, Debug, Args)]
 pub struct GenerateKeysCmd {
     /// Relation to work with.
-    #[clap(long, short, value_enum)]
+    #[clap(subcommand)]
     pub relation: Relation,
 
     /// Proving system to use.
@@ -83,9 +78,8 @@ pub struct GenerateKeysCmd {
 #[derive(Clone, Eq, PartialEq, Hash, Debug, Args)]
 pub struct GenerateProofCmd {
     /// Relation to work with.
-    #[clap(long, short, value_enum)]
+    #[clap(subcommand)]
     pub relation: Relation,
-
     /// Proving system to use.
     ///
     /// Accepts either `NonUniversalProvingSystem` or `UniversalProvingSystem`.

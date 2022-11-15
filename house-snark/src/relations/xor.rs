@@ -2,37 +2,27 @@ use ark_ff::PrimeField;
 use ark_r1cs_std::prelude::{AllocVar, EqGadget, UInt8};
 use ark_relations::r1cs::{ConstraintSynthesizer, ConstraintSystemRef, SynthesisError};
 use ark_serialize::CanonicalSerialize;
+use clap::Args;
 
 use crate::relations::{byte_to_bits, GetPublicInput};
 
+/// XOR relation: a ⊕ b = c
+///
 /// Relation with:
 ///  - 1 public input    (a | `public_xoree`)
 ///  - 1 private witness (b | `private_xoree`)
 ///  - 1 constant        (c | `result`)
 /// such that: a ^ b = c.
-#[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
+#[derive(Copy, Clone, Eq, PartialEq, Hash, Debug, Args)]
 pub struct XorRelation {
     // ToDo: Especially for Groth16, it is better to provide public input as a field element.
     // Otherwise, we have to provide it to circuit bit by bit.
+    #[clap(long, short = 'a', default_value = "2")]
     pub public_xoree: u8,
+    #[clap(long, short = 'b', default_value = "3")]
     pub private_xoree: u8,
+    #[clap(long, short = 'c', default_value = "1")]
     pub result: u8,
-}
-
-impl XorRelation {
-    pub fn new(public_xoree: u8, private_xoree: u8, result: u8) -> Self {
-        Self {
-            public_xoree,
-            private_xoree,
-            result,
-        }
-    }
-}
-
-impl Default for XorRelation {
-    fn default() -> Self {
-        XorRelation::new(2, 3, 1)
-    }
 }
 
 impl<Field: PrimeField> ConstraintSynthesizer<Field> for XorRelation {

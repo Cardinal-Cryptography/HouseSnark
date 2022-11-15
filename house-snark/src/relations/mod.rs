@@ -5,9 +5,9 @@ mod xor;
 use ark_ff::{One, PrimeField, Zero};
 use ark_relations::r1cs::{ConstraintSynthesizer, ConstraintSystemRef};
 use ark_serialize::CanonicalSerialize;
-use clap::ValueEnum;
+use clap::Subcommand;
 pub use linear::LinearEqRelation;
-pub use merkle_tree::MerkleTreeRelation;
+pub use merkle_tree::{MerkleTreeRelation, MerkleTreeRelationArgs};
 pub use xor::XorRelation;
 
 use crate::CircuitField;
@@ -15,17 +15,21 @@ use crate::CircuitField;
 /// All implemented relations.
 ///
 /// They should have corresponding definition in submodule.
-#[derive(Copy, Clone, Eq, PartialEq, Hash, Debug, ValueEnum)]
+#[derive(Clone, Eq, PartialEq, Hash, Debug, Subcommand)]
 pub enum Relation {
-    Xor,
-    LinearEquation,
-    MerkleTree,
+    Xor(XorRelation),
+    LinearEquation(LinearEqRelation),
+    MerkleTree(MerkleTreeRelationArgs),
 }
 
 impl Relation {
     /// Relation identifier.
     pub fn id(&self) -> String {
-        format!("{:?}", self).to_lowercase()
+        match &self {
+            Relation::Xor(_) => String::from("xor"),
+            Relation::LinearEquation(_) => String::from("linear_equation"),
+            Relation::MerkleTree(_) => String::from("merkle_tree"),
+        }
     }
 }
 
@@ -35,9 +39,14 @@ impl ConstraintSynthesizer<CircuitField> for Relation {
         cs: ConstraintSystemRef<CircuitField>,
     ) -> ark_relations::r1cs::Result<()> {
         match self {
-            Relation::Xor => XorRelation::default().generate_constraints(cs),
-            Relation::LinearEquation => LinearEqRelation::default().generate_constraints(cs),
-            Relation::MerkleTree => MerkleTreeRelation::default().generate_constraints(cs),
+            Relation::Xor(relation @ XorRelation { .. }) => relation.generate_constraints(cs),
+            Relation::LinearEquation(relation @ LinearEqRelation { .. }) => {
+                relation.generate_constraints(cs)
+            }
+            Relation::MerkleTree(args @ MerkleTreeRelationArgs { .. }) => {
+                <MerkleTreeRelationArgs as Into<MerkleTreeRelation>>::into(args)
+                    .generate_constraints(cs)
+            }
         }
     }
 }
@@ -51,9 +60,12 @@ pub trait GetPublicInput<CircuitField: PrimeField + CanonicalSerialize> {
 impl GetPublicInput<CircuitField> for Relation {
     fn public_input(&self) -> Vec<CircuitField> {
         match self {
-            Relation::Xor => XorRelation::default().public_input(),
-            Relation::LinearEquation => LinearEqRelation::default().public_input(),
-            Relation::MerkleTree => MerkleTreeRelation::default().public_input(),
+            Relation::Xor(relation @ XorRelation { .. }) => relation.public_input(),
+            Relation::LinearEquation(relation @ LinearEqRelation { .. }) => relation.public_input(),
+            Relation::MerkleTree(args @ MerkleTreeRelationArgs { .. }) => {
+                <MerkleTreeRelationArgs as Into<MerkleTreeRelation>>::into(args.to_owned())
+                    .public_input()
+            }
         }
     }
 }
@@ -67,4 +79,12 @@ fn byte_to_bits<F: Zero + One + Copy>(byte: u8) -> [F; 8] {
         }
     }
     bits
+}
+
+/// Takes a string an converts it to a 32 byte array
+/// missing bytes are padded with 0's
+fn string_to_padded_bytes(s: String) -> [u8; 32] {
+    let mut bytes: Vec<u8> = s.as_bytes().into();
+    bytes.resize(32, 0);
+    bytes.try_into().expect("this should never fail")
 }

@@ -42,33 +42,29 @@ fn main() {
             let srs = system.generate_srs(num_constraints, num_variables, degree);
             save_srs(&srs, &system.id());
         }
-
         Command::GenerateKeysFromSrs(GenerateKeysFromSrsCmd {
             relation,
             system,
             srs_file,
         }) => {
             let srs = read_srs(srs_file);
-            let keys = system.generate_keys(relation, srs);
+            let keys = system.generate_keys(relation.clone(), srs);
             save_keys(&relation.id(), &system.id(), &keys.pk, &keys.vk);
         }
-
         Command::GenerateKeys(GenerateKeysCmd { relation, system }) => {
-            let keys = system.generate_keys(relation);
+            let keys = system.generate_keys(relation.clone());
             save_keys(&relation.id(), &system.id(), &keys.pk, &keys.vk);
         }
-
         Command::GenerateProof(GenerateProofCmd {
             relation,
             system,
             proving_key_file,
         }) => {
             let proving_key = read_proving_key(proving_key_file);
-            let proof = system.prove(relation, proving_key);
+            let proof = system.prove(relation.clone(), proving_key);
             let public_input = serialize(&relation.public_input());
             save_proving_artifacts(&relation.id(), &system.id(), &proof, &public_input);
         }
-
         Command::RedWedding => match kill_all_snarks() {
             Ok(_) => println!("Cleaning succeeded"),
             Err(e) => eprintln!("Cleaning failed: {:?}", e),
