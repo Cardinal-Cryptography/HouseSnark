@@ -1,0 +1,1136 @@
+{
+  "source": {
+    "hash": "0xbc045294bc18ffb1d34c8fa6a3f1a55f764728bcb270b764cb9699d9d9a47f5e",
+    "language": "ink! 3.4.0",
+    "compiler": "rustc 1.65.0-nightly"
+  },
+  "contract": {
+    "name": "blender",
+    "version": "0.1.0",
+    "authors": [
+      "Cardinal Cryptography"
+    ],
+    "repository": "https://github.com/aleph-zero-foundation/aleph-node",
+    "homepage": "https://alephzero.org/",
+    "license": "Apache 2.0"
+  },
+  "V3": {
+    "spec": {
+      "constructors": [
+        {
+          "args": [
+            {
+              "label": "max_leaves",
+              "type": {
+                "displayName": [
+                  "u32"
+                ],
+                "type": 1
+              }
+            }
+          ],
+          "docs": [
+            "Instantiate the contract. Set the caller as the blendermaster."
+          ],
+          "label": "new",
+          "payable": false,
+          "selector": "0x9bae9d5e"
+        }
+      ],
+      "docs": [],
+      "events": [
+        {
+          "args": [
+            {
+              "docs": [],
+              "indexed": true,
+              "label": "token_id",
+              "type": {
+                "displayName": [
+                  "TokenId"
+                ],
+                "type": 11
+              }
+            },
+            {
+              "docs": [],
+              "indexed": false,
+              "label": "value",
+              "type": {
+                "displayName": [
+                  "TokenAmount"
+                ],
+                "type": 9
+              }
+            },
+            {
+              "docs": [],
+              "indexed": false,
+              "label": "leaf_idx",
+              "type": {
+                "displayName": [
+                  "u32"
+                ],
+                "type": 1
+              }
+            }
+          ],
+          "docs": [],
+          "label": "Deposited"
+        },
+        {
+          "args": [
+            {
+              "docs": [],
+              "indexed": true,
+              "label": "token_id",
+              "type": {
+                "displayName": [
+                  "TokenId"
+                ],
+                "type": 11
+              }
+            },
+            {
+              "docs": [],
+              "indexed": false,
+              "label": "value",
+              "type": {
+                "displayName": [
+                  "TokenAmount"
+                ],
+                "type": 9
+              }
+            },
+            {
+              "docs": [],
+              "indexed": true,
+              "label": "recipient",
+              "type": {
+                "displayName": [
+                  "AccountId"
+                ],
+                "type": 12
+              }
+            },
+            {
+              "docs": [],
+              "indexed": false,
+              "label": "leaf_idx",
+              "type": {
+                "displayName": [
+                  "u32"
+                ],
+                "type": 1
+              }
+            }
+          ],
+          "docs": [],
+          "label": "Withdrawn"
+        }
+      ],
+      "messages": [
+        {
+          "args": [
+            {
+              "label": "token_id",
+              "type": {
+                "displayName": [
+                  "TokenId"
+                ],
+                "type": 11
+              }
+            },
+            {
+              "label": "value",
+              "type": {
+                "displayName": [
+                  "TokenAmount"
+                ],
+                "type": 9
+              }
+            },
+            {
+              "label": "note",
+              "type": {
+                "displayName": [
+                  "Note"
+                ],
+                "type": 2
+              }
+            },
+            {
+              "label": "proof",
+              "type": {
+                "displayName": [
+                  "Vec"
+                ],
+                "type": 13
+              }
+            }
+          ],
+          "docs": [
+            " Trigger deposit action (see ADR for detailed description)."
+          ],
+          "label": "deposit",
+          "mutates": true,
+          "payable": false,
+          "returnType": {
+            "displayName": [
+              "Result"
+            ],
+            "type": 14
+          },
+          "selector": "0x00000001"
+        },
+        {
+          "args": [
+            {
+              "label": "token_id",
+              "type": {
+                "displayName": [
+                  "TokenId"
+                ],
+                "type": 11
+              }
+            },
+            {
+              "label": "value",
+              "type": {
+                "displayName": [
+                  "TokenAmount"
+                ],
+                "type": 9
+              }
+            },
+            {
+              "label": "recipient",
+              "type": {
+                "displayName": [
+                  "AccountId"
+                ],
+                "type": 12
+              }
+            },
+            {
+              "label": "fee_for_caller",
+              "type": {
+                "displayName": [
+                  "Option"
+                ],
+                "type": 19
+              }
+            },
+            {
+              "label": "merkle_root",
+              "type": {
+                "displayName": [
+                  "MerkleRoot"
+                ],
+                "type": 2
+              }
+            },
+            {
+              "label": "nullifier",
+              "type": {
+                "displayName": [
+                  "Nullifier"
+                ],
+                "type": 9
+              }
+            },
+            {
+              "label": "new_note",
+              "type": {
+                "displayName": [
+                  "Note"
+                ],
+                "type": 2
+              }
+            },
+            {
+              "label": "proof",
+              "type": {
+                "displayName": [
+                  "Vec"
+                ],
+                "type": 13
+              }
+            }
+          ],
+          "docs": [
+            " Trigger withdraw action (see ADR for detailed description)."
+          ],
+          "label": "withdraw",
+          "mutates": true,
+          "payable": false,
+          "returnType": {
+            "displayName": [
+              "Result"
+            ],
+            "type": 14
+          },
+          "selector": "0x00000002"
+        },
+        {
+          "args": [],
+          "docs": [
+            " Read the current root of the Merkle tree with notes."
+          ],
+          "label": "current_merkle_root",
+          "mutates": false,
+          "payable": false,
+          "returnType": {
+            "displayName": [
+              "Hash"
+            ],
+            "type": 2
+          },
+          "selector": "0x00000003"
+        },
+        {
+          "args": [
+            {
+              "label": "leaf_idx",
+              "type": {
+                "displayName": [
+                  "u32"
+                ],
+                "type": 1
+              }
+            }
+          ],
+          "docs": [
+            " Retrieve the path from the leaf to the root. `None` if the leaf does not exist."
+          ],
+          "label": "merkle_path",
+          "mutates": false,
+          "payable": false,
+          "returnType": {
+            "displayName": [
+              "Option"
+            ],
+            "type": 20
+          },
+          "selector": "0x00000004"
+        },
+        {
+          "args": [
+            {
+              "label": "nullifier",
+              "type": {
+                "displayName": [
+                  "Nullifier"
+                ],
+                "type": 9
+              }
+            }
+          ],
+          "docs": [
+            " Check whether `nullifier` has been already used."
+          ],
+          "label": "observed_nullifier",
+          "mutates": false,
+          "payable": false,
+          "returnType": {
+            "displayName": [
+              "bool"
+            ],
+            "type": 22
+          },
+          "selector": "0x00000005"
+        },
+        {
+          "args": [
+            {
+              "label": "relation",
+              "type": {
+                "displayName": [
+                  "Relation"
+                ],
+                "type": 23
+              }
+            },
+            {
+              "label": "vk",
+              "type": {
+                "displayName": [
+                  "Vec"
+                ],
+                "type": 13
+              }
+            }
+          ],
+          "docs": [
+            " Register a verifying key for one of the `Relation`.",
+            "",
+            " For blendermaster use only."
+          ],
+          "label": "register_vk",
+          "mutates": true,
+          "payable": false,
+          "returnType": {
+            "displayName": [
+              "Result"
+            ],
+            "type": 14
+          },
+          "selector": "0x00000008"
+        },
+        {
+          "args": [
+            {
+              "label": "token_id",
+              "type": {
+                "displayName": [
+                  "TokenId"
+                ],
+                "type": 11
+              }
+            }
+          ],
+          "docs": [
+            " Check if there is a token address registered at `token_id`."
+          ],
+          "label": "registered_token_address",
+          "mutates": false,
+          "payable": false,
+          "returnType": {
+            "displayName": [
+              "Option"
+            ],
+            "type": 24
+          },
+          "selector": "0x00000009"
+        },
+        {
+          "args": [
+            {
+              "label": "token_id",
+              "type": {
+                "displayName": [
+                  "TokenId"
+                ],
+                "type": 11
+              }
+            },
+            {
+              "label": "token_address",
+              "type": {
+                "displayName": [
+                  "AccountId"
+                ],
+                "type": 12
+              }
+            }
+          ],
+          "docs": [
+            " Register a token contract (`token_address`) at `token_id`.",
+            "",
+            " For blendermaster use only."
+          ],
+          "label": "register_new_token",
+          "mutates": true,
+          "payable": false,
+          "returnType": {
+            "displayName": [
+              "Result"
+            ],
+            "type": 14
+          },
+          "selector": "0x0000000a"
+        }
+      ]
+    },
+    "storage": {
+      "struct": {
+        "fields": [
+          {
+            "layout": {
+              "cell": {
+                "key": "0x0000000000000000000000000000000000000000000000000000000000000000",
+                "ty": 0
+              }
+            },
+            "name": "notes"
+          },
+          {
+            "layout": {
+              "cell": {
+                "key": "0x0100000000000000000000000000000000000000000000000000000000000000",
+                "ty": 1
+              }
+            },
+            "name": "next_free_leaf"
+          },
+          {
+            "layout": {
+              "cell": {
+                "key": "0x0200000000000000000000000000000000000000000000000000000000000000",
+                "ty": 1
+              }
+            },
+            "name": "max_leaves"
+          },
+          {
+            "layout": {
+              "cell": {
+                "key": "0x0300000000000000000000000000000000000000000000000000000000000000",
+                "ty": 6
+              }
+            },
+            "name": "merkle_roots"
+          },
+          {
+            "layout": {
+              "cell": {
+                "key": "0x0400000000000000000000000000000000000000000000000000000000000000",
+                "ty": 8
+              }
+            },
+            "name": "nullifiers"
+          },
+          {
+            "layout": {
+              "cell": {
+                "key": "0x0500000000000000000000000000000000000000000000000000000000000000",
+                "ty": 10
+              }
+            },
+            "name": "registered_tokens"
+          },
+          {
+            "layout": {
+              "cell": {
+                "key": "0x0600000000000000000000000000000000000000000000000000000000000000",
+                "ty": 12
+              }
+            },
+            "name": "blendermaster"
+          }
+        ]
+      }
+    },
+    "types": [
+      {
+        "id": 0,
+        "type": {
+          "def": {
+            "composite": {
+              "fields": [
+                {
+                  "name": "offset_key",
+                  "type": 5,
+                  "typeName": "Key"
+                }
+              ]
+            }
+          },
+          "params": [
+            {
+              "name": "K",
+              "type": 1
+            },
+            {
+              "name": "V",
+              "type": 2
+            }
+          ],
+          "path": [
+            "ink_storage",
+            "lazy",
+            "mapping",
+            "Mapping"
+          ]
+        }
+      },
+      {
+        "id": 1,
+        "type": {
+          "def": {
+            "primitive": "u32"
+          }
+        }
+      },
+      {
+        "id": 2,
+        "type": {
+          "def": {
+            "composite": {
+              "fields": [
+                {
+                  "type": 3,
+                  "typeName": "[u8; 32]"
+                }
+              ]
+            }
+          },
+          "path": [
+            "ink_env",
+            "types",
+            "Hash"
+          ]
+        }
+      },
+      {
+        "id": 3,
+        "type": {
+          "def": {
+            "array": {
+              "len": 32,
+              "type": 4
+            }
+          }
+        }
+      },
+      {
+        "id": 4,
+        "type": {
+          "def": {
+            "primitive": "u8"
+          }
+        }
+      },
+      {
+        "id": 5,
+        "type": {
+          "def": {
+            "composite": {
+              "fields": [
+                {
+                  "type": 3,
+                  "typeName": "[u8; 32]"
+                }
+              ]
+            }
+          },
+          "path": [
+            "ink_primitives",
+            "Key"
+          ]
+        }
+      },
+      {
+        "id": 6,
+        "type": {
+          "def": {
+            "composite": {
+              "fields": [
+                {
+                  "name": "offset_key",
+                  "type": 5,
+                  "typeName": "Key"
+                }
+              ]
+            }
+          },
+          "params": [
+            {
+              "name": "K",
+              "type": 2
+            },
+            {
+              "name": "V",
+              "type": 7
+            }
+          ],
+          "path": [
+            "ink_storage",
+            "lazy",
+            "mapping",
+            "Mapping"
+          ]
+        }
+      },
+      {
+        "id": 7,
+        "type": {
+          "def": {
+            "tuple": []
+          }
+        }
+      },
+      {
+        "id": 8,
+        "type": {
+          "def": {
+            "composite": {
+              "fields": [
+                {
+                  "name": "offset_key",
+                  "type": 5,
+                  "typeName": "Key"
+                }
+              ]
+            }
+          },
+          "params": [
+            {
+              "name": "K",
+              "type": 9
+            },
+            {
+              "name": "V",
+              "type": 7
+            }
+          ],
+          "path": [
+            "ink_storage",
+            "lazy",
+            "mapping",
+            "Mapping"
+          ]
+        }
+      },
+      {
+        "id": 9,
+        "type": {
+          "def": {
+            "primitive": "u64"
+          }
+        }
+      },
+      {
+        "id": 10,
+        "type": {
+          "def": {
+            "composite": {
+              "fields": [
+                {
+                  "name": "offset_key",
+                  "type": 5,
+                  "typeName": "Key"
+                }
+              ]
+            }
+          },
+          "params": [
+            {
+              "name": "K",
+              "type": 11
+            },
+            {
+              "name": "V",
+              "type": 12
+            }
+          ],
+          "path": [
+            "ink_storage",
+            "lazy",
+            "mapping",
+            "Mapping"
+          ]
+        }
+      },
+      {
+        "id": 11,
+        "type": {
+          "def": {
+            "primitive": "u16"
+          }
+        }
+      },
+      {
+        "id": 12,
+        "type": {
+          "def": {
+            "composite": {
+              "fields": [
+                {
+                  "type": 3,
+                  "typeName": "[u8; 32]"
+                }
+              ]
+            }
+          },
+          "path": [
+            "ink_env",
+            "types",
+            "AccountId"
+          ]
+        }
+      },
+      {
+        "id": 13,
+        "type": {
+          "def": {
+            "sequence": {
+              "type": 4
+            }
+          }
+        }
+      },
+      {
+        "id": 14,
+        "type": {
+          "def": {
+            "variant": {
+              "variants": [
+                {
+                  "fields": [
+                    {
+                      "type": 7
+                    }
+                  ],
+                  "index": 0,
+                  "name": "Ok"
+                },
+                {
+                  "fields": [
+                    {
+                      "type": 15
+                    }
+                  ],
+                  "index": 1,
+                  "name": "Err"
+                }
+              ]
+            }
+          },
+          "params": [
+            {
+              "name": "T",
+              "type": 7
+            },
+            {
+              "name": "E",
+              "type": 15
+            }
+          ],
+          "path": [
+            "Result"
+          ]
+        }
+      },
+      {
+        "id": 15,
+        "type": {
+          "def": {
+            "variant": {
+              "variants": [
+                {
+                  "index": 0,
+                  "name": "InsufficientPermission"
+                },
+                {
+                  "index": 1,
+                  "name": "TooManyNotes"
+                },
+                {
+                  "index": 2,
+                  "name": "UnknownMerkleRoot"
+                },
+                {
+                  "index": 3,
+                  "name": "NullifierAlreadyUsed"
+                },
+                {
+                  "index": 4,
+                  "name": "TooHighFee"
+                },
+                {
+                  "fields": [
+                    {
+                      "type": 16,
+                      "typeName": "SnarcosError"
+                    }
+                  ],
+                  "index": 5,
+                  "name": "ChainExtension"
+                },
+                {
+                  "fields": [
+                    {
+                      "type": 17,
+                      "typeName": "PSP22Error"
+                    }
+                  ],
+                  "index": 6,
+                  "name": "Psp22"
+                },
+                {
+                  "fields": [
+                    {
+                      "type": 18,
+                      "typeName": "String"
+                    }
+                  ],
+                  "index": 7,
+                  "name": "InkEnv"
+                },
+                {
+                  "index": 8,
+                  "name": "TokenIdAlreadyRegistered"
+                },
+                {
+                  "index": 9,
+                  "name": "TokenIdNotRegistered"
+                }
+              ]
+            }
+          },
+          "path": [
+            "blender",
+            "error",
+            "BlenderError"
+          ]
+        }
+      },
+      {
+        "id": 16,
+        "type": {
+          "def": {
+            "variant": {
+              "variants": [
+                {
+                  "index": 0,
+                  "name": "IdentifierAlreadyInUse"
+                },
+                {
+                  "index": 1,
+                  "name": "VerificationKeyTooLong"
+                },
+                {
+                  "index": 2,
+                  "name": "UnknownVerificationKeyIdentifier"
+                },
+                {
+                  "index": 3,
+                  "name": "DeserializingProofFailed"
+                },
+                {
+                  "index": 4,
+                  "name": "DeserializingPublicInputFailed"
+                },
+                {
+                  "index": 5,
+                  "name": "DeserializingVerificationKeyFailed"
+                },
+                {
+                  "index": 6,
+                  "name": "VerificationFailed"
+                },
+                {
+                  "index": 7,
+                  "name": "IncorrectProof"
+                },
+                {
+                  "index": 8,
+                  "name": "UnknownError"
+                }
+              ]
+            }
+          },
+          "path": [
+            "snarcos_extension",
+            "SnarcosError"
+          ]
+        }
+      },
+      {
+        "id": 17,
+        "type": {
+          "def": {
+            "variant": {
+              "variants": [
+                {
+                  "fields": [
+                    {
+                      "type": 13,
+                      "typeName": "String"
+                    }
+                  ],
+                  "index": 0,
+                  "name": "Custom"
+                },
+                {
+                  "index": 1,
+                  "name": "InsufficientBalance"
+                },
+                {
+                  "index": 2,
+                  "name": "InsufficientAllowance"
+                },
+                {
+                  "index": 3,
+                  "name": "ZeroRecipientAddress"
+                },
+                {
+                  "index": 4,
+                  "name": "ZeroSenderAddress"
+                },
+                {
+                  "fields": [
+                    {
+                      "type": 13,
+                      "typeName": "String"
+                    }
+                  ],
+                  "index": 5,
+                  "name": "SafeTransferCheckFailed"
+                }
+              ]
+            }
+          },
+          "path": [
+            "openbrush_contracts",
+            "traits",
+            "errors",
+            "psp22",
+            "PSP22Error"
+          ]
+        }
+      },
+      {
+        "id": 18,
+        "type": {
+          "def": {
+            "primitive": "str"
+          }
+        }
+      },
+      {
+        "id": 19,
+        "type": {
+          "def": {
+            "variant": {
+              "variants": [
+                {
+                  "index": 0,
+                  "name": "None"
+                },
+                {
+                  "fields": [
+                    {
+                      "type": 9
+                    }
+                  ],
+                  "index": 1,
+                  "name": "Some"
+                }
+              ]
+            }
+          },
+          "params": [
+            {
+              "name": "T",
+              "type": 9
+            }
+          ],
+          "path": [
+            "Option"
+          ]
+        }
+      },
+      {
+        "id": 20,
+        "type": {
+          "def": {
+            "variant": {
+              "variants": [
+                {
+                  "index": 0,
+                  "name": "None"
+                },
+                {
+                  "fields": [
+                    {
+                      "type": 21
+                    }
+                  ],
+                  "index": 1,
+                  "name": "Some"
+                }
+              ]
+            }
+          },
+          "params": [
+            {
+              "name": "T",
+              "type": 21
+            }
+          ],
+          "path": [
+            "Option"
+          ]
+        }
+      },
+      {
+        "id": 21,
+        "type": {
+          "def": {
+            "sequence": {
+              "type": 2
+            }
+          }
+        }
+      },
+      {
+        "id": 22,
+        "type": {
+          "def": {
+            "primitive": "bool"
+          }
+        }
+      },
+      {
+        "id": 23,
+        "type": {
+          "def": {
+            "variant": {
+              "variants": [
+                {
+                  "index": 0,
+                  "name": "Deposit"
+                },
+                {
+                  "index": 1,
+                  "name": "Withdraw"
+                }
+              ]
+            }
+          },
+          "path": [
+            "blender",
+            "contract",
+            "blender",
+            "Relation"
+          ]
+        }
+      },
+      {
+        "id": 24,
+        "type": {
+          "def": {
+            "variant": {
+              "variants": [
+                {
+                  "index": 0,
+                  "name": "None"
+                },
+                {
+                  "fields": [
+                    {
+                      "type": 12
+                    }
+                  ],
+                  "index": 1,
+                  "name": "Some"
+                }
+              ]
+            }
+          },
+          "params": [
+            {
+              "name": "T",
+              "type": 12
+            }
+          ],
+          "path": [
+            "Option"
+          ]
+        }
+      }
+    ]
+  }
+}
