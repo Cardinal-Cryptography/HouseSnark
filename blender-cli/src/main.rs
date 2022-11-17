@@ -6,7 +6,7 @@ use clap::Parser;
 
 use crate::{
     app_state::AppState,
-    config::{CliConfig, Command, DepositCmd, SetContractAddressCmd, SetNodeCmd, SetSeedCmd},
+    config::{CliConfig, Command::*, DepositCmd, SetContractAddressCmd, SetNodeCmd, SetSeedCmd},
     contract::Blender,
 };
 
@@ -46,36 +46,40 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let mut app_state = get_app_state(&cli_config.state_file)?;
 
-    match cli_config.command {
-        Command::SetSeed(SetSeedCmd { seed }) => {
-            app_state.caller_seed = seed;
-            app_state::write_to(&app_state, &cli_config.state_file)?;
-        }
-        Command::SetNode(SetNodeCmd { node }) => {
-            app_state.node_address = node;
-            app_state::write_to(&app_state, &cli_config.state_file)?;
-        }
-        Command::SetContractAddress(SetContractAddressCmd { address }) => {
-            app_state.contract_address = address;
-            app_state::write_to(&app_state, &cli_config.state_file)?;
-        }
+    if cli_config.command.is_state_update_action() {
+        match cli_config.command {
+            SetSeed(SetSeedCmd { seed }) => {
+                app_state.caller_seed = seed;
+            }
+            SetNode(SetNodeCmd { node }) => {
+                app_state.node_address = node;
+            }
+            SetContractAddress(SetContractAddressCmd { address }) => {
+                app_state.contract_address = address;
+            }
+            _ => unreachable!(),
+        };
+        app_state::write_to(&app_state, &cli_config.state_file)?;
+    } else if cli_config.command.is_contract_action() {
+        let signer = keypair_from_string(&app_state.caller_seed);
+        let connection = SignedConnection::new(&app_state.node_address, signer);
 
-        Command::Deposit(DepositCmd {
-            token_id,
-            amount,
-            metadata_file,
-        }) => {
-            let signer = keypair_from_string(&app_state.caller_seed);
-            let connection = SignedConnection::new(&app_state.node_address, signer);
+        let metadata_file = cli_config.command.get_metadata_file().unwrap();
+        let contract = Blender::new(&app_state.contract_address, &metadata_file)?;
 
-            let contract = Blender::new(&app_state.contract_address, &metadata_file)?;
-            contract.deposit(
-                &connection,
-                token_id,
-                amount,
-                Default::default(),
-                &vec![1, 2, 3],
-            )?;
+        match cli_config.command {
+            Deposit(DepositCmd {
+                token_id, amount, ..
+            }) => {
+                contract.deposit(
+                    &connection,
+                    token_id,
+                    amount,
+                    Default::default(),
+                    &vec![1, 2, 3],
+                )?;
+            }
+            _ => unreachable!(),
         }
     }
 
