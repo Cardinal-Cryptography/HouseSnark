@@ -48,6 +48,10 @@ pub(super) struct DepositCmd {
 
     /// Registered token id.
     pub amount: TokenAmount,
+
+    /// Contract metadata file.
+    #[clap(default_value = "blender-metadata.json", value_parser = parsing::parse_path)]
+    pub metadata_file: PathBuf,
 }
 
 mod parsing {

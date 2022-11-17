@@ -99,7 +99,7 @@ dependencies = [
 [[package]]
 name = "aleph_client"
 version = "1.13.0"
-source = "git+https://github.com/Cardinal-Cryptography/aleph-node/?rev=493270989938c4b2da1a74c499ea2ea172f6c714#493270989938c4b2da1a74c499ea2ea172f6c714"
+source = "git+https://github.com/Cardinal-Cryptography/aleph-node/?branch=blender-cli#6e2600978a5f9f1add04b0bf49f344363f6ad18f"
 dependencies = [
  "ac-node-api",
  "ac-primitives",
@@ -292,6 +292,7 @@ dependencies = [
  "aleph_client",
  "anyhow",
  "clap",
+ "hex",
  "parity-scale-codec",
  "serde",
  "serde_json",
@@ -2073,7 +2074,7 @@ checksum = "7b5bf27447411e9ee3ff51186bf7a08e16c341efdde93f4d823e8844429bed7e"
 [[package]]
 name = "pallet-aleph"
 version = "0.5.0"
-source = "git+https://github.com/Cardinal-Cryptography/aleph-node/?rev=493270989938c4b2da1a74c499ea2ea172f6c714#493270989938c4b2da1a74c499ea2ea172f6c714"
+source = "git+https://github.com/Cardinal-Cryptography/aleph-node/?branch=blender-cli#6e2600978a5f9f1add04b0bf49f344363f6ad18f"
 dependencies = [
  "frame-support",
  "frame-system",
@@ -2121,7 +2122,7 @@ dependencies = [
 [[package]]
 name = "pallet-elections"
 version = "0.5.0"
-source = "git+https://github.com/Cardinal-Cryptography/aleph-node/?rev=493270989938c4b2da1a74c499ea2ea172f6c714#493270989938c4b2da1a74c499ea2ea172f6c714"
+source = "git+https://github.com/Cardinal-Cryptography/aleph-node/?branch=blender-cli#6e2600978a5f9f1add04b0bf49f344363f6ad18f"
 dependencies = [
  "frame-election-provider-support",
  "frame-support",
@@ -2263,7 +2264,7 @@ dependencies = [
 [[package]]
 name = "pallets-support"
 version = "0.1.0"
-source = "git+https://github.com/Cardinal-Cryptography/aleph-node/?rev=493270989938c4b2da1a74c499ea2ea172f6c714#493270989938c4b2da1a74c499ea2ea172f6c714"
+source = "git+https://github.com/Cardinal-Cryptography/aleph-node/?branch=blender-cli#6e2600978a5f9f1add04b0bf49f344363f6ad18f"
 dependencies = [
  "frame-support",
 ]
@@ -2420,7 +2421,7 @@ dependencies = [
 [[package]]
 name = "primitives"
 version = "0.5.0"
-source = "git+https://github.com/Cardinal-Cryptography/aleph-node/?rev=493270989938c4b2da1a74c499ea2ea172f6c714#493270989938c4b2da1a74c499ea2ea172f6c714"
+source = "git+https://github.com/Cardinal-Cryptography/aleph-node/?branch=blender-cli#6e2600978a5f9f1add04b0bf49f344363f6ad18f"
 dependencies = [
  "parity-scale-codec",
  "scale-info",

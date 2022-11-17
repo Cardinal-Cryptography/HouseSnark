@@ -1,20 +1,22 @@
 use std::{fs::File, path::PathBuf};
 
+use aleph_client::{keypair_from_string, SignedConnection};
 use anyhow::{anyhow, Result};
 use clap::Parser;
 
 use crate::{
     app_state::AppState,
     config::{CliConfig, Command, DepositCmd, SetContractAddressCmd, SetNodeCmd, SetSeedCmd},
-    contract_actions::deposit,
+    contract::Blender,
 };
 
 type TokenId = u16;
 type TokenAmount = u64;
+type Note = [u8; 32];
 
 mod app_state;
 mod config;
-mod contract_actions;
+mod contract;
 
 fn create_and_save_default_state(path: &PathBuf) -> Result<AppState> {
     File::create(path).map_err(|e| anyhow!("Failed to create {path:?}: {e:?}"))?;
@@ -58,7 +60,23 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             app_state::write_to(&app_state, &cli_config.state_file)?;
         }
 
-        Command::Deposit(DepositCmd { token_id, amount }) => deposit(&app_state, token_id, amount),
+        Command::Deposit(DepositCmd {
+            token_id,
+            amount,
+            metadata_file,
+        }) => {
+            let signer = keypair_from_string(&app_state.caller_seed);
+            let connection = SignedConnection::new(&app_state.node_address, signer);
+
+            let contract = Blender::new(&app_state.contract_address, &metadata_file)?;
+            contract.deposit(
+                &connection,
+                token_id,
+                amount,
+                Default::default(),
+                &vec![1, 2, 3],
+            )?;
+        }
     }
 
     Ok(())
