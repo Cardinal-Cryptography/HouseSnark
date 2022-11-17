@@ -11,4 +11,4 @@ mod gadgets;
 mod hash_functions;
 mod relation;
 
-pub use relation::DepositRelation;
+pub use relation::{DepositRelation, WithdrawRelation};
