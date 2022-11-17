@@ -293,6 +293,7 @@ dependencies = [
  "anyhow",
  "clap",
  "hex",
+ "itertools",
  "parity-scale-codec",
  "serde",
  "serde_json",

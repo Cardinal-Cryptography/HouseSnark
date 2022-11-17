@@ -2,6 +2,7 @@ use std::{fs, path::Path};
 
 use aleph_client::AccountId;
 use anyhow::{anyhow, Result};
+use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 
 use crate::{TokenAmount, TokenId};
@@ -33,6 +34,30 @@ impl Default for AppState {
             contract_address: AccountId::new([0u8; 32]),
             deposits: Default::default(),
         }
+    }
+}
+
+#[derive(Clone, Eq, PartialEq, Debug, Deserialize, Serialize)]
+pub struct Asset {
+    pub token_id: TokenId,
+    pub token_amount: TokenAmount,
+}
+
+impl AppState {
+    pub fn get_assets(&self, token_id: Option<TokenId>) -> Vec<Asset> {
+        self.deposits
+            .iter()
+            .filter_map(|d| match token_id {
+                Some(id) if id != d.token_id => None,
+                _ => Some(Asset {
+                    token_id: d.token_id,
+                    token_amount: d.token_amount,
+                }),
+            })
+            .sorted_by_key(|a| a.token_amount)
+            .rev()
+            .sorted_by_key(|a| a.token_id)
+            .collect()
     }
 }
 
