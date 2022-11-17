@@ -70,13 +70,11 @@ fn perform_contract_command(mut app_state: AppState, command: Command) -> Result
         Deposit(DepositCmd {
             token_id, amount, ..
         }) => {
-            let leaf_idx = contract.deposit(
-                &connection,
-                token_id,
-                amount,
-                Default::default(),
-                &vec![1, 2, 3],
-            )?;
+            let dummy_proof = vec![1, 2, 3];
+            let dummy_note = Default::default();
+
+            let leaf_idx =
+                contract.deposit(&connection, token_id, amount, dummy_note, &dummy_proof)?;
 
             app_state.deposits.push(app_state::Deposit {
                 token_id,
