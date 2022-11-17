@@ -4,11 +4,22 @@ use aleph_client::AccountId;
 use anyhow::{anyhow, Result};
 use serde::{Deserialize, Serialize};
 
+use crate::{TokenAmount, TokenId};
+
+#[derive(Clone, Eq, PartialEq, Debug, Deserialize, Serialize)]
+pub struct Deposit {
+    pub token_id: TokenId,
+    pub token_amount: TokenAmount,
+    pub leaf_idx: u32,
+}
+
 #[derive(Clone, Eq, PartialEq, Debug, Deserialize, Serialize)]
 pub struct AppState {
     pub caller_seed: String,
     pub node_address: String,
     pub contract_address: AccountId,
+
+    pub deposits: Vec<Deposit>,
 }
 
 const DEFAULT_SEED: &str = "//Alice";
@@ -20,6 +31,7 @@ impl Default for AppState {
             caller_seed: DEFAULT_SEED.to_string(),
             node_address: DEFAULT_NODE_ADDRESS.to_string(),
             contract_address: AccountId::new([0u8; 32]),
+            deposits: Default::default(),
         }
     }
 }

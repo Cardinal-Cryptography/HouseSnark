@@ -33,11 +33,11 @@ fn create_and_save_default_state(path: &PathBuf) -> Result<AppState> {
 fn get_app_state(path: &PathBuf) -> Result<AppState> {
     match path.exists() {
         true => {
-            println!("File was found. Reading the state from {path:?}.");
+            println!("File with state was found. Reading the state from {path:?}.");
             app_state::read_from(path)
         }
         false => {
-            println!("File not found. Creating the default state in {path:?}.");
+            println!("File with state not found. Creating the default state in {path:?}.");
             create_and_save_default_state(path)
         }
     }
@@ -59,7 +59,7 @@ fn perform_state_update_command(mut app_state: AppState, command: Command) -> Re
     Ok(app_state)
 }
 
-fn perform_contract_command(app_state: AppState, command: Command) -> Result<AppState> {
+fn perform_contract_command(mut app_state: AppState, command: Command) -> Result<AppState> {
     let signer = keypair_from_string(&app_state.caller_seed);
     let connection = SignedConnection::new(&app_state.node_address, signer);
 
@@ -70,13 +70,19 @@ fn perform_contract_command(app_state: AppState, command: Command) -> Result<App
         Deposit(DepositCmd {
             token_id, amount, ..
         }) => {
-            contract.deposit(
+            let leaf_idx = contract.deposit(
                 &connection,
                 token_id,
                 amount,
                 Default::default(),
                 &vec![1, 2, 3],
             )?;
+
+            app_state.deposits.push(app_state::Deposit {
+                token_id,
+                token_amount: amount,
+                leaf_idx,
+            });
         }
         _ => unreachable!(),
     };
