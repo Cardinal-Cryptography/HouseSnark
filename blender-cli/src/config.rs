@@ -23,6 +23,25 @@ pub(super) enum Command {
     Deposit(DepositCmd),
 }
 
+impl Command {
+    pub fn is_state_update_action(&self) -> bool {
+        use Command::*;
+        matches!(self, SetSeed(_) | SetNode(_) | SetContractAddress(_))
+    }
+
+    pub fn is_contract_action(&self) -> bool {
+        use Command::*;
+        matches!(self, Deposit(_))
+    }
+
+    pub fn get_metadata_file(&self) -> Option<PathBuf> {
+        match self {
+            Command::Deposit(DepositCmd { metadata_file, .. }) => Some(metadata_file.clone()),
+            _ => None,
+        }
+    }
+}
+
 #[derive(Clone, Eq, PartialEq, Debug, Args)]
 pub(super) struct SetSeedCmd {
     /// Seed of the submitting account.
@@ -48,6 +67,10 @@ pub(super) struct DepositCmd {
 
     /// Registered token id.
     pub amount: TokenAmount,
+
+    /// Contract metadata file.
+    #[clap(default_value = "blender-metadata.json", value_parser = parsing::parse_path)]
+    pub metadata_file: PathBuf,
 }
 
 mod parsing {

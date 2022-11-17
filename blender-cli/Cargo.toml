@@ -8,8 +8,9 @@ authors = ["Cardinal Cryptography"]
 anyhow = "1.0"
 clap = { version = "4.0", features = ["derive"] }
 codec = { package = "parity-scale-codec", version = "3.0.0", default-features = false, features = ["derive", "full", "bit-vec"] }
+hex = "0.4.3"
 serde = { version = "1.0.147", features = ["derive"] }
 serde_json = "1.0.87"
 shellexpand = "2.1.2"
 
-aleph_client = { git = "https://github.com/Cardinal-Cryptography/aleph-node/", rev = "493270989938c4b2da1a74c499ea2ea172f6c714" }
+aleph_client = { git = "https://github.com/Cardinal-Cryptography/aleph-node/", branch = "blender-cli" }
