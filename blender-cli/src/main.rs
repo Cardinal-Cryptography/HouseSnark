@@ -6,7 +6,9 @@ use clap::Parser;
 
 use crate::{
     app_state::AppState,
-    config::{CliConfig, Command::*, DepositCmd, SetContractAddressCmd, SetNodeCmd, SetSeedCmd},
+    config::{
+        CliConfig, Command, Command::*, DepositCmd, SetContractAddressCmd, SetNodeCmd, SetSeedCmd,
+    },
     contract::Blender,
 };
 
@@ -41,47 +43,60 @@ fn get_app_state(path: &PathBuf) -> Result<AppState> {
     }
 }
 
+fn perform_state_update_command(mut app_state: AppState, command: Command) -> Result<AppState> {
+    match command {
+        SetSeed(SetSeedCmd { seed }) => {
+            app_state.caller_seed = seed;
+        }
+        SetNode(SetNodeCmd { node }) => {
+            app_state.node_address = node;
+        }
+        SetContractAddress(SetContractAddressCmd { address }) => {
+            app_state.contract_address = address;
+        }
+        _ => unreachable!(),
+    };
+    Ok(app_state)
+}
+
+fn perform_contract_command(app_state: AppState, command: Command) -> Result<AppState> {
+    let signer = keypair_from_string(&app_state.caller_seed);
+    let connection = SignedConnection::new(&app_state.node_address, signer);
+
+    let metadata_file = command.get_metadata_file().unwrap();
+    let contract = Blender::new(&app_state.contract_address, &metadata_file)?;
+
+    match command {
+        Deposit(DepositCmd {
+            token_id, amount, ..
+        }) => {
+            contract.deposit(
+                &connection,
+                token_id,
+                amount,
+                Default::default(),
+                &vec![1, 2, 3],
+            )?;
+        }
+        _ => unreachable!(),
+    };
+    Ok(app_state)
+}
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let cli_config: CliConfig = CliConfig::parse();
 
-    let mut app_state = get_app_state(&cli_config.state_file)?;
+    let app_state = get_app_state(&cli_config.state_file)?;
 
-    if cli_config.command.is_state_update_action() {
-        match cli_config.command {
-            SetSeed(SetSeedCmd { seed }) => {
-                app_state.caller_seed = seed;
-            }
-            SetNode(SetNodeCmd { node }) => {
-                app_state.node_address = node;
-            }
-            SetContractAddress(SetContractAddressCmd { address }) => {
-                app_state.contract_address = address;
-            }
-            _ => unreachable!(),
-        };
-        app_state::write_to(&app_state, &cli_config.state_file)?;
+    let updated_state = if cli_config.command.is_state_update_action() {
+        perform_state_update_command(app_state, cli_config.command)?
     } else if cli_config.command.is_contract_action() {
-        let signer = keypair_from_string(&app_state.caller_seed);
-        let connection = SignedConnection::new(&app_state.node_address, signer);
+        perform_contract_command(app_state, cli_config.command)?
+    } else {
+        unreachable!()
+    };
 
-        let metadata_file = cli_config.command.get_metadata_file().unwrap();
-        let contract = Blender::new(&app_state.contract_address, &metadata_file)?;
-
-        match cli_config.command {
-            Deposit(DepositCmd {
-                token_id, amount, ..
-            }) => {
-                contract.deposit(
-                    &connection,
-                    token_id,
-                    amount,
-                    Default::default(),
-                    &vec![1, 2, 3],
-                )?;
-            }
-            _ => unreachable!(),
-        }
-    }
+    app_state::write_to(&updated_state, &cli_config.state_file)?;
 
     Ok(())
 }
