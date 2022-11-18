@@ -34,6 +34,11 @@ pub(super) fn do_withdraw(
 
     let merkle_root = contract.get_merkle_root(&connection);
 
+    // TODO:
+    // - create real proof
+    // - create new note
+    // - save new deposit to the state
+
     let dummy_proof = vec![1, 2, 3];
     let dummy_note = Default::default();
 
