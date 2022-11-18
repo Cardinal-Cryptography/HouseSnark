@@ -3,7 +3,7 @@ use std::path::PathBuf;
 use aleph_client::AccountId;
 use clap::{Args, Parser, Subcommand};
 
-use crate::{TokenAmount, TokenId};
+use crate::{NoteId, TokenAmount, TokenId};
 
 #[derive(Clone, Eq, PartialEq, Parser)]
 pub(super) struct CliConfig {
@@ -46,12 +46,16 @@ pub(super) enum StateReadCommand {
 #[derive(Clone, Eq, PartialEq, Debug, Subcommand)]
 pub(super) enum ContractInteractionCommand {
     Deposit(DepositCmd),
+    Withdraw(WithdrawCmd),
 }
 
 impl ContractInteractionCommand {
     pub fn get_metadata_file(&self) -> PathBuf {
         match self {
             ContractInteractionCommand::Deposit(DepositCmd { metadata_file, .. }) => {
+                metadata_file.clone()
+            }
+            ContractInteractionCommand::Withdraw(WithdrawCmd { metadata_file, .. }) => {
                 metadata_file.clone()
             }
         }
@@ -82,6 +86,19 @@ pub(super) struct DepositCmd {
     pub token_id: TokenId,
 
     /// Registered token id.
+    pub amount: TokenAmount,
+
+    /// Contract metadata file.
+    #[clap(default_value = "blender-metadata.json", value_parser = parsing::parse_path)]
+    pub metadata_file: PathBuf,
+}
+
+#[derive(Clone, Eq, PartialEq, Debug, Args)]
+pub(super) struct WithdrawCmd {
+    /// Which note should be spent.
+    pub note_id: NoteId,
+
+    /// How many tokens should be withdrawn.
     pub amount: TokenAmount,
 
     /// Contract metadata file.

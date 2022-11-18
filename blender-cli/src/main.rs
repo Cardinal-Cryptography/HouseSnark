@@ -19,6 +19,7 @@ use crate::{
     state_file::{get_app_state, save_app_state},
 };
 
+type NoteId = u16;
 type TokenId = u16;
 type TokenAmount = u64;
 type Note = [u8; 32];
@@ -82,6 +83,7 @@ fn perform_contract_action(
                 leaf_idx,
             });
         }
+        ContractInteractionCommand::Withdraw(_) => {}
     };
     Ok(())
 }
