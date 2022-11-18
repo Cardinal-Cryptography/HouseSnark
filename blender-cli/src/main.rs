@@ -66,6 +66,7 @@ fn perform_state_update_action(
 fn perform_state_read_action(app_state: AppState, command: Command) -> Result<Option<AppState>> {
     match command {
         ShowAssets(ShowAssetsCmd { token_id }) => println!("{:?}", app_state.get_assets(token_id)),
+        PrintState => println!("{}", serde_json::to_string_pretty(&app_state).unwrap()),
         _ => {}
     };
     Ok(None)

@@ -68,6 +68,6 @@ pub fn read_from(path: &Path) -> Result<AppState> {
 }
 
 pub fn write_to(state: &AppState, path: &Path) -> Result<()> {
-    fs::write(path, serde_json::to_string_pretty(state)?)
+    fs::write(path, serde_json::to_string_pretty(state).unwrap())
         .map_err(|e| anyhow!("Failed to save application state: {:?}", e))
 }

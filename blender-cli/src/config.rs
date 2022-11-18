@@ -21,6 +21,7 @@ pub(super) enum Command {
     SetContractAddress(SetContractAddressCmd),
 
     ShowAssets(ShowAssetsCmd),
+    PrintState,
 
     Deposit(DepositCmd),
 }
@@ -33,7 +34,7 @@ impl Command {
 
     pub fn is_state_read_action(&self) -> bool {
         use Command::*;
-        matches!(self, ShowAssets(_))
+        matches!(self, ShowAssets(_) | PrintState)
     }
 
     pub fn is_contract_action(&self) -> bool {
