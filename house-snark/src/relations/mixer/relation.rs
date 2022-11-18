@@ -15,7 +15,7 @@ use ark_std::hash::Hash;
 use super::{
     gadgets::LeafHashGadget,
     hash_functions::LeafHash,
-    tree::{PoseidonMerkleTreePath, Root},
+    tree::{PoseidonMerkleTreeConfig, PoseidonMerkleTreePath, Root},
 };
 use crate::{
     relations::mixer::{
@@ -183,6 +183,8 @@ mod tests {
             trapdoor,
             new_trapdoor,
             new_nullifier,
+            two_to_one_crh_params,
+            leaf_crh_params,
         };
 
         circuit.generate_constraints(cs.clone()).unwrap();
@@ -212,32 +214,29 @@ pub struct WithdrawRelation {
     trapdoor: u128,
     new_trapdoor: u128,
     new_nullifier: u128,
-    //     pub two_to_one_crh_params: <TwoToOneHash as TwoToOneCRH>::Parameters,
-    //     pub leaf_crh_params: <TwoToOneHash as TwoToOneCRH>::Parameters,
+
+    // CRH params
+    two_to_one_crh_params: <TwoToOneHash as TwoToOneCRH>::Parameters,
+    leaf_crh_params: <TwoToOneHash as TwoToOneCRH>::Parameters,
 }
+
+/// The R1CS equivalent of the the Merkle tree root.
+pub type RootVar = <TwoToOneHashGadget as TwoToOneCRHGadget<TwoToOneHash, CircuitField>>::OutputVar;
+
+/// The R1CS equivalent of the the Merkle tree path.
+pub type SimplePathVar =
+    PathVar<PoseidonMerkleTreeConfig, LeafHashGadget, TwoToOneHashGadget, CircuitField>;
 
 impl ConstraintSynthesizer<CircuitField> for WithdrawRelation {
     fn generate_constraints(
         self,
         cs: ConstraintSystemRef<CircuitField>,
     ) -> Result<(), SynthesisError> {
-        todo!()
+        self.clone().verify_merkle_proof(cs.clone())?;
+
+        Ok(())
     }
 }
-
-// #[derive(Clone)]
-// pub struct DepositRelation<Trapdoor, Nullifier, TokenId> {
-//     // private
-//     pub trapdoor: Trapdoor,
-//     pub nullifier: Nullifier,
-
-//     // public
-//     pub note: NoteVar,
-//     pub token_id: TokenId,
-//     pub value: u128,
-
-//     pub two_to_one_crh_params: <TwoToOneHash as TwoToOneCRH>::Parameters,
-// }
 
 // impl<Trapdoor, Nullifier, TokenId> ConstraintSynthesizer<CircuitField>
 //     for DepositRelation<Trapdoor, Nullifier, TokenId>
@@ -285,24 +284,6 @@ impl ConstraintSynthesizer<CircuitField> for WithdrawRelation {
 // {
 // }
 
-// /// The R1CS equivalent of the the Merkle tree root.
-// pub type RootVar = <TwoToOneHashGadget as TwoToOneCRHGadget<TwoToOneHash, CircuitField>>::OutputVar;
-
-// #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug, Default)]
-// pub struct MerkleConfig;
-// impl Config for MerkleConfig {
-//     type LeafHash = LeafHash;
-//     type TwoToOneHash = TwoToOneHash;
-// }
-
-// /// The root of the byte Merkle tree.
-// pub type Root = <TwoToOneHash as TwoToOneCRH>::Output;
-
-// #[derive(Clone)]
-// pub struct MerklePathWrapper {
-//     path: Path<MerkleConfig>,
-// }
-
 // #[derive(Clone)]
 // pub struct WithdrawRelation<Trapdoor: Clone, Nullifier: Clone, TokenId: Clone> {
 //     pub old_t: Trapdoor,
@@ -325,133 +306,117 @@ impl ConstraintSynthesizer<CircuitField> for WithdrawRelation {
 //     pub leaf_crh_params: <TwoToOneHash as TwoToOneCRH>::Parameters,
 // }
 
-// impl<Trapdoor, Nullifier, TokenId> WithdrawRelation<Trapdoor, Nullifier, TokenId>
-// where
-//     Trapdoor: ToBytesGadget<CircuitField> + Clone,
-//     Nullifier: ToBytesGadget<CircuitField> + Clone,
-//     TokenId: ToBytesGadget<CircuitField> + Clone,
-// {
-//     fn verify_old_inputs(
-//         self,
-//         cs: ConstraintSystemRef<CircuitField>,
-//     ) -> Result<(), SynthesisError> {
-//         let two_to_one_crh_params =
-//             TwoToOneHashParamsVar::new_constant(cs.clone(), &self.two_to_one_crh_params)?;
+impl WithdrawRelation {
+    // fn verify_old_inputs(
+    //     self,
+    //     cs: ConstraintSystemRef<CircuitField>,
+    // ) -> Result<(), SynthesisError> {
+    //     let two_to_one_crh_params =
+    //         TwoToOneHashParamsVar::new_constant(cs.clone(), &self.two_to_one_crh_params)?;
 
-//         let old_n = self.old_n.to_bytes()?;
-//         let old_n = old_n.as_slice();
-//         let old_t = self.old_t.to_bytes()?;
-//         let old_t = old_t.as_slice();
+    //     let old_n = self.old_n.to_bytes()?;
+    //     let old_n = old_n.as_slice();
+    //     let old_t = self.old_t.to_bytes()?;
+    //     let old_t = old_t.as_slice();
 
-//         let token_id = self.token_id.to_bytes()?;
-//         let token_id = token_id.as_slice();
-//         let value_out = UInt128::new_input(ark_relations::ns!(cs, "value_out_var"), || {
-//             Ok(&self.value_out)
-//         })?;
+    //     let token_id = self.token_id.to_bytes()?;
+    //     let token_id = token_id.as_slice();
+    //     let value_out = UInt128::new_input(ark_relations::ns!(cs, "value_out_var"), || {
+    //         Ok(&self.value_out)
+    //     })?;
 
-//         let left_hash = TwoToOneHashGadget::evaluate(&two_to_one_crh_params, old_n, old_t)?;
-//         let right_hash = TwoToOneHashGadget::evaluate(
-//             &two_to_one_crh_params,
-//             token_id,
-//             value_out.to_bytes()?.as_slice(),
-//         )?;
-//         let final_hash = TwoToOneHashGadget::evaluate(
-//             &two_to_one_crh_params,
-//             left_hash.to_bytes()?.as_slice(),
-//             right_hash.to_bytes()?.as_slice(),
-//         )?;
+    //     let left_hash = TwoToOneHashGadget::evaluate(&two_to_one_crh_params, old_n, old_t)?;
+    //     let right_hash = TwoToOneHashGadget::evaluate(
+    //         &two_to_one_crh_params,
+    //         token_id,
+    //         value_out.to_bytes()?.as_slice(),
+    //     )?;
+    //     let final_hash = TwoToOneHashGadget::evaluate(
+    //         &two_to_one_crh_params,
+    //         left_hash.to_bytes()?.as_slice(),
+    //         right_hash.to_bytes()?.as_slice(),
+    //     )?;
 
-//         final_hash.enforce_equal(&self.old_note)?;
+    //     final_hash.enforce_equal(&self.old_note)?;
 
-//         Ok(())
-//     }
+    //     Ok(())
+    // }
 
-//     fn verify_new_inputs(
-//         self,
-//         cs: ConstraintSystemRef<CircuitField>,
-//     ) -> Result<(), SynthesisError> {
-//         let two_to_one_crh_params =
-//             TwoToOneHashParamsVar::new_constant(cs.clone(), &self.two_to_one_crh_params)?;
+    // fn verify_new_inputs(
+    //     self,
+    //     cs: ConstraintSystemRef<CircuitField>,
+    // ) -> Result<(), SynthesisError> {
+    //     let two_to_one_crh_params =
+    //         TwoToOneHashParamsVar::new_constant(cs.clone(), &self.two_to_one_crh_params)?;
 
-//         let new_n = self.new_n.to_bytes()?;
-//         let new_n = new_n.as_slice();
-//         let new_t = self.new_t.to_bytes()?;
-//         let new_t = new_t.as_slice();
+    //     let new_n = self.new_n.to_bytes()?;
+    //     let new_n = new_n.as_slice();
+    //     let new_t = self.new_t.to_bytes()?;
+    //     let new_t = new_t.as_slice();
 
-//         let token_id = self.token_id.to_bytes()?;
-//         let token_id = token_id.as_slice();
-//         let new_value = UInt128::new_input(ark_relations::ns!(cs, "new_value_var"), || {
-//             Ok(&self.new_value)
-//         })?;
-//         let value_out = UInt128::new_input(ark_relations::ns!(cs, "value_out_var"), || {
-//             Ok(&self.value_out)
-//         })?;
+    //     let token_id = self.token_id.to_bytes()?;
+    //     let token_id = token_id.as_slice();
+    //     let new_value = UInt128::new_input(ark_relations::ns!(cs, "new_value_var"), || {
+    //         Ok(&self.new_value)
+    //     })?;
+    //     let value_out = UInt128::new_input(ark_relations::ns!(cs, "value_out_var"), || {
+    //         Ok(&self.value_out)
+    //     })?;
 
-//         let value = UInt128::new_input(ark_relations::ns!(cs, "value_var"), || Ok(&self.value))?;
-//         let sum = UInt128::addmany(&[new_value.clone(), value_out])?;
-//         sum.enforce_equal(&value)?;
+    //     let value = UInt128::new_input(ark_relations::ns!(cs, "value_var"), || Ok(&self.value))?;
+    //     let sum = UInt128::addmany(&[new_value.clone(), value_out])?;
+    //     sum.enforce_equal(&value)?;
 
-//         let left_hash = TwoToOneHashGadget::evaluate(&two_to_one_crh_params, new_n, new_t)?;
-//         let right_hash = TwoToOneHashGadget::evaluate(
-//             &two_to_one_crh_params,
-//             token_id,
-//             new_value.to_bytes()?.as_slice(),
-//         )?;
-//         let final_hash = TwoToOneHashGadget::evaluate(
-//             &two_to_one_crh_params,
-//             left_hash.to_bytes()?.as_slice(),
-//             right_hash.to_bytes()?.as_slice(),
-//         )?;
+    //     let left_hash = TwoToOneHashGadget::evaluate(&two_to_one_crh_params, new_n, new_t)?;
+    //     let right_hash = TwoToOneHashGadget::evaluate(
+    //         &two_to_one_crh_params,
+    //         token_id,
+    //         new_value.to_bytes()?.as_slice(),
+    //     )?;
+    //     let final_hash = TwoToOneHashGadget::evaluate(
+    //         &two_to_one_crh_params,
+    //         left_hash.to_bytes()?.as_slice(),
+    //         right_hash.to_bytes()?.as_slice(),
+    //     )?;
 
-//         final_hash.enforce_equal(&self.old_note)?;
+    //     final_hash.enforce_equal(&self.old_note)?;
 
-//         Ok(())
-//     }
+    //     Ok(())
+    // }
 
-//     fn verify_merkle_proof(
-//         self,
-//         cs: ConstraintSystemRef<CircuitField>,
-//     ) -> Result<(), SynthesisError> {
-//         let root =
-//             RootVar::new_input(ark_relations::ns!(cs, "root_var"), || Ok(&self.merkle_root))?;
-//         let path: PathVar<_, LeafHashGadget, TwoToOneHashGadget, _> =
-//             PathVar::new_input(ark_relations::ns!(cs, "merkle_proof_var"), || {
-//                 Ok(&self.merkle_proof.path)
-//             })?;
-//         let two_to_one_crh_params =
-//             TwoToOneHashParamsVar::new_constant(cs.clone(), &self.two_to_one_crh_params)?;
-//         let leaf_crh_params = TwoToOneHashParamsVar::new_constant(cs, &self.leaf_crh_params)?;
+    fn verify_merkle_proof(
+        self,
+        cs: ConstraintSystemRef<CircuitField>,
+    ) -> Result<(), SynthesisError> {
+        // verify merkle path
 
-//         path.verify_membership(
-//             &leaf_crh_params,
-//             &two_to_one_crh_params,
-//             &root,
-//             &self.old_note,
-//         )?
-//         .enforce_equal(&Boolean::TRUE)?;
+        let root =
+            RootVar::new_input(ark_relations::ns!(cs, "root_var"), || Ok(&self.merkle_root))?;
 
-//         Ok(())
-//     }
-// }
+        let path: PathVar<_, LeafHashGadget, TwoToOneHashGadget, _> =
+            PathVar::new_input(ark_relations::ns!(cs, "merkle_proof_var"), || {
+                Ok(&self.merkle_proof)
+            })?;
 
-// impl<Trapdoor, Nullifier, TokenId> ConstraintSynthesizer<CircuitField>
-//     for WithdrawRelation<Trapdoor, Nullifier, TokenId>
-// where
-//     Trapdoor: ToBytesGadget<CircuitField> + Clone,
-//     Nullifier: ToBytesGadget<CircuitField> + Clone,
-//     TokenId: ToBytesGadget<CircuitField> + Clone,
-// {
-//     fn generate_constraints(
-//         self,
-//         cs: ConstraintSystemRef<CircuitField>,
-//     ) -> Result<(), SynthesisError> {
-//         self.clone().verify_merkle_proof(cs.clone())?;
-//         self.clone().verify_old_inputs(cs.clone())?;
-//         self.verify_new_inputs(cs)?;
+        let two_to_one_crh_params =
+            TwoToOneHashParamsVar::new_constant(cs.clone(), &self.two_to_one_crh_params)?;
+        let leaf_crh_params = TwoToOneHashParamsVar::new_constant(cs, &self.leaf_crh_params)?;
 
-//         Ok(())
-//     }
-// }
+        // let note = NoteVar::new_input(ark_relations::ns!(cs, "note_var"), || Ok(&self.note))?;
+
+        // let leaf_bytes = vec![note; 1];
+
+        // path.verify_membership(
+        //     &leaf_crh_params,
+        //     &two_to_one_crh_params,
+        //     &root,
+        //     &leaf_bytes.as_slice(),
+        // )?
+        // .enforce_equal(&Boolean::TRUE)?;
+
+        Ok(())
+    }
+}
 
 // impl<Trapdoor: Clone, Nullifier: Clone, TokenId: Clone> GetPublicInput<CircuitField>
 //     for WithdrawRelation<Trapdoor, Nullifier, TokenId>
