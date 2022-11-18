@@ -28,7 +28,7 @@ pub fn get_app_state(path: &PathBuf, password: &str) -> Result<AppState> {
 /// Save `app_state` to `path`.
 ///
 /// `path` will be encrypted with `password`.
-pub fn save_app_state(app_state: &AppState, path: &PathBuf, password: &str) -> Result<()> {
+pub fn save_app_state(app_state: &AppState, path: &PathBuf, _password: &str) -> Result<()> {
     fs::write(
         path,
         serde_json::to_string_pretty(app_state).expect("Serialization should succeed"),
@@ -39,8 +39,8 @@ pub fn save_app_state(app_state: &AppState, path: &PathBuf, password: &str) -> R
 /// Read `AppState` from `path`.
 fn read_from(path: &Path, password: &str) -> Result<AppState> {
     let file_content = fs::read(path).map_err(|e| anyhow!("Failed to read file content: {e:?}"))?;
-    let decrypted_content = decrypt(file_content);
-    serde_json::from_str::<AppState>(&file_content)
+    let decrypted_content = decrypt(&file_content, password);
+    serde_json::from_str::<AppState>(&decrypted_content)
         .map_err(|e| anyhow!("Failed to deserialize application state: {e:?}"))
 }
 
@@ -49,7 +49,12 @@ fn create_and_save_default_state(path: &PathBuf, password: &str) -> Result<AppSt
     File::create(path).map_err(|e| anyhow!("Failed to create {path:?}: {e:?}"))?;
 
     let state = AppState::default();
-    save_app_state(&state, path).map_err(|e| anyhow!("Failed to save state to {path:?}: {e:?}"))?;
+    save_app_state(&state, path, password)
+        .map_err(|e| anyhow!("Failed to save state to {path:?}: {e:?}"))?;
 
     Ok(state)
+}
+
+fn decrypt(_content: &[u8], _password: &str) -> String {
+    String::new()
 }

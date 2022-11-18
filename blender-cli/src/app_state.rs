@@ -1,3 +1,5 @@
+use std::cmp::Ordering;
+
 use aleph_client::AccountId;
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
@@ -40,20 +42,48 @@ pub struct Asset {
     pub token_amount: TokenAmount,
 }
 
+impl PartialOrd<Self> for Asset {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for Asset {
+    fn cmp(&self, other: &Self) -> Ordering {
+        if self == other {
+            Ordering::Equal
+        } else if self.token_id < other.token_id
+            || (self.token_id == other.token_id && self.token_amount > other.token_amount)
+        {
+            Ordering::Less
+        } else {
+            Ordering::Greater
+        }
+    }
+}
+
 impl AppState {
-    pub fn get_assets(&self, token_id: Option<TokenId>) -> Vec<Asset> {
+    pub fn get_all_assets(&self) -> Vec<Asset> {
         self.deposits
             .iter()
-            .filter_map(|d| match token_id {
-                Some(id) if id != d.token_id => None,
-                _ => Some(Asset {
+            .map(|d| Asset {
+                token_id: d.token_id,
+                token_amount: d.token_amount,
+            })
+            .sorted()
+            .collect()
+    }
+
+    pub fn get_single_asset(&self, token_id: TokenId) -> Vec<Asset> {
+        self.deposits
+            .iter()
+            .filter_map(|d| {
+                (token_id == d.token_id).then_some(Asset {
                     token_id: d.token_id,
                     token_amount: d.token_amount,
-                }),
+                })
             })
-            .sorted_by_key(|a| a.token_amount)
-            .rev()
-            .sorted_by_key(|a| a.token_id)
+            .sorted()
             .collect()
     }
 }

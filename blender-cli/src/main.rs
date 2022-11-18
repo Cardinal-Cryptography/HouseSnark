@@ -1,7 +1,7 @@
 use aleph_client::{keypair_from_string, SignedConnection};
 use anyhow::Result;
 use clap::Parser;
-use inquire::{error::InquireResult, Password, PasswordDisplayMode};
+use inquire::Password;
 
 use crate::{
     app_state::AppState,
@@ -43,7 +43,13 @@ fn perform_state_update_action(
 
 fn perform_state_read_action(app_state: AppState, command: Command) -> Result<Option<AppState>> {
     match command {
-        ShowAssets(ShowAssetsCmd { token_id }) => println!("{:?}", app_state.get_assets(token_id)),
+        ShowAssets(ShowAssetsCmd { token_id }) => {
+            let assets = match token_id {
+                None => app_state.get_all_assets(),
+                Some(token_id) => app_state.get_single_asset(token_id),
+            };
+            println!("{:?}", assets)
+        }
         PrintState => println!("{}", serde_json::to_string_pretty(&app_state).unwrap()),
         _ => {}
     };
