@@ -96,10 +96,16 @@ pub(super) struct DepositCmd {
 #[derive(Clone, Eq, PartialEq, Debug, Args)]
 pub(super) struct WithdrawCmd {
     /// Which note should be spent.
-    pub deposit_id: DepositId,
+    #[clap(required_unless_present("interactive"))]
+    pub deposit_id: Option<DepositId>,
 
     /// How many tokens should be withdrawn.
-    pub amount: TokenAmount,
+    #[clap(required_unless_present("interactive"))]
+    pub amount: Option<TokenAmount>,
+
+    /// Perform action interactively.
+    #[clap(short, conflicts_with_all(["deposit_id", "amount"]))]
+    pub interactive: bool,
 
     /// Contract metadata file.
     #[clap(default_value = "blender-metadata.json", value_parser = parsing::parse_path)]

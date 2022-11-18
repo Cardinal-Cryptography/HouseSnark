@@ -1,9 +1,9 @@
 use aleph_client::{keypair_from_string, SignedConnection};
 use anyhow::Result;
 use clap::Parser;
-use inquire::Password;
+use inquire::{CustomType, Password, Select};
 use zeroize::Zeroize;
-use ContractInteractionCommand::Deposit;
+use ContractInteractionCommand::{Deposit, Withdraw};
 use StateReadCommand::{PrintState, ShowAssets};
 use StateWriteCommand::{SetContractAddress, SetNode};
 
@@ -13,7 +13,7 @@ use crate::{
         CliConfig,
         Command::{ContractInteraction, StateRead, StateWrite},
         ContractInteractionCommand, DepositCmd, SetContractAddressCmd, SetNodeCmd, ShowAssetsCmd,
-        StateReadCommand, StateWriteCommand,
+        StateReadCommand, StateWriteCommand, WithdrawCmd,
     },
     contract::Blender,
     state_file::{get_app_state, save_app_state},
@@ -79,7 +79,35 @@ fn perform_contract_action(
 
             app_state.add_deposit(token_id, amount, leaf_idx);
         }
-        ContractInteractionCommand::Withdraw(_) => {}
+        Withdraw(WithdrawCmd {
+            interactive,
+            deposit_id,
+            amount,
+            ..
+        }) => {
+            let (deposit_id, amount) = if !interactive {
+                (deposit_id.unwrap(), amount.unwrap())
+            } else {
+                let deposit = Select::new("Select one of your deposits:", app_state.deposits())
+                    .with_page_size(5)
+                    .prompt()?;
+
+                let amount = CustomType::<TokenAmount>::new(
+                    "Specify how many tokens should be withdrawn:",
+                )
+                .with_default(deposit.token_amount)
+                .with_parser(&|a| match str::parse::<TokenAmount>(a) {
+                    Ok(amount) if amount <= deposit.token_amount => Ok(amount),
+                    _ => Err(()),
+                })
+                .with_error_message(
+                    "You should provide a valid amount, no more than the whole deposit value",
+                )
+                .prompt()?;
+
+                (deposit.deposit_id, amount)
+            };
+        }
     };
     Ok(())
 }

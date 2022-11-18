@@ -1,4 +1,7 @@
-use std::cmp::Ordering;
+use std::{
+    cmp::Ordering,
+    fmt::{Display, Formatter},
+};
 
 use aleph_client::AccountId;
 use itertools::Itertools;
@@ -12,6 +15,16 @@ pub struct Deposit {
     pub token_id: TokenId,
     pub token_amount: TokenAmount,
     pub leaf_idx: u32,
+}
+
+impl Display for Deposit {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{{ TokenID: {}, Amount: {} }}",
+            self.token_id, self.token_amount
+        )
+    }
 }
 
 #[derive(Clone, Eq, PartialEq, Debug, Deserialize, Serialize)]
@@ -43,6 +56,7 @@ impl Default for AppState {
 pub struct Asset {
     pub token_id: TokenId,
     pub token_amount: TokenAmount,
+    pub deposit_id: DepositId,
 }
 
 impl PartialOrd<Self> for Asset {
@@ -65,27 +79,25 @@ impl Ord for Asset {
     }
 }
 
+impl From<&Deposit> for Asset {
+    fn from(d: &Deposit) -> Self {
+        Asset {
+            token_id: d.token_id,
+            token_amount: d.token_amount,
+            deposit_id: d.deposit_id,
+        }
+    }
+}
+
 impl AppState {
     pub fn get_all_assets(&self) -> Vec<Asset> {
-        self.deposits
-            .iter()
-            .map(|d| Asset {
-                token_id: d.token_id,
-                token_amount: d.token_amount,
-            })
-            .sorted()
-            .collect()
+        self.deposits.iter().map(Asset::from).sorted().collect()
     }
 
     pub fn get_single_asset(&self, token_id: TokenId) -> Vec<Asset> {
         self.deposits
             .iter()
-            .filter_map(|d| {
-                (token_id == d.token_id).then_some(Asset {
-                    token_id: d.token_id,
-                    token_amount: d.token_amount,
-                })
-            })
+            .filter_map(|d| (token_id == d.token_id).then(|| Asset::from(d)))
             .sorted()
             .collect()
     }
@@ -98,5 +110,13 @@ impl AppState {
             leaf_idx,
         });
         self.deposit_counter += 1;
+    }
+
+    pub fn deposits(&self) -> Vec<Deposit> {
+        self.deposits
+            .clone()
+            .into_iter()
+            .sorted_by_key(|d| Asset::from(d))
+            .collect()
     }
 }
