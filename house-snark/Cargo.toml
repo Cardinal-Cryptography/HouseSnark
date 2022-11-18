@@ -28,6 +28,8 @@ ark-bls12-381 = { version = "^0.3.0" }
 ark-groth16 = { version = "^0.3.0", default-features = false }
 ark-gm17 = { version = "^0.3.0", default-features = false }
 ark-marlin = { version = "^0.3.0", default-features = false }
+# ark-test-curves = { version = "^0.3.0", default-features = true, features = [ "bls12_381_scalar_field" ] }
+# primitive-types = "0.12.1"
 
 [features]
 default = ["std"]

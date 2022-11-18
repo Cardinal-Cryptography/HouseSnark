@@ -9,7 +9,7 @@ use ark_serialize::CanonicalSerialize;
 use clap::Subcommand;
 pub use linear::LinearEqRelation;
 pub use merkle_tree::{MerkleTreeRelation, MerkleTreeRelationArgs};
-pub use mixer::{DepositRelation, WithdrawRelation};
+// pub use mixer::{DepositRelation, WithdrawRelation};
 pub use xor::XorRelation;
 
 use crate::CircuitField;

@@ -45,3 +45,35 @@ impl<CircuitField: PrimeField + CanonicalSerialize> GetPublicInput<CircuitField>
         byte_to_bits(self.public_xoree).to_vec()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use ark_relations::r1cs::ConstraintSystem;
+    use ark_test_curves::bls12_381::Fr;
+
+    use super::*;
+    #[test]
+    fn test_xor_relation() {
+        let cs = ConstraintSystem::<Fr>::new_ref();
+
+        let circuit = XorRelation {
+            public_xoree: 2,
+            private_xoree: 3,
+            result: 1,
+        };
+
+        circuit.generate_constraints(cs.clone()).unwrap();
+
+        let is_satisfied = cs.is_satisfied().unwrap();
+        if !is_satisfied {
+            println!("{:?}", cs.which_is_unsatisfied());
+        }
+
+        assert!(is_satisfied);
+
+        // TODO : in groth16
+        // generate keys
+        // generate proof
+        // verify proof
+    }
+}
