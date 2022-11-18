@@ -5,7 +5,7 @@ use clap::{Args, Parser, Subcommand};
 
 use crate::{TokenAmount, TokenId};
 
-#[derive(Clone, Eq, PartialEq, Debug, Parser)]
+#[derive(Clone, Eq, PartialEq, Parser)]
 pub(super) struct CliConfig {
     /// Path to the file containing application state.
     #[clap(long, default_value = "~/.blender-state", value_parser = parsing::parse_path)]
@@ -23,35 +23,37 @@ pub(super) struct CliConfig {
 
 #[derive(Clone, Eq, PartialEq, Debug, Subcommand)]
 pub(super) enum Command {
+    #[clap(flatten)]
+    StateWrite(StateWriteCommand),
+    #[clap(flatten)]
+    StateRead(StateReadCommand),
+    #[clap(flatten)]
+    ContractInteraction(ContractInteractionCommand),
+}
+
+#[derive(Clone, Eq, PartialEq, Debug, Subcommand)]
+pub(super) enum StateWriteCommand {
     SetNode(SetNodeCmd),
     SetContractAddress(SetContractAddressCmd),
+}
 
+#[derive(Clone, Eq, PartialEq, Debug, Subcommand)]
+pub(super) enum StateReadCommand {
     ShowAssets(ShowAssetsCmd),
     PrintState,
+}
 
+#[derive(Clone, Eq, PartialEq, Debug, Subcommand)]
+pub(super) enum ContractInteractionCommand {
     Deposit(DepositCmd),
 }
 
-impl Command {
-    pub fn is_state_update_action(&self) -> bool {
-        use Command::*;
-        matches!(self, SetNode(_) | SetContractAddress(_))
-    }
-
-    pub fn is_state_read_action(&self) -> bool {
-        use Command::*;
-        matches!(self, ShowAssets(_) | PrintState)
-    }
-
-    pub fn is_contract_action(&self) -> bool {
-        use Command::*;
-        matches!(self, Deposit(_))
-    }
-
-    pub fn get_metadata_file(&self) -> Option<PathBuf> {
+impl ContractInteractionCommand {
+    pub fn get_metadata_file(&self) -> PathBuf {
         match self {
-            Command::Deposit(DepositCmd { metadata_file, .. }) => Some(metadata_file.clone()),
-            _ => None,
+            ContractInteractionCommand::Deposit(DepositCmd { metadata_file, .. }) => {
+                metadata_file.clone()
+            }
         }
     }
 }
