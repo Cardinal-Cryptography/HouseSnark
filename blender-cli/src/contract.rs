@@ -15,7 +15,7 @@ use aleph_client::{
 };
 use anyhow::{anyhow, Result};
 
-use crate::{Note, TokenAmount, TokenId};
+use crate::{MerkleRoot, Note, Nullifier, TokenAmount, TokenId};
 
 #[derive(Debug)]
 pub struct Blender {
@@ -91,5 +91,21 @@ impl Blender {
                 "Failed to observe expected event. And actually I do not know where are your tokens."
             ))
         }
+    }
+
+    /// Call `withdraw` message of the contract.
+    pub fn withdraw(
+        &self,
+        connection: &SignedConnection,
+        token_id: TokenId,
+        token_amount: TokenAmount,
+        recipient: AccountId,
+        fee_for_caller: Option<TokenAmount>,
+        merkle_root: MerkleRoot,
+        nullifier: Nullifier,
+        new_note: Note,
+        proof: &[u8],
+    ) -> Result<()> {
+        Ok(())
     }
 }

@@ -107,6 +107,15 @@ pub(super) struct WithdrawCmd {
     #[clap(short, conflicts_with_all(["deposit_id", "amount"]))]
     pub interactive: bool,
 
+    /// The destination account. If `None`, the tokens will be transferred to the main seed account.
+    pub recipient: Option<AccountId>,
+
+    /// Seed for submitting the transaction. If `None`, the main seed is used.
+    pub caller_seed: Option<String>,
+
+    /// Fee for the caller.
+    pub fee: Option<TokenAmount>,
+
     /// Contract metadata file.
     #[clap(default_value = "blender-metadata.json", value_parser = parsing::parse_path)]
     pub metadata_file: PathBuf,

@@ -1,7 +1,7 @@
 use aleph_client::{keypair_from_string, SignedConnection};
 use anyhow::Result;
 use clap::Parser;
-use inquire::{CustomType, Password, Select};
+use inquire::Password;
 use zeroize::Zeroize;
 use ContractInteractionCommand::{Deposit, Withdraw};
 use StateReadCommand::{PrintState, ShowAssets};
@@ -12,22 +12,28 @@ use crate::{
     config::{
         CliConfig,
         Command::{ContractInteraction, StateRead, StateWrite},
-        ContractInteractionCommand, DepositCmd, SetContractAddressCmd, SetNodeCmd, ShowAssetsCmd,
-        StateReadCommand, StateWriteCommand, WithdrawCmd,
+        ContractInteractionCommand, SetContractAddressCmd, SetNodeCmd, ShowAssetsCmd,
+        StateReadCommand, StateWriteCommand,
     },
     contract::Blender,
+    deposit::do_deposit,
     state_file::{get_app_state, save_app_state},
+    withdraw::do_withdraw,
 };
 
 type DepositId = u16;
 type TokenId = u16;
 type TokenAmount = u64;
 type Note = [u8; 32];
+type MerkleRoot = [u8; 32];
+type Nullifier = u64;
 
 mod app_state;
 mod config;
 mod contract;
+mod deposit;
 mod state_file;
+mod withdraw;
 
 fn perform_state_write_action(app_state: &mut AppState, command: StateWriteCommand) -> Result<()> {
     match command {
@@ -68,46 +74,8 @@ fn perform_contract_action(
     let contract = Blender::new(&app_state.contract_address, &metadata_file)?;
 
     match command {
-        Deposit(DepositCmd {
-            token_id, amount, ..
-        }) => {
-            let dummy_proof = vec![1, 2, 3];
-            let dummy_note = Default::default();
-
-            let leaf_idx =
-                contract.deposit(&connection, token_id, amount, dummy_note, &dummy_proof)?;
-
-            app_state.add_deposit(token_id, amount, leaf_idx);
-        }
-        Withdraw(WithdrawCmd {
-            interactive,
-            deposit_id,
-            amount,
-            ..
-        }) => {
-            let (deposit_id, amount) = if !interactive {
-                (deposit_id.unwrap(), amount.unwrap())
-            } else {
-                let deposit = Select::new("Select one of your deposits:", app_state.deposits())
-                    .with_page_size(5)
-                    .prompt()?;
-
-                let amount = CustomType::<TokenAmount>::new(
-                    "Specify how many tokens should be withdrawn:",
-                )
-                .with_default(deposit.token_amount)
-                .with_parser(&|a| match str::parse::<TokenAmount>(a) {
-                    Ok(amount) if amount <= deposit.token_amount => Ok(amount),
-                    _ => Err(()),
-                })
-                .with_error_message(
-                    "You should provide a valid amount, no more than the whole deposit value",
-                )
-                .prompt()?;
-
-                (deposit.deposit_id, amount)
-            };
-        }
+        Deposit(cmd) => do_deposit(contract, connection, cmd, app_state)?,
+        Withdraw(cmd) => do_withdraw(contract, connection, cmd, app_state)?,
     };
     Ok(())
 }
