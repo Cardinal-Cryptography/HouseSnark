@@ -8,7 +8,7 @@ use crate::{TokenAmount, TokenId};
 #[derive(Clone, Eq, PartialEq, Debug, Parser)]
 pub(super) struct CliConfig {
     /// Path to the file containing application state.
-    #[clap(long, default_value = "~/.blender-state.json", value_parser = parsing::parse_path)]
+    #[clap(long, default_value = "~/.blender-state", value_parser = parsing::parse_path)]
     pub state_file: PathBuf,
 
     /// Password to decrypt `state_file`. If not provided, will be prompted.
