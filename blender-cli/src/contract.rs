@@ -94,6 +94,7 @@ impl Blender {
     }
 
     /// Call `withdraw` message of the contract.
+    #[allow(clippy::too_many_arguments)]
     pub fn withdraw(
         &self,
         _connection: &SignedConnection,
