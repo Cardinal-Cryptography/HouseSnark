@@ -3,7 +3,7 @@ use std::path::PathBuf;
 use aleph_client::AccountId;
 use clap::{Args, Parser, Subcommand};
 
-use crate::{NoteId, TokenAmount, TokenId};
+use crate::{DepositId, TokenAmount, TokenId};
 
 #[derive(Clone, Eq, PartialEq, Parser)]
 pub(super) struct CliConfig {
@@ -96,7 +96,7 @@ pub(super) struct DepositCmd {
 #[derive(Clone, Eq, PartialEq, Debug, Args)]
 pub(super) struct WithdrawCmd {
     /// Which note should be spent.
-    pub note_id: NoteId,
+    pub deposit_id: DepositId,
 
     /// How many tokens should be withdrawn.
     pub amount: TokenAmount,

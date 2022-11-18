@@ -4,10 +4,11 @@ use aleph_client::AccountId;
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 
-use crate::{TokenAmount, TokenId};
+use crate::{DepositId, TokenAmount, TokenId};
 
 #[derive(Clone, Eq, PartialEq, Debug, Deserialize, Serialize)]
 pub struct Deposit {
+    pub deposit_id: DepositId,
     pub token_id: TokenId,
     pub token_amount: TokenAmount,
     pub leaf_idx: u32,
@@ -20,7 +21,8 @@ pub struct AppState {
     pub node_address: String,
     pub contract_address: AccountId,
 
-    pub deposits: Vec<Deposit>,
+    deposit_counter: DepositId,
+    deposits: Vec<Deposit>,
 }
 
 const DEFAULT_NODE_ADDRESS: &str = "ws://127.0.0.1:9944";
@@ -31,6 +33,7 @@ impl Default for AppState {
             caller_seed: String::new(),
             node_address: DEFAULT_NODE_ADDRESS.to_string(),
             contract_address: AccountId::new([0u8; 32]),
+            deposit_counter: 0,
             deposits: Default::default(),
         }
     }
@@ -85,5 +88,15 @@ impl AppState {
             })
             .sorted()
             .collect()
+    }
+
+    pub fn add_deposit(&mut self, token_id: TokenId, token_amount: TokenAmount, leaf_idx: u32) {
+        self.deposits.push(Deposit {
+            deposit_id: self.deposit_counter,
+            token_id,
+            token_amount,
+            leaf_idx,
+        });
+        self.deposit_counter += 1;
     }
 }

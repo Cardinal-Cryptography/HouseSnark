@@ -19,7 +19,7 @@ use crate::{
     state_file::{get_app_state, save_app_state},
 };
 
-type NoteId = u16;
+type DepositId = u16;
 type TokenId = u16;
 type TokenAmount = u64;
 type Note = [u8; 32];
@@ -77,11 +77,7 @@ fn perform_contract_action(
             let leaf_idx =
                 contract.deposit(&connection, token_id, amount, dummy_note, &dummy_proof)?;
 
-            app_state.deposits.push(app_state::Deposit {
-                token_id,
-                token_amount: amount,
-                leaf_idx,
-            });
+            app_state.add_deposit(token_id, amount, leaf_idx);
         }
         ContractInteractionCommand::Withdraw(_) => {}
     };
