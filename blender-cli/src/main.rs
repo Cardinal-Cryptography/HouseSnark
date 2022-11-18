@@ -86,7 +86,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         _ => Password::new("Password:").without_confirmation().prompt()?,
     };
 
-    let app_state = get_app_state(&cli_config.state_file)?;
+    let app_state = get_app_state(&cli_config.state_file, &password)?;
 
     let updated_state = if cli_config.command.is_state_update_action() {
         perform_state_update_action(app_state, cli_config.command)?
@@ -99,7 +99,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     };
 
     updated_state
-        .map(|state| save_app_state(&state, &cli_config.state_file))
+        .map(|state| save_app_state(&state, &cli_config.state_file, &password))
         .unwrap_or(Ok(()))
         .map_err(|e| e.into())
 }
