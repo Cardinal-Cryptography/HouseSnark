@@ -41,3 +41,13 @@ jobs:
 
       - name: Run tests  for `snarkxt`
         run: cd snarkxt/ && cargo test
+
+
+      - name: Run format check for `blender-cli`
+        run: cd blender-cli/ && cargo fmt --all --check
+
+      - name: Run clippy for `blender-cli`
+        run: cd blender-cli/ && cargo clippy --all-features -- --no-deps -D warnings
+
+      - name: Run tests  for `blender-cli`
+        run: cd blender-cli/ && cargo test
