@@ -323,6 +323,7 @@ dependencies = [
  "serde",
  "serde_json",
  "shellexpand",
+ "zeroize",
 ]
 
 [[package]]
