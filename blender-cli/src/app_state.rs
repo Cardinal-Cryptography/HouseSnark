@@ -1,4 +1,4 @@
-use std::{fs, path::Path};
+use std::{cmp::Ordering, fs, path::Path};
 
 use aleph_client::AccountId;
 use anyhow::{anyhow, Result};
@@ -43,6 +43,26 @@ pub struct Asset {
     pub token_amount: TokenAmount,
 }
 
+impl PartialOrd<Self> for Asset {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for Asset {
+    fn cmp(&self, other: &Self) -> Ordering {
+        if self == other {
+            Ordering::Equal
+        } else if self.token_id < other.token_id
+            || (self.token_id == other.token_id && self.token_amount > other.token_amount)
+        {
+            Ordering::Less
+        } else {
+            Ordering::Greater
+        }
+    }
+}
+
 impl AppState {
     pub fn get_assets(&self, token_id: Option<TokenId>) -> Vec<Asset> {
         self.deposits
@@ -54,9 +74,7 @@ impl AppState {
                     token_amount: d.token_amount,
                 }),
             })
-            .sorted_by_key(|a| a.token_amount)
-            .rev()
-            .sorted_by_key(|a| a.token_id)
+            .sorted()
             .collect()
     }
 }
