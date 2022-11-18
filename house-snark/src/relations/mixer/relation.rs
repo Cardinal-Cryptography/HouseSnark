@@ -106,13 +106,13 @@ pub struct MerklePathWrapper {
 pub struct WithdrawRelation {
     pub old_t: u128,
     pub new_t: u128,
+    pub value: u128,
     pub new_value: u128,
     pub merkle_proof: MerklePathWrapper,
     pub old_n: u128,
     pub old_note: Note,
 
     pub token_id: u128,
-    pub value: u128,
     pub value_out: u128,
     pub merkle_root: Root,
     pub new_n: u128,
@@ -132,8 +132,8 @@ impl WithdrawRelation {
         let two_to_one_crh_params =
             TwoToOneHashParamsVar::new_constant(cs.clone(), &self.two_to_one_crh_params)?;
 
-        let old_n = UInt128::new_input(ark_relations::ns!(cs, "old_n_var"), || Ok(&self.old_n))?;
-        let old_t = UInt128::new_input(ark_relations::ns!(cs, "old_t_var"), || Ok(&self.old_t))?;
+        let old_n = UInt128::new_witness(ark_relations::ns!(cs, "old_n_var"), || Ok(&self.old_n))?;
+        let old_t = UInt128::new_witness(ark_relations::ns!(cs, "old_t_var"), || Ok(&self.old_t))?;
 
         let token_id =
             UInt128::new_input(
@@ -160,7 +160,7 @@ impl WithdrawRelation {
             right_hash.to_bytes()?.as_slice(),
         )?;
 
-        let old_note = FpVar::<Fp256<FrParameters>>::new_input(
+        let old_note = FpVar::<Fp256<FrParameters>>::new_witness(
             ark_relations::ns!(cs, "old_note_var"),
             || {
                 <Fp256<FrParameters> as FromBytes>::read(self.old_note.as_slice())
@@ -181,21 +181,21 @@ impl WithdrawRelation {
             TwoToOneHashParamsVar::new_constant(cs.clone(), &self.two_to_one_crh_params)?;
 
         let new_n = UInt128::new_input(ark_relations::ns!(cs, "new_n_var"), || Ok(&self.new_n))?;
-        let new_t = UInt128::new_input(ark_relations::ns!(cs, "new_t_var"), || Ok(&self.new_t))?;
+        let new_t = UInt128::new_witness(ark_relations::ns!(cs, "new_t_var"), || Ok(&self.new_t))?;
 
         let token_id =
             UInt128::new_input(
                 ark_relations::ns!(cs, "token_id_var"),
                 || Ok(&self.token_id),
             )?;
-        let new_value = UInt128::new_input(ark_relations::ns!(cs, "new_value_var"), || {
+        let new_value = UInt128::new_witness(ark_relations::ns!(cs, "new_value_var"), || {
             Ok(&self.new_value)
         })?;
         let value_out = UInt128::new_input(ark_relations::ns!(cs, "value_out_var"), || {
             Ok(&self.value_out)
         })?;
 
-        let value = UInt128::new_input(ark_relations::ns!(cs, "value_var"), || Ok(&self.value))?;
+        let value = UInt128::new_witness(ark_relations::ns!(cs, "value_var"), || Ok(&self.value))?;
         let sum = UInt128::addmany(&[new_value.clone(), value_out])?;
         sum.enforce_equal(&value)?;
 
@@ -235,7 +235,7 @@ impl WithdrawRelation {
         let root =
             RootVar::new_input(ark_relations::ns!(cs, "root_var"), || Ok(&self.merkle_root))?;
         let path: PathVar<_, LeafHashGadget, TwoToOneHashGadget, _> =
-            PathVar::new_input(ark_relations::ns!(cs, "merkle_proof_var"), || {
+            PathVar::new_witness(ark_relations::ns!(cs, "merkle_proof_var"), || {
                 Ok(&self.merkle_proof.path)
             })?;
         let two_to_one_crh_params =
@@ -243,7 +243,7 @@ impl WithdrawRelation {
         let leaf_crh_params =
             TwoToOneHashParamsVar::new_constant(cs.clone(), &self.leaf_crh_params)?;
 
-        let old_note = FpVar::<Fp256<FrParameters>>::new_input(
+        let old_note = FpVar::<Fp256<FrParameters>>::new_witness(
             ark_relations::ns!(cs, "old_note_var"),
             || {
                 <Fp256<FrParameters> as FromBytes>::read(self.old_note.as_slice())
