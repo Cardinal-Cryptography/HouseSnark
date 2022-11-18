@@ -1,16 +1,36 @@
-use aleph_client::SignedConnection;
-use anyhow::Result;
+use aleph_client::{account_from_keypair, keypair_from_string, SignedConnection};
+use anyhow::{anyhow, Result};
 use inquire::{CustomType, Select};
 
-use crate::{app_state::AppState, config::WithdrawCmd, contract::Blender, DepositId, TokenAmount};
+use crate::{
+    app_state::{AppState, Deposit},
+    config::WithdrawCmd,
+    contract::Blender,
+    DepositId, TokenAmount,
+};
 
 pub(super) fn do_withdraw(
     contract: Blender,
-    connection: SignedConnection,
+    mut connection: SignedConnection,
     cmd: WithdrawCmd,
     app_state: &mut AppState,
 ) -> Result<()> {
-    let (deposit_id, amount) = get_deposit_and_amount(&cmd, app_state)?;
+    let (deposit, amount) = get_deposit_and_amount(&cmd, app_state)?;
+
+    let WithdrawCmd {
+        recipient,
+        caller_seed,
+        fee,
+        ..
+    } = cmd;
+
+    if let Some(seed) = caller_seed {
+        connection = SignedConnection::new(&app_state.node_address, keypair_from_string(&seed));
+    }
+    let recipient = match recipient {
+        None => account_from_keypair(&keypair_from_string(&app_state.caller_seed)),
+        Some(recipient) => recipient,
+    };
 
     Ok(())
 }
@@ -18,9 +38,12 @@ pub(super) fn do_withdraw(
 fn get_deposit_and_amount(
     cmd: &WithdrawCmd,
     app_state: &AppState,
-) -> Result<(DepositId, TokenAmount)> {
+) -> Result<(Deposit, TokenAmount)> {
     if !cmd.interactive {
-        return Ok((cmd.deposit_id.unwrap(), cmd.amount.unwrap()));
+        if let Some(deposit) = app_state.get_deposit_by_id(cmd.deposit_id.unwrap()) {
+            return Ok((deposit, cmd.amount.unwrap()));
+        }
+        return Err(anyhow!("Incorrect deposit id"));
     }
 
     let deposit = Select::new("Select one of your deposits:", app_state.deposits())
@@ -38,5 +61,5 @@ fn get_deposit_and_amount(
         )
         .prompt()?;
 
-    Ok((deposit.deposit_id, amount))
+    Ok((deposit, amount))
 }

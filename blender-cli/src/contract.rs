@@ -96,15 +96,15 @@ impl Blender {
     /// Call `withdraw` message of the contract.
     pub fn withdraw(
         &self,
-        connection: &SignedConnection,
-        token_id: TokenId,
-        token_amount: TokenAmount,
-        recipient: AccountId,
-        fee_for_caller: Option<TokenAmount>,
-        merkle_root: MerkleRoot,
-        nullifier: Nullifier,
-        new_note: Note,
-        proof: &[u8],
+        _connection: &SignedConnection,
+        _token_id: TokenId,
+        _token_amount: TokenAmount,
+        _recipient: AccountId,
+        _fee_for_caller: Option<TokenAmount>,
+        _merkle_root: MerkleRoot,
+        _nullifier: Nullifier,
+        _new_note: Note,
+        _proof: &[u8],
     ) -> Result<()> {
         Ok(())
     }

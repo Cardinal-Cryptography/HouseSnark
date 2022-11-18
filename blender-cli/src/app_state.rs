@@ -4,6 +4,7 @@ use std::{
 };
 
 use aleph_client::AccountId;
+use anyhow::anyhow;
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 
@@ -118,5 +119,12 @@ impl AppState {
             .into_iter()
             .sorted_by_key(|d| Asset::from(d))
             .collect()
+    }
+
+    pub fn get_deposit_by_id(&self, deposit_id: DepositId) -> Option<Deposit> {
+        self.deposits
+            .iter()
+            .find(|d| d.deposit_id == deposit_id)
+            .map(Clone::clone)
     }
 }
