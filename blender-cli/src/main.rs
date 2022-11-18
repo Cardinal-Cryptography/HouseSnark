@@ -8,6 +8,7 @@ use crate::{
     app_state::AppState,
     config::{
         CliConfig, Command, Command::*, DepositCmd, SetContractAddressCmd, SetNodeCmd, SetSeedCmd,
+        ShowAssetsCmd,
     },
     contract::Blender,
 };
@@ -43,7 +44,10 @@ fn get_app_state(path: &PathBuf) -> Result<AppState> {
     }
 }
 
-fn perform_state_update_command(mut app_state: AppState, command: Command) -> Result<AppState> {
+fn perform_state_update_action(
+    mut app_state: AppState,
+    command: Command,
+) -> Result<Option<AppState>> {
     match command {
         SetSeed(SetSeedCmd { seed }) => {
             app_state.caller_seed = seed;
@@ -56,10 +60,24 @@ fn perform_state_update_command(mut app_state: AppState, command: Command) -> Re
         }
         _ => unreachable!(),
     };
-    Ok(app_state)
+    Ok(Some(app_state))
 }
 
-fn perform_contract_command(mut app_state: AppState, command: Command) -> Result<AppState> {
+fn perform_state_read_action(app_state: AppState, command: Command) -> Result<Option<AppState>> {
+    match command {
+        ShowAssets(ShowAssetsCmd { token_id }) => {
+            let assets = match token_id {
+                None => app_state.get_all_assets(),
+                Some(token_id) => app_state.get_single_asset(token_id),
+            };
+            println!("{:?}", assets);
+        }
+        _ => {}
+    };
+    Ok(None)
+}
+
+fn perform_contract_action(mut app_state: AppState, command: Command) -> Result<Option<AppState>> {
     let signer = keypair_from_string(&app_state.caller_seed);
     let connection = SignedConnection::new(&app_state.node_address, signer);
 
@@ -84,7 +102,7 @@ fn perform_contract_command(mut app_state: AppState, command: Command) -> Result
         }
         _ => unreachable!(),
     };
-    Ok(app_state)
+    Ok(Some(app_state))
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -93,14 +111,17 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let app_state = get_app_state(&cli_config.state_file)?;
 
     let updated_state = if cli_config.command.is_state_update_action() {
-        perform_state_update_command(app_state, cli_config.command)?
+        perform_state_update_action(app_state, cli_config.command)?
+    } else if cli_config.command.is_state_read_action() {
+        perform_state_read_action(app_state, cli_config.command)?
     } else if cli_config.command.is_contract_action() {
-        perform_contract_command(app_state, cli_config.command)?
+        perform_contract_action(app_state, cli_config.command)?
     } else {
         unreachable!()
     };
 
-    app_state::write_to(&updated_state, &cli_config.state_file)?;
-
-    Ok(())
+    updated_state
+        .map(|state| app_state::write_to(&state, &cli_config.state_file))
+        .unwrap_or(Ok(()))
+        .map_err(|e| e.into())
 }

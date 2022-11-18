@@ -20,6 +20,8 @@ pub(super) enum Command {
     SetNode(SetNodeCmd),
     SetContractAddress(SetContractAddressCmd),
 
+    ShowAssets(ShowAssetsCmd),
+
     Deposit(DepositCmd),
 }
 
@@ -27,6 +29,11 @@ impl Command {
     pub fn is_state_update_action(&self) -> bool {
         use Command::*;
         matches!(self, SetSeed(_) | SetNode(_) | SetContractAddress(_))
+    }
+
+    pub fn is_state_read_action(&self) -> bool {
+        use Command::*;
+        matches!(self, ShowAssets(_))
     }
 
     pub fn is_contract_action(&self) -> bool {
@@ -58,6 +65,12 @@ pub(super) struct SetNodeCmd {
 pub(super) struct SetContractAddressCmd {
     /// Address of the Blender contract.
     pub address: AccountId,
+}
+
+#[derive(Clone, Eq, PartialEq, Debug, Args)]
+pub(super) struct ShowAssetsCmd {
+    /// Which token type to display. All, if `None`.
+    pub token_id: Option<TokenId>,
 }
 
 #[derive(Clone, Eq, PartialEq, Debug, Args)]
