@@ -68,7 +68,7 @@ impl Blender {
             .contract_exec(
                 connection,
                 "deposit",
-                &vec![
+                &[
                     &*token_id.to_string(),
                     &*token_amount.to_string(),
                     &*format!("0x{}", hex::encode(note)),

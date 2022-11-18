@@ -1,7 +1,4 @@
-use std::{fs, path::Path};
-
 use aleph_client::AccountId;
-use anyhow::{anyhow, Result};
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 
@@ -59,15 +56,4 @@ impl AppState {
             .sorted_by_key(|a| a.token_id)
             .collect()
     }
-}
-
-pub fn read_from(path: &Path) -> Result<AppState> {
-    let file_content = fs::read_to_string(path)?;
-    serde_json::from_str::<AppState>(&file_content)
-        .map_err(|e| anyhow!("Failed to deserialize application state: {:?}", e))
-}
-
-pub fn write_to(state: &AppState, path: &Path) -> Result<()> {
-    fs::write(path, serde_json::to_string_pretty(state).unwrap())
-        .map_err(|e| anyhow!("Failed to save application state: {:?}", e))
 }

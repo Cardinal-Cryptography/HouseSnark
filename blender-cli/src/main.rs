@@ -1,7 +1,5 @@
-use std::{fs::File, path::PathBuf};
-
 use aleph_client::{keypair_from_string, SignedConnection};
-use anyhow::{anyhow, Result};
+use anyhow::Result;
 use clap::Parser;
 
 use crate::{
@@ -11,6 +9,7 @@ use crate::{
         ShowAssetsCmd,
     },
     contract::Blender,
+    state_file::{get_app_state, save_app_state},
 };
 
 type TokenId = u16;
@@ -20,29 +19,7 @@ type Note = [u8; 32];
 mod app_state;
 mod config;
 mod contract;
-
-fn create_and_save_default_state(path: &PathBuf) -> Result<AppState> {
-    File::create(path).map_err(|e| anyhow!("Failed to create {path:?}: {e:?}"))?;
-
-    let state = AppState::default();
-    app_state::write_to(&state, path)
-        .map_err(|e| anyhow!("Failed to save state to {path:?}: {e:?}"))?;
-
-    Ok(state)
-}
-
-fn get_app_state(path: &PathBuf) -> Result<AppState> {
-    match path.exists() {
-        true => {
-            println!("File with state was found. Reading the state from {path:?}.");
-            app_state::read_from(path)
-        }
-        false => {
-            println!("File with state not found. Creating the default state in {path:?}.");
-            create_and_save_default_state(path)
-        }
-    }
-}
+mod state_file;
 
 fn perform_state_update_action(
     mut app_state: AppState,
@@ -116,7 +93,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     };
 
     updated_state
-        .map(|state| app_state::write_to(&state, &cli_config.state_file))
+        .map(|state| save_app_state(&state, &cli_config.state_file))
         .unwrap_or(Ok(()))
         .map_err(|e| e.into())
 }
