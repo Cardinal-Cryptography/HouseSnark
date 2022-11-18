@@ -7,7 +7,7 @@ use zeroize::Zeroize;
 use crate::{
     app_state::AppState,
     config::{
-        CliConfig, Command, Command::*, DepositCmd, SetContractAddressCmd, SetNodeCmd, SetSeedCmd,
+        CliConfig, Command, Command::*, DepositCmd, SetContractAddressCmd, SetNodeCmd,
         ShowAssetsCmd,
     },
     contract::Blender,
@@ -23,14 +23,8 @@ mod config;
 mod contract;
 mod state_file;
 
-fn perform_state_update_action(
-    mut app_state: AppState,
-    command: Command,
-) -> Result<Option<AppState>> {
+fn perform_state_update_action(app_state: &mut AppState, command: Command) -> Result<()> {
     match command {
-        SetSeed(SetSeedCmd { seed }) => {
-            app_state.caller_seed = seed;
-        }
         SetNode(SetNodeCmd { node }) => {
             app_state.node_address = node;
         }
@@ -39,10 +33,10 @@ fn perform_state_update_action(
         }
         _ => unreachable!(),
     };
-    Ok(Some(app_state))
+    Ok(())
 }
 
-fn perform_state_read_action(app_state: AppState, command: Command) -> Result<Option<AppState>> {
+fn perform_state_read_action(app_state: &mut AppState, command: Command) -> Result<()> {
     match command {
         ShowAssets(ShowAssetsCmd { token_id }) => {
             let assets = match token_id {
@@ -54,10 +48,10 @@ fn perform_state_read_action(app_state: AppState, command: Command) -> Result<Op
         PrintState => println!("{}", serde_json::to_string_pretty(&app_state).unwrap()),
         _ => {}
     };
-    Ok(None)
+    Ok(())
 }
 
-fn perform_contract_action(mut app_state: AppState, command: Command) -> Result<Option<AppState>> {
+fn perform_contract_action(app_state: &mut AppState, command: Command) -> Result<()> {
     let signer = keypair_from_string(&app_state.caller_seed);
     let connection = SignedConnection::new(&app_state.node_address, signer);
 
@@ -82,34 +76,36 @@ fn perform_contract_action(mut app_state: AppState, command: Command) -> Result<
         }
         _ => unreachable!(),
     };
-    Ok(Some(app_state))
+    Ok(())
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let cli_config: CliConfig = CliConfig::parse();
 
-    let mut password = match cli_config.password {
-        Some(p) => p,
-        _ => Password::new("Password:").without_confirmation().prompt()?,
+    let mut seed = match cli_config.seed {
+        Some(seed) => seed,
+        _ => Password::new("Password (account seed):")
+            .without_confirmation()
+            .prompt()?,
     };
 
-    let app_state = get_app_state(&cli_config.state_file, &password)?;
+    let mut app_state = get_app_state(&cli_config.state_file, &seed)?;
 
-    let updated_state = if cli_config.command.is_state_update_action() {
-        perform_state_update_action(app_state, cli_config.command)?
+    if cli_config.command.is_state_update_action() {
+        perform_state_update_action(&mut app_state, cli_config.command)?
     } else if cli_config.command.is_state_read_action() {
-        perform_state_read_action(app_state, cli_config.command)?
+        perform_state_read_action(&mut app_state, cli_config.command)?
     } else if cli_config.command.is_contract_action() {
-        perform_contract_action(app_state, cli_config.command)?
+        perform_contract_action(&mut app_state, cli_config.command)?
     } else {
         unreachable!()
     };
 
-    if let Some(state) = updated_state {
-        save_app_state(&state, &cli_config.state_file, &password)?
-    }
+    save_app_state(&app_state, &cli_config.state_file, &seed)?;
 
-    password.zeroize();
+    app_state.caller_seed.zeroize();
+    seed.zeroize();
+    // `cli_config.seed` is already moved
 
     Ok(())
 }

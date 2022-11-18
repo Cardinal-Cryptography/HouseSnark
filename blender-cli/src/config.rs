@@ -11,9 +11,11 @@ pub(super) struct CliConfig {
     #[clap(long, default_value = "~/.blender-state", value_parser = parsing::parse_path)]
     pub state_file: PathBuf,
 
-    /// Password to decrypt `state_file`. If not provided, will be prompted.
+    /// Account seed, which is used both for submitting transactions and decrypting `state_file`.
+    ///
+    /// If not provided, will be prompted.
     #[clap(long)]
-    pub password: Option<String>,
+    pub seed: Option<String>,
 
     #[clap(subcommand)]
     pub command: Command,
@@ -21,7 +23,6 @@ pub(super) struct CliConfig {
 
 #[derive(Clone, Eq, PartialEq, Debug, Subcommand)]
 pub(super) enum Command {
-    SetSeed(SetSeedCmd),
     SetNode(SetNodeCmd),
     SetContractAddress(SetContractAddressCmd),
 
@@ -34,7 +35,7 @@ pub(super) enum Command {
 impl Command {
     pub fn is_state_update_action(&self) -> bool {
         use Command::*;
-        matches!(self, SetSeed(_) | SetNode(_) | SetContractAddress(_))
+        matches!(self, SetNode(_) | SetContractAddress(_))
     }
 
     pub fn is_state_read_action(&self) -> bool {
@@ -53,12 +54,6 @@ impl Command {
             _ => None,
         }
     }
-}
-
-#[derive(Clone, Eq, PartialEq, Debug, Args)]
-pub(super) struct SetSeedCmd {
-    /// Seed of the submitting account.
-    pub seed: String,
 }
 
 #[derive(Clone, Eq, PartialEq, Debug, Args)]
