@@ -82,7 +82,7 @@ fn perform_contract_action(app_state: &mut AppState, command: Command) -> Result
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let cli_config: CliConfig = CliConfig::parse();
 
-    let mut seed = match cli_config.seed {
+    let seed = match cli_config.seed {
         Some(seed) => seed,
         _ => Password::new("Password (account seed):")
             .without_confirmation()
@@ -90,6 +90,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     };
 
     let mut app_state = get_app_state(&cli_config.state_file, &seed)?;
+    app_state.caller_seed = seed;
 
     if cli_config.command.is_state_update_action() {
         perform_state_update_action(&mut app_state, cli_config.command)?
@@ -101,11 +102,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         unreachable!()
     };
 
-    save_app_state(&app_state, &cli_config.state_file, &seed)?;
+    save_app_state(&app_state, &cli_config.state_file, &app_state.caller_seed)?;
 
     app_state.caller_seed.zeroize();
-    seed.zeroize();
-    // `cli_config.seed` is already moved
+    // `cli_config.seed` and `seed` are already moved
 
     Ok(())
 }
