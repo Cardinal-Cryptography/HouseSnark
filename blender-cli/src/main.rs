@@ -1,6 +1,7 @@
 use aleph_client::{keypair_from_string, SignedConnection};
 use anyhow::Result;
 use clap::Parser;
+use inquire::{error::InquireResult, Password, PasswordDisplayMode};
 
 use crate::{
     app_state::AppState,
@@ -79,6 +80,11 @@ fn perform_contract_action(mut app_state: AppState, command: Command) -> Result<
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let cli_config: CliConfig = CliConfig::parse();
+
+    let password = match cli_config.password {
+        Some(p) => p,
+        _ => Password::new("Password:").without_confirmation().prompt()?,
+    };
 
     let app_state = get_app_state(&cli_config.state_file)?;
 
