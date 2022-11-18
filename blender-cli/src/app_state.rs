@@ -64,15 +64,25 @@ impl Ord for Asset {
 }
 
 impl AppState {
-    pub fn get_assets(&self, token_id: Option<TokenId>) -> Vec<Asset> {
+    pub fn get_all_assets(&self) -> Vec<Asset> {
         self.deposits
             .iter()
-            .filter_map(|d| match token_id {
-                Some(id) if id != d.token_id => None,
-                _ => Some(Asset {
+            .map(|d| Asset {
+                token_id: d.token_id,
+                token_amount: d.token_amount,
+            })
+            .sorted()
+            .collect()
+    }
+
+    pub fn get_single_asset(&self, token_id: TokenId) -> Vec<Asset> {
+        self.deposits
+            .iter()
+            .filter_map(|d| {
+                (token_id == d.token_id).then_some(Asset {
                     token_id: d.token_id,
                     token_amount: d.token_amount,
-                }),
+                })
             })
             .sorted()
             .collect()
