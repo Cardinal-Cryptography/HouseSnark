@@ -1,9 +1,12 @@
+use ark_bls12_381::FrParameters;
 use ark_crypto_primitives::{
     crh::{TwoToOneCRH, TwoToOneCRHGadget},
     merkle_tree::Config,
     Path, PathVar,
 };
+use ark_ff::{Fp256, FromBytes};
 use ark_r1cs_std::{
+    fields::fp::FpVar,
     prelude::{AllocVar, Boolean, EqGadget},
     uint128::UInt128,
     ToBytesGadget,
@@ -19,27 +22,21 @@ use crate::{
     CircuitField, GetPublicInput,
 };
 
-pub type NoteVar = <TwoToOneHashGadget as TwoToOneCRHGadget<TwoToOneHash, CircuitField>>::OutputVar;
+pub type Note = [u8; 32];
 
 #[derive(Clone)]
-pub struct DepositRelation<Trapdoor, Nullifier, TokenId> {
-    pub t: Trapdoor,
-    pub n: Nullifier,
+pub struct DepositRelation {
+    pub t: u128,
+    pub n: u128,
 
-    pub note: NoteVar,
-    pub token_id: TokenId,
+    pub note: Note,
+    pub token_id: u128,
     pub value: u128,
 
     pub two_to_one_crh_params: <TwoToOneHash as TwoToOneCRH>::Parameters,
 }
 
-impl<Trapdoor, Nullifier, TokenId> ConstraintSynthesizer<CircuitField>
-    for DepositRelation<Trapdoor, Nullifier, TokenId>
-where
-    Trapdoor: ToBytesGadget<CircuitField>,
-    Nullifier: ToBytesGadget<CircuitField>,
-    TokenId: ToBytesGadget<CircuitField>,
-{
+impl ConstraintSynthesizer<CircuitField> for DepositRelation {
     fn generate_constraints(
         self,
         cs: ConstraintSystemRef<CircuitField>,
@@ -47,19 +44,24 @@ where
         let two_to_one_crh_params =
             TwoToOneHashParamsVar::new_constant(cs.clone(), &self.two_to_one_crh_params)?;
 
-        let n = self.n.to_bytes()?;
-        let n = n.as_slice();
-        let t = self.t.to_bytes()?;
-        let t = t.as_slice();
+        let n = UInt128::new_input(ark_relations::ns!(cs, "n_var"), || Ok(&self.n))?;
+        let t = UInt128::new_input(ark_relations::ns!(cs, "t_var"), || Ok(&self.t))?;
 
-        let token_id = self.token_id.to_bytes()?;
-        let token_id = token_id.as_slice();
+        let token_id =
+            UInt128::new_input(
+                ark_relations::ns!(cs, "token_id_var"),
+                || Ok(&self.token_id),
+            )?;
         let value = UInt128::new_input(ark_relations::ns!(cs, "value_var"), || Ok(&self.value))?;
 
-        let left_hash = TwoToOneHashGadget::evaluate(&two_to_one_crh_params, n, t)?;
+        let left_hash = TwoToOneHashGadget::evaluate(
+            &two_to_one_crh_params,
+            n.to_bytes()?.as_slice(),
+            t.to_bytes()?.as_slice(),
+        )?;
         let right_hash = TwoToOneHashGadget::evaluate(
             &two_to_one_crh_params,
-            token_id,
+            token_id.to_bytes()?.as_slice(),
             value.to_bytes()?.as_slice(),
         )?;
         let final_hash = TwoToOneHashGadget::evaluate(
@@ -68,16 +70,19 @@ where
             right_hash.to_bytes()?.as_slice(),
         )?;
 
-        final_hash.enforce_equal(&self.note)?;
+        let note =
+            FpVar::<Fp256<FrParameters>>::new_input(ark_relations::ns!(cs, "note_var"), || {
+                <Fp256<FrParameters> as FromBytes>::read(self.note.as_slice())
+                    .map_err(|_| SynthesisError::UnexpectedIdentity)
+            })?;
+
+        final_hash.enforce_equal(&note)?;
 
         Ok(())
     }
 }
 
-impl<Trapdoor, Nullifier, TokenId> GetPublicInput<CircuitField>
-    for DepositRelation<Trapdoor, Nullifier, TokenId>
-{
-}
+impl GetPublicInput<CircuitField> for DepositRelation {}
 
 /// The R1CS equivalent of the the Merkle tree root.
 pub type RootVar = <TwoToOneHashGadget as TwoToOneCRHGadget<TwoToOneHash, CircuitField>>::OutputVar;
@@ -98,20 +103,20 @@ pub struct MerklePathWrapper {
 }
 
 #[derive(Clone)]
-pub struct WithdrawRelation<Trapdoor: Clone, Nullifier: Clone, TokenId: Clone> {
-    pub old_t: Trapdoor,
-    pub new_t: Trapdoor,
+pub struct WithdrawRelation {
+    pub old_t: u128,
+    pub new_t: u128,
     pub new_value: u128,
     pub merkle_proof: MerklePathWrapper,
-    pub old_n: Nullifier,
-    pub old_note: NoteVar,
+    pub old_n: u128,
+    pub old_note: Note,
 
-    pub token_id: TokenId,
+    pub token_id: u128,
     pub value: u128,
     pub value_out: u128,
     pub merkle_root: Root,
-    pub new_n: Nullifier,
-    pub new_note: NoteVar,
+    pub new_n: u128,
+    pub new_note: Note,
     pub _recipient: u128,
     pub _fee: u128,
 
@@ -119,12 +124,7 @@ pub struct WithdrawRelation<Trapdoor: Clone, Nullifier: Clone, TokenId: Clone> {
     pub leaf_crh_params: <TwoToOneHash as TwoToOneCRH>::Parameters,
 }
 
-impl<Trapdoor, Nullifier, TokenId> WithdrawRelation<Trapdoor, Nullifier, TokenId>
-where
-    Trapdoor: ToBytesGadget<CircuitField> + Clone,
-    Nullifier: ToBytesGadget<CircuitField> + Clone,
-    TokenId: ToBytesGadget<CircuitField> + Clone,
-{
+impl WithdrawRelation {
     fn verify_old_inputs(
         self,
         cs: ConstraintSystemRef<CircuitField>,
@@ -132,21 +132,26 @@ where
         let two_to_one_crh_params =
             TwoToOneHashParamsVar::new_constant(cs.clone(), &self.two_to_one_crh_params)?;
 
-        let old_n = self.old_n.to_bytes()?;
-        let old_n = old_n.as_slice();
-        let old_t = self.old_t.to_bytes()?;
-        let old_t = old_t.as_slice();
+        let old_n = UInt128::new_input(ark_relations::ns!(cs, "old_n_var"), || Ok(&self.old_n))?;
+        let old_t = UInt128::new_input(ark_relations::ns!(cs, "old_t_var"), || Ok(&self.old_t))?;
 
-        let token_id = self.token_id.to_bytes()?;
-        let token_id = token_id.as_slice();
+        let token_id =
+            UInt128::new_input(
+                ark_relations::ns!(cs, "token_id_var"),
+                || Ok(&self.token_id),
+            )?;
         let value_out = UInt128::new_input(ark_relations::ns!(cs, "value_out_var"), || {
             Ok(&self.value_out)
         })?;
 
-        let left_hash = TwoToOneHashGadget::evaluate(&two_to_one_crh_params, old_n, old_t)?;
+        let left_hash = TwoToOneHashGadget::evaluate(
+            &two_to_one_crh_params,
+            old_n.to_bytes()?.as_slice(),
+            old_t.to_bytes()?.as_slice(),
+        )?;
         let right_hash = TwoToOneHashGadget::evaluate(
             &two_to_one_crh_params,
-            token_id,
+            token_id.to_bytes()?.as_slice(),
             value_out.to_bytes()?.as_slice(),
         )?;
         let final_hash = TwoToOneHashGadget::evaluate(
@@ -155,7 +160,15 @@ where
             right_hash.to_bytes()?.as_slice(),
         )?;
 
-        final_hash.enforce_equal(&self.old_note)?;
+        let old_note = FpVar::<Fp256<FrParameters>>::new_input(
+            ark_relations::ns!(cs, "old_note_var"),
+            || {
+                <Fp256<FrParameters> as FromBytes>::read(self.old_note.as_slice())
+                    .map_err(|_| SynthesisError::UnexpectedIdentity)
+            },
+        )?;
+
+        final_hash.enforce_equal(&old_note)?;
 
         Ok(())
     }
@@ -167,13 +180,14 @@ where
         let two_to_one_crh_params =
             TwoToOneHashParamsVar::new_constant(cs.clone(), &self.two_to_one_crh_params)?;
 
-        let new_n = self.new_n.to_bytes()?;
-        let new_n = new_n.as_slice();
-        let new_t = self.new_t.to_bytes()?;
-        let new_t = new_t.as_slice();
+        let new_n = UInt128::new_input(ark_relations::ns!(cs, "new_n_var"), || Ok(&self.new_n))?;
+        let new_t = UInt128::new_input(ark_relations::ns!(cs, "new_t_var"), || Ok(&self.new_t))?;
 
-        let token_id = self.token_id.to_bytes()?;
-        let token_id = token_id.as_slice();
+        let token_id =
+            UInt128::new_input(
+                ark_relations::ns!(cs, "token_id_var"),
+                || Ok(&self.token_id),
+            )?;
         let new_value = UInt128::new_input(ark_relations::ns!(cs, "new_value_var"), || {
             Ok(&self.new_value)
         })?;
@@ -185,10 +199,14 @@ where
         let sum = UInt128::addmany(&[new_value.clone(), value_out])?;
         sum.enforce_equal(&value)?;
 
-        let left_hash = TwoToOneHashGadget::evaluate(&two_to_one_crh_params, new_n, new_t)?;
+        let left_hash = TwoToOneHashGadget::evaluate(
+            &two_to_one_crh_params,
+            new_n.to_bytes()?.as_slice(),
+            new_t.to_bytes()?.as_slice(),
+        )?;
         let right_hash = TwoToOneHashGadget::evaluate(
             &two_to_one_crh_params,
-            token_id,
+            token_id.to_bytes()?.as_slice(),
             new_value.to_bytes()?.as_slice(),
         )?;
         let final_hash = TwoToOneHashGadget::evaluate(
@@ -197,7 +215,15 @@ where
             right_hash.to_bytes()?.as_slice(),
         )?;
 
-        final_hash.enforce_equal(&self.old_note)?;
+        let new_note = FpVar::<Fp256<FrParameters>>::new_input(
+            ark_relations::ns!(cs, "new_note_var"),
+            || {
+                <Fp256<FrParameters> as FromBytes>::read(self.new_note.as_slice())
+                    .map_err(|_| SynthesisError::UnexpectedIdentity)
+            },
+        )?;
+
+        final_hash.enforce_equal(&new_note)?;
 
         Ok(())
     }
@@ -214,27 +240,25 @@ where
             })?;
         let two_to_one_crh_params =
             TwoToOneHashParamsVar::new_constant(cs.clone(), &self.two_to_one_crh_params)?;
-        let leaf_crh_params = TwoToOneHashParamsVar::new_constant(cs, &self.leaf_crh_params)?;
+        let leaf_crh_params =
+            TwoToOneHashParamsVar::new_constant(cs.clone(), &self.leaf_crh_params)?;
 
-        path.verify_membership(
-            &leaf_crh_params,
-            &two_to_one_crh_params,
-            &root,
-            &self.old_note,
-        )?
-        .enforce_equal(&Boolean::TRUE)?;
+        let old_note = FpVar::<Fp256<FrParameters>>::new_input(
+            ark_relations::ns!(cs, "old_note_var"),
+            || {
+                <Fp256<FrParameters> as FromBytes>::read(self.old_note.as_slice())
+                    .map_err(|_| SynthesisError::UnexpectedIdentity)
+            },
+        )?;
+
+        path.verify_membership(&leaf_crh_params, &two_to_one_crh_params, &root, &old_note)?
+            .enforce_equal(&Boolean::TRUE)?;
 
         Ok(())
     }
 }
 
-impl<Trapdoor, Nullifier, TokenId> ConstraintSynthesizer<CircuitField>
-    for WithdrawRelation<Trapdoor, Nullifier, TokenId>
-where
-    Trapdoor: ToBytesGadget<CircuitField> + Clone,
-    Nullifier: ToBytesGadget<CircuitField> + Clone,
-    TokenId: ToBytesGadget<CircuitField> + Clone,
-{
+impl ConstraintSynthesizer<CircuitField> for WithdrawRelation {
     fn generate_constraints(
         self,
         cs: ConstraintSystemRef<CircuitField>,
@@ -247,7 +271,4 @@ where
     }
 }
 
-impl<Trapdoor: Clone, Nullifier: Clone, TokenId: Clone> GetPublicInput<CircuitField>
-    for WithdrawRelation<Trapdoor, Nullifier, TokenId>
-{
-}
+impl GetPublicInput<CircuitField> for WithdrawRelation {}

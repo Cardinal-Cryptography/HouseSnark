@@ -31,7 +31,7 @@ where
     _crh: poseidon::CRH<F, P>,
 }
 
-impl<'a, F, P> CRH for DummyCRHCompressor<F, P>
+impl<F, P> CRH for DummyCRHCompressor<F, P>
 where
     F: PrimeField + FromBytes,
     P: PoseidonRoundParams<F>,
@@ -57,7 +57,7 @@ where
     _crh_gadget: poseidon::constraints::CRHGadget<F, P>,
 }
 
-impl<'a, F, P> CRHGadget<DummyCRHCompressor<F, P>, F> for DummyCRHGadget<F, P>
+impl<F, P> CRHGadget<DummyCRHCompressor<F, P>, F> for DummyCRHGadget<F, P>
 where
     F: PrimeField + FromBytes,
     P: PoseidonRoundParams<F>,
