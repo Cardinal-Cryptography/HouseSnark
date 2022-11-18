@@ -108,4 +108,9 @@ impl Blender {
     ) -> Result<()> {
         Ok(())
     }
+
+    /// Fetch the current merkle root.
+    pub fn get_merkle_root(&self, _connection: &SignedConnection) -> MerkleRoot {
+        Default::default()
+    }
 }

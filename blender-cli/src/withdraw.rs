@@ -6,7 +6,7 @@ use crate::{
     app_state::{AppState, Deposit},
     config::WithdrawCmd,
     contract::Blender,
-    DepositId, TokenAmount,
+    TokenAmount,
 };
 
 pub(super) fn do_withdraw(
@@ -31,6 +31,25 @@ pub(super) fn do_withdraw(
         None => account_from_keypair(&keypair_from_string(&app_state.caller_seed)),
         Some(recipient) => recipient,
     };
+
+    let merkle_root = contract.get_merkle_root(&connection);
+
+    let dummy_proof = vec![1, 2, 3];
+    let dummy_note = Default::default();
+
+    contract.withdraw(
+        &connection,
+        deposit.token_id,
+        amount,
+        recipient,
+        fee,
+        merkle_root,
+        deposit.nullifier,
+        dummy_note,
+        &dummy_proof,
+    )?;
+
+    app_state.delete_deposit_by_id(deposit.deposit_id);
 
     Ok(())
 }

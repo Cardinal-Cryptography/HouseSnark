@@ -4,11 +4,10 @@ use std::{
 };
 
 use aleph_client::AccountId;
-use anyhow::anyhow;
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 
-use crate::{DepositId, TokenAmount, TokenId};
+use crate::{DepositId, Nullifier, TokenAmount, TokenId};
 
 #[derive(Clone, Eq, PartialEq, Debug, Deserialize, Serialize)]
 pub struct Deposit {
@@ -16,6 +15,7 @@ pub struct Deposit {
     pub token_id: TokenId,
     pub token_amount: TokenAmount,
     pub leaf_idx: u32,
+    pub nullifier: Nullifier,
 }
 
 impl Display for Deposit {
@@ -109,6 +109,7 @@ impl AppState {
             token_id,
             token_amount,
             leaf_idx,
+            nullifier: Default::default(),
         });
         self.deposit_counter += 1;
     }
@@ -126,5 +127,9 @@ impl AppState {
             .iter()
             .find(|d| d.deposit_id == deposit_id)
             .map(Clone::clone)
+    }
+
+    pub fn delete_deposit_by_id(&mut self, deposit_id: DepositId) {
+        self.deposits.retain(|d| d.deposit_id != deposit_id)
     }
 }
