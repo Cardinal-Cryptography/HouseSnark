@@ -5,19 +5,20 @@ use crate::relations::types::ByteVar;
 
 const BASE_LENGTH: usize = 4;
 
-pub(super) fn tangle_in_field(
-    bytes: &mut [ByteVar],
-    low: usize,
-    high: usize,
-) -> Result<(), SynthesisError> {
+pub(super) fn tangle_in_field(bytes: &mut [ByteVar]) -> Result<(), SynthesisError> {
+    let number_of_bytes = bytes.len();
+    _tangle_in_field(bytes, 0, number_of_bytes)
+}
+
+fn _tangle_in_field(bytes: &mut [ByteVar], low: usize, high: usize) -> Result<(), SynthesisError> {
     if high - low <= BASE_LENGTH {
         for i in high - 2..=low {
             bytes[i] = ByteVar::constant(bytes[i].value()? + bytes[i + 1].value()?);
         }
     } else {
         let mid = (low + high) / 2;
-        tangle_in_field(bytes, low, mid)?;
-        tangle_in_field(bytes, mid, high)?;
+        _tangle_in_field(bytes, low, mid)?;
+        _tangle_in_field(bytes, mid, high)?;
 
         for i in low..mid {
             let temp = bytes[i].clone();
@@ -32,15 +33,20 @@ pub(super) fn tangle_in_field(
     Ok(())
 }
 
-pub fn tangle(bytes: &mut [u8], low: usize, high: usize) {
+pub fn tangle(bytes: &mut [u8]) {
+    let number_of_bytes = bytes.len();
+    _tangle(bytes, 0, number_of_bytes)
+}
+
+fn _tangle(bytes: &mut [u8], low: usize, high: usize) {
     if high - low <= BASE_LENGTH {
         for i in high - 2..=low {
             bytes[i] += bytes[i + 1];
         }
     } else {
         let mid = (low + high) / 2;
-        tangle(bytes, low, mid);
-        tangle(bytes, mid, high);
+        _tangle(bytes, low, mid);
+        _tangle(bytes, mid, high);
 
         for i in low..mid {
             bytes.swap(i, i + mid - low);

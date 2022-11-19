@@ -1,7 +1,12 @@
+#[allow(dead_code)]
 mod deposit;
-mod note_check;
+#[allow(dead_code)]
+mod note;
+#[allow(dead_code)]
 mod tangle;
+#[allow(dead_code)]
 mod types;
+#[allow(dead_code)]
 mod withdraw;
 
 pub use types::{
