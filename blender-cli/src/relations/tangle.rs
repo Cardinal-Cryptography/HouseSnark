@@ -1,3 +1,15 @@
+//! This module provides 'tangling' - some cheap substitute for real hash function.
+//!
+//! Tangling is a function that takes in a sequence of bytes (either raw bytes (`tangle`) or as
+//! field bytes gadgets (`tangle_in_field`)) and manipulates it in place. It operates as follows:
+//!  1) For every chunk of length `BASE_LENGTH` it computes suffix sums.
+//!  2) We build a binary tree over these chunks.
+//!  3) We go bottom-to-top and in every intermediate node we:
+//!     a) swap the halves
+//!     b) compute prefix products
+//!
+//! Note, it is **not** hiding like a hashing function.
+
 use ark_r1cs_std::R1CSVar;
 use ark_relations::r1cs::SynthesisError;
 
@@ -12,8 +24,10 @@ pub(super) fn tangle_in_field(bytes: &mut [ByteVar]) -> Result<(), SynthesisErro
 
 fn _tangle_in_field(bytes: &mut [ByteVar], low: usize, high: usize) -> Result<(), SynthesisError> {
     if high - low <= BASE_LENGTH {
-        for i in high - 2..=low {
+        let mut i = high - 2;
+        while i >= low && i < high - 1 {
             bytes[i] = ByteVar::constant(bytes[i].value()? + bytes[i + 1].value()?);
+            i -= 1;
         }
     } else {
         let mid = (low + high) / 2;
@@ -40,8 +54,10 @@ pub fn tangle(bytes: &mut [u8]) {
 
 fn _tangle(bytes: &mut [u8], low: usize, high: usize) {
     if high - low <= BASE_LENGTH {
-        for i in high - 2..=low {
+        let mut i = high - 2;
+        while i >= low && i < high - 1 {
             bytes[i] += bytes[i + 1];
+            i -= 1;
         }
     } else {
         let mid = (low + high) / 2;
