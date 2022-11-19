@@ -26,6 +26,7 @@ type Note = [u8; 32];
 mod app_state;
 mod config;
 mod contract;
+mod relations;
 mod state_file;
 
 fn perform_state_write_action(app_state: &mut AppState, command: StateWriteCommand) -> Result<()> {
