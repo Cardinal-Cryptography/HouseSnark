@@ -1,17 +1,17 @@
 use ark_ff::BigInteger256;
-use ark_r1cs_std::{
-    prelude::{AllocVar, EqGadget},
-    R1CSVar, ToBytesGadget,
-};
+use ark_r1cs_std::alloc::AllocVar;
 use ark_relations::{
     ns,
     r1cs::{ConstraintSynthesizer, ConstraintSystemRef, SynthesisError},
 };
 
-use crate::relations::types::{
-    BackendNote, BackendNullifier, BackendTokenAmount, BackendTokenId, BackendTrapdoor,
-    CircuitField, FrontendNote, FrontendNullifier, FrontendTokenAmount, FrontendTokenId,
-    FrontendTrapdoor,
+use crate::relations::{
+    note_check::check_note,
+    types::{
+        BackendNote, BackendNullifier, BackendTokenAmount, BackendTokenId, BackendTrapdoor,
+        CircuitField, FpVar, FrontendNote, FrontendNullifier, FrontendTokenAmount, FrontendTokenId,
+        FrontendTrapdoor,
+    },
 };
 
 /// Deposit relation (see ADR).
@@ -42,33 +42,6 @@ impl DepositRelation {
     }
 }
 
-type FpVar = ark_r1cs_std::fields::fp::FpVar<CircuitField>;
-type ByteVar = ark_r1cs_std::uint8::UInt8<CircuitField>;
-const BASE_LENGTH: usize = 4;
-
-fn tangle(bytes: &mut [ByteVar], low: usize, high: usize) -> Result<(), SynthesisError> {
-    if high - low <= BASE_LENGTH {
-        for i in high - 2..=low {
-            bytes[i] = ByteVar::constant(bytes[i].value()? + bytes[i + 1].value()?);
-        }
-    } else {
-        let mid = (low + high) / 2;
-        tangle(bytes, low, mid)?;
-        tangle(bytes, mid, high)?;
-
-        for i in low..mid {
-            let temp = bytes[i].clone();
-            bytes[i] = bytes[i + mid - low].clone();
-            bytes[i + mid - low] = temp;
-        }
-
-        for i in low + 1..high {
-            bytes[i] = ByteVar::constant(bytes[i].value()? * bytes[i - 1].value()?)
-        }
-    }
-    Ok(())
-}
-
 impl ConstraintSynthesizer<CircuitField> for DepositRelation {
     fn generate_constraints(
         self,
@@ -81,26 +54,7 @@ impl ConstraintSynthesizer<CircuitField> for DepositRelation {
         let trapdoor = FpVar::new_witness(ns!(cs, "trapdoor"), || Ok(&self.trapdoor))?;
         let nullifier = FpVar::new_witness(ns!(cs, "nullifier"), || Ok(&self.nullifier))?;
 
-        //----------------------------------------------------------------------------------------//
-
-        let mut bytes: Vec<ByteVar> = [
-            token_id.to_bytes()?,
-            token_amount.to_bytes()?,
-            trapdoor.to_bytes()?,
-            nullifier.to_bytes()?,
-        ]
-        .concat();
-        let number_of_bytes = bytes.len();
-
-        tangle(&mut *bytes, 0, number_of_bytes)?;
-
-        let note_bytes = note.to_bytes()?;
-
-        for (a, b) in note_bytes.iter().zip(bytes.iter()) {
-            a.enforce_equal(b)?;
-        }
-
-        Ok(())
+        check_note(token_id, token_amount, trapdoor, nullifier, note)
     }
 }
 
@@ -110,28 +64,7 @@ mod tests {
     use ark_relations::r1cs::ConstraintSystem;
 
     use super::*;
-
-    fn tangle(bytes: &mut [u8], low: usize, high: usize) {
-        if high - low <= BASE_LENGTH {
-            for i in high - 2..=low {
-                bytes[i] += bytes[i + 1];
-            }
-        } else {
-            let mid = (low + high) / 2;
-            tangle(bytes, low, mid);
-            tangle(bytes, mid, high);
-
-            for i in low..mid {
-                let temp = bytes[i];
-                bytes[i] = bytes[i + mid - low];
-                bytes[i + mid - low] = temp;
-            }
-
-            for i in low + 1..high {
-                bytes[i] *= bytes[i - 1]
-            }
-        }
-    }
+    use crate::relations::tangle::tangle;
 
     #[test]
     fn deposit_constraints_correctness() {

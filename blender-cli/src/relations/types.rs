@@ -1,16 +1,25 @@
 pub type CircuitField = ark_bls12_381::Fr;
 
+pub(super) type FpVar = ark_r1cs_std::fields::fp::FpVar<CircuitField>;
+pub(super) type ByteVar = ark_r1cs_std::uint8::UInt8<CircuitField>;
+
 pub type FrontendNullifier = u64;
 pub type FrontendTrapdoor = u64;
 pub type FrontendNote = [u64; 4];
 pub type FrontendTokenId = u16;
 pub type FrontendTokenAmount = u64;
+pub type FrontendMerkleRoot = [u64; 4];
+pub type FrontendMerklePath = Vec<[u64; 4]>;
+pub type FrontendLeafIndex = u64;
 
-pub type BackendNullifier = CircuitField;
-pub type BackendTrapdoor = CircuitField;
-pub type BackendNote = CircuitField;
-pub type BackendTokenId = CircuitField;
-pub type BackendTokenAmount = CircuitField;
+pub(super) type BackendNullifier = CircuitField;
+pub(super) type BackendTrapdoor = CircuitField;
+pub(super) type BackendNote = CircuitField;
+pub(super) type BackendTokenId = CircuitField;
+pub(super) type BackendTokenAmount = CircuitField;
+pub(super) type BackendMerkleRoot = CircuitField;
+pub(super) type BackendMerklePath = Vec<CircuitField>;
+pub(super) type BackendLeafIndex = CircuitField;
 
 /*
 This is a setup for using Pedersen hashing (with field element compressing). It would work well, but
