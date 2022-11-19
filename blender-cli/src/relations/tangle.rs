@@ -25,9 +25,13 @@ pub(super) fn tangle_in_field(bytes: &mut [ByteVar]) -> Result<(), SynthesisErro
 fn _tangle_in_field(bytes: &mut [ByteVar], low: usize, high: usize) -> Result<(), SynthesisError> {
     if high - low <= BASE_LENGTH {
         let mut i = high - 2;
-        while i >= low && i < high - 1 {
+        loop {
             bytes[i] = ByteVar::constant(bytes[i].value()? + bytes[i + 1].value()?);
-            i -= 1;
+            if i == low {
+                break;
+            } else {
+                i -= 1
+            }
         }
     } else {
         let mid = (low + high) / 2;
@@ -55,9 +59,13 @@ pub fn tangle(bytes: &mut [u8]) {
 fn _tangle(bytes: &mut [u8], low: usize, high: usize) {
     if high - low <= BASE_LENGTH {
         let mut i = high - 2;
-        while i >= low && i < high - 1 {
+        loop {
             bytes[i] += bytes[i + 1];
-            i -= 1;
+            if i == low {
+                break;
+            } else {
+                i -= 1
+            }
         }
     } else {
         let mid = (low + high) / 2;
