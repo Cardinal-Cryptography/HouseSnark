@@ -1,3 +1,5 @@
+//! Module exposing some utilities regarding note generation and verification.
+
 use ark_ff::{BigInteger, BigInteger256};
 use ark_r1cs_std::{eq::EqGadget, ToBytesGadget};
 use ark_relations::r1cs::SynthesisError;
@@ -10,6 +12,10 @@ use crate::relations::{
     },
 };
 
+/// Verify that `note` is indeed the result of tangling `(token_id, token_amount, trapdoor,
+/// nullifier)`.
+///
+/// For circuit use only.
 pub(super) fn check_note(
     token_id: &FpVar,
     token_amount: &FpVar,
@@ -35,6 +41,12 @@ pub(super) fn check_note(
     Ok(())
 }
 
+/// Compute note as the result of tangling `(token_id, token_amount, trapdoor, nullifier)`.
+///
+/// To be precise, the result of tangling will be 128 bytes. Then, the note will be created from
+/// the first 32 bytes. The rest will be just abandoned.
+///
+/// Useful for input preparation and offline note generation.
 pub fn compute_note(
     token_id: FrontendTokenId,
     token_amount: FrontendTokenAmount,
@@ -54,6 +66,7 @@ pub fn compute_note(
     note_from_bytes(bytes.as_slice())
 }
 
+/// Create a note from the first 32 bytes of `bytes`.
 pub(super) fn note_from_bytes(bytes: &[u8]) -> FrontendNote {
     [
         u64::from_le_bytes(bytes[0..8].try_into().unwrap()),

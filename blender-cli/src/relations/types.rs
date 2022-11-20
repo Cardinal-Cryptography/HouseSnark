@@ -1,8 +1,12 @@
+/// All our circuits will operate over the scalar field of the BLS12-381 curve.
 pub type CircuitField = ark_bls12_381::Fr;
 
+/// The circuit lifting for `CircuitField`.
 pub(super) type FpVar = ark_r1cs_std::fields::fp::FpVar<CircuitField>;
+/// The circuit lifting for the byte type.
 pub(super) type ByteVar = ark_r1cs_std::uint8::UInt8<CircuitField>;
 
+// Types accepted by the relation constructors.
 pub type FrontendNullifier = u64;
 pub type FrontendTrapdoor = u64;
 pub type FrontendNote = [u64; 4];
@@ -11,7 +15,9 @@ pub type FrontendTokenAmount = u64;
 pub type FrontendMerkleRoot = [u64; 4];
 pub type FrontendMerklePath = Vec<[u64; 4]>;
 pub type FrontendLeafIndex = u64;
+pub type FrontendAccount = [u32; 4];
 
+// Types used internally by the relations (but still outside circuit environment).
 pub(super) type BackendNullifier = CircuitField;
 pub(super) type BackendTrapdoor = CircuitField;
 pub(super) type BackendNote = CircuitField;
@@ -20,6 +26,7 @@ pub(super) type BackendTokenAmount = CircuitField;
 pub(super) type BackendMerkleRoot = CircuitField;
 pub(super) type BackendMerklePath = Vec<CircuitField>;
 pub(super) type BackendLeafIndex = CircuitField;
+pub(super) type BackendAccount = CircuitField;
 
 /*
 This is a setup for using Pedersen hashing (with field element compressing). It would work well, but

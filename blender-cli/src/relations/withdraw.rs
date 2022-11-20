@@ -11,21 +11,37 @@ use crate::relations::{
     note::check_note,
     tangle::tangle_in_field,
     types::{
-        BackendLeafIndex, BackendMerklePath, BackendMerkleRoot, BackendNote, BackendNullifier,
-        BackendTokenAmount, BackendTokenId, BackendTrapdoor, ByteVar, CircuitField, FpVar,
-        FrontendLeafIndex, FrontendMerklePath, FrontendMerkleRoot, FrontendNote, FrontendNullifier,
-        FrontendTokenAmount, FrontendTokenId, FrontendTrapdoor,
+        BackendAccount, BackendLeafIndex, BackendMerklePath, BackendMerkleRoot, BackendNote,
+        BackendNullifier, BackendTokenAmount, BackendTokenId, BackendTrapdoor, ByteVar,
+        CircuitField, FpVar, FrontendAccount, FrontendLeafIndex, FrontendMerklePath,
+        FrontendMerkleRoot, FrontendNote, FrontendNullifier, FrontendTokenAmount, FrontendTokenId,
+        FrontendTrapdoor,
     },
 };
 
-/// Withdraw relation (see ADR).
+/// 'Withdraw' relation for the Blender application.
+///
+/// It expresses the facts that:
+///  - `new_note` is a prefix of the result of tangling together `token_id`, `whole_token_amount`,
+///    `old_trapdoor` and `old_nullifier`,
+///  - `old_note` is a prefix of the result of tangling together `token_id`, `new_token_amount`,
+///    `new_trapdoor` and `new_nullifier`,
+///  - `new_token_amount + token_amount_out = whole_token_amount`
+///  - `merkle_path` is a valid Merkle proof for `old_note` being present at `leaf_index` in some
+///    Merkle tree with `merkle_root` hash in the root
+/// It also includes two artificial inputs `fee` and `recipient` just to strengthen the application
+/// security by treating them as public inputs (and thus integral part of the SNARK).
 pub struct WithdrawRelation {
+    // Public inputs.
     pub old_nullifier: BackendNullifier,
     pub merkle_root: BackendMerkleRoot,
     pub new_note: BackendNote,
     pub token_id: BackendTokenId,
     pub token_amount_out: BackendTokenAmount,
+    pub fee: BackendTokenAmount,
+    pub recipient: BackendAccount,
 
+    // Private inputs.
     pub old_trapdoor: BackendTrapdoor,
     pub new_trapdoor: BackendTrapdoor,
     pub new_nullifier: BackendNullifier,
@@ -52,6 +68,8 @@ impl WithdrawRelation {
         old_note: FrontendNote,
         whole_token_amount: FrontendTokenAmount,
         new_token_amount: FrontendTokenAmount,
+        fee: FrontendTokenAmount,
+        recipient: FrontendAccount,
     ) -> Self {
         Self {
             old_nullifier: BackendNullifier::from(old_nullifier),
@@ -70,6 +88,8 @@ impl WithdrawRelation {
             old_note: BackendNote::from(BigInteger256::new(old_note)),
             whole_token_amount: BackendTokenAmount::from(whole_token_amount),
             new_token_amount: BackendTokenAmount::from(new_token_amount),
+            fee: BackendTokenAmount::from(fee),
+            recipient: BackendAccount::from(BigInteger256::new(recipient.map(|x| x as u64))),
         }
     }
 }
@@ -79,6 +99,16 @@ impl ConstraintSynthesizer<CircuitField> for WithdrawRelation {
         self,
         cs: ConstraintSystemRef<CircuitField>,
     ) -> Result<(), SynthesisError> {
+        //----------------------------------------------------------------------
+        // Dummy constraint so that the `fee` and `recipient` are actually used.
+        //----------------------------------------------------------------------
+        let fee = FpVar::new_input(ns!(cs, "fee"), || Ok(&self.fee))?;
+        let recipient = FpVar::new_input(ns!(cs, "recipient"), || Ok(&self.recipient))?;
+        (fee.clone().add(&recipient)).enforce_equal(&recipient.add(&fee))?;
+
+        //------------------------------
+        // Check the old note arguments.
+        //------------------------------
         let old_note = FpVar::new_witness(ns!(cs, "old note"), || Ok(&self.old_note))?;
         let token_id = FpVar::new_input(ns!(cs, "token id"), || Ok(&self.token_id))?;
         let whole_token_amount = FpVar::new_witness(ns!(cs, "whole token amount"), || {
@@ -95,6 +125,9 @@ impl ConstraintSynthesizer<CircuitField> for WithdrawRelation {
             &old_note,
         )?;
 
+        //------------------------------
+        // Check the new note arguments.
+        //------------------------------
         let new_note = FpVar::new_input(ns!(cs, "new note"), || Ok(&self.new_note))?;
         let new_token_amount =
             FpVar::new_witness(ns!(cs, "new token amount"), || Ok(&self.new_token_amount))?;
@@ -110,13 +143,18 @@ impl ConstraintSynthesizer<CircuitField> for WithdrawRelation {
             &new_note,
         )?;
 
+        //----------------------------------
+        // Check the token values soundness.
+        //----------------------------------
         let token_amount_out =
             FpVar::new_input(ns!(cs, "token amount out"), || Ok(&self.token_amount_out))?;
-
         // some range checks for overflows?
         let token_sum = token_amount_out.add(new_token_amount);
         token_sum.enforce_equal(&whole_token_amount)?;
 
+        //------------------------
+        // Check the merkle proof.
+        //------------------------
         let merkle_root = FpVar::new_input(ns!(cs, "merkle root"), || Ok(&self.merkle_root))?;
         let mut leaf_index = FpVar::new_witness(ns!(cs, "leaf index"), || Ok(&self.leaf_index))?;
 
@@ -195,6 +233,9 @@ mod tests {
 
         let merkle_path = vec![sibling_note, uncle_note];
 
+        let fee: FrontendTokenAmount = 1;
+        let recipient: FrontendAccount = [0u32; 4];
+
         let circuit = WithdrawRelation::new(
             old_nullifier,
             merkle_root,
@@ -209,6 +250,8 @@ mod tests {
             old_note,
             whole_token_amount,
             new_token_amount,
+            fee,
+            recipient,
         );
 
         let cs = ConstraintSystem::new_ref();

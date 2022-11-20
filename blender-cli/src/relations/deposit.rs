@@ -14,12 +14,17 @@ use crate::relations::{
     },
 };
 
-/// Deposit relation (see ADR).
+/// 'Deposit' relation for the Blender application.
+///
+/// It expresses the fact that `note` is a prefix of the result of tangling together `token_id`,
+/// `token_amount`, `trapdoor` and `nullifier`.
 pub struct DepositRelation {
+    // Public inputs.
     pub note: BackendNote,
     pub token_id: BackendTokenId,
     pub token_amount: BackendTokenAmount,
 
+    // Private inputs.
     pub trapdoor: BackendTrapdoor,
     pub nullifier: BackendNullifier,
 }
