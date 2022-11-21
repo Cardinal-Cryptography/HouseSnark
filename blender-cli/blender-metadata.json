@@ -1,6 +1,6 @@
 {
   "source": {
-    "hash": "0xbc045294bc18ffb1d34c8fa6a3f1a55f764728bcb270b764cb9699d9d9a47f5e",
+    "hash": "0x8b886982e7a4bb662417e413f8b1b45212c19efc52f5508ed16b0bc9a9b8dde5",
     "language": "ink! 3.4.0",
     "compiler": "rustc 1.65.0-nightly"
   },
@@ -30,7 +30,7 @@
             }
           ],
           "docs": [
-            "Instantiate the contract. Set the caller as the blendermaster."
+            "Instantiate the contract. Set the caller as the owner."
           ],
           "label": "new",
           "payable": false,
@@ -72,6 +72,17 @@
                   "u32"
                 ],
                 "type": 1
+              }
+            },
+            {
+              "docs": [],
+              "indexed": false,
+              "label": "note",
+              "type": {
+                "displayName": [
+                  "Note"
+                ],
+                "type": 2
               }
             }
           ],
@@ -122,6 +133,17 @@
                   "u32"
                 ],
                 "type": 1
+              }
+            },
+            {
+              "docs": [],
+              "indexed": false,
+              "label": "new_note",
+              "type": {
+                "displayName": [
+                  "Note"
+                ],
+                "type": 2
               }
             }
           ],
@@ -218,7 +240,7 @@
                 "displayName": [
                   "Option"
                 ],
-                "type": 19
+                "type": 20
               }
             },
             {
@@ -310,7 +332,7 @@
             "displayName": [
               "Option"
             ],
-            "type": 20
+            "type": 21
           },
           "selector": "0x00000004"
         },
@@ -329,14 +351,14 @@
           "docs": [
             " Check whether `nullifier` has been already used."
           ],
-          "label": "observed_nullifier",
+          "label": "contains_nullifier",
           "mutates": false,
           "payable": false,
           "returnType": {
             "displayName": [
               "bool"
             ],
-            "type": 22
+            "type": 23
           },
           "selector": "0x00000005"
         },
@@ -348,7 +370,7 @@
                 "displayName": [
                   "Relation"
                 ],
-                "type": 23
+                "type": 24
               }
             },
             {
@@ -364,7 +386,7 @@
           "docs": [
             " Register a verifying key for one of the `Relation`.",
             "",
-            " For blendermaster use only."
+            " For owner use only."
           ],
           "label": "register_vk",
           "mutates": true,
@@ -399,7 +421,7 @@
             "displayName": [
               "Option"
             ],
-            "type": 24
+            "type": 25
           },
           "selector": "0x00000009"
         },
@@ -427,7 +449,7 @@
           "docs": [
             " Register a token contract (`token_address`) at `token_id`.",
             "",
-            " For blendermaster use only."
+            " For owner use only."
           ],
           "label": "register_new_token",
           "mutates": true,
@@ -501,12 +523,47 @@
           },
           {
             "layout": {
-              "cell": {
-                "key": "0x0600000000000000000000000000000000000000000000000000000000000000",
-                "ty": 12
+              "struct": {
+                "fields": [
+                  {
+                    "layout": {
+                      "cell": {
+                        "key": "0xb36ee29c00000000000000000000000000000000000000000000000000000000",
+                        "ty": 12
+                      }
+                    },
+                    "name": "owner"
+                  },
+                  {
+                    "layout": {
+                      "enum": {
+                        "dispatchKey": "0xb46ee29c00000000000000000000000000000000000000000000000000000000",
+                        "variants": {
+                          "0": {
+                            "fields": [
+                              {
+                                "layout": {
+                                  "cell": {
+                                    "key": "0xb56ee29c00000000000000000000000000000000000000000000000000000000",
+                                    "ty": 7
+                                  }
+                                },
+                                "name": null
+                              }
+                            ]
+                          },
+                          "1": {
+                            "fields": []
+                          }
+                        }
+                      }
+                    },
+                    "name": "_reserved"
+                  }
+                ]
               }
             },
-            "name": "blendermaster"
+            "name": "ownable"
           }
         ]
       }
@@ -809,6 +866,12 @@
             "variant": {
               "variants": [
                 {
+                  "fields": [
+                    {
+                      "type": 16,
+                      "typeName": "OwnableError"
+                    }
+                  ],
                   "index": 0,
                   "name": "InsufficientPermission"
                 },
@@ -831,7 +894,7 @@
                 {
                   "fields": [
                     {
-                      "type": 16,
+                      "type": 17,
                       "typeName": "SnarcosError"
                     }
                   ],
@@ -841,7 +904,7 @@
                 {
                   "fields": [
                     {
-                      "type": 17,
+                      "type": 18,
                       "typeName": "PSP22Error"
                     }
                   ],
@@ -851,7 +914,7 @@
                 {
                   "fields": [
                     {
-                      "type": 18,
+                      "type": 19,
                       "typeName": "String"
                     }
                   ],
@@ -878,6 +941,32 @@
       },
       {
         "id": 16,
+        "type": {
+          "def": {
+            "variant": {
+              "variants": [
+                {
+                  "index": 0,
+                  "name": "CallerIsNotOwner"
+                },
+                {
+                  "index": 1,
+                  "name": "NewOwnerIsZero"
+                }
+              ]
+            }
+          },
+          "path": [
+            "openbrush_contracts",
+            "traits",
+            "errors",
+            "ownable",
+            "OwnableError"
+          ]
+        }
+      },
+      {
+        "id": 17,
         "type": {
           "def": {
             "variant": {
@@ -928,7 +1017,7 @@
         }
       },
       {
-        "id": 17,
+        "id": 18,
         "type": {
           "def": {
             "variant": {
@@ -982,7 +1071,7 @@
         }
       },
       {
-        "id": 18,
+        "id": 19,
         "type": {
           "def": {
             "primitive": "str"
@@ -990,7 +1079,7 @@
         }
       },
       {
-        "id": 19,
+        "id": 20,
         "type": {
           "def": {
             "variant": {
@@ -1023,7 +1112,7 @@
         }
       },
       {
-        "id": 20,
+        "id": 21,
         "type": {
           "def": {
             "variant": {
@@ -1035,7 +1124,7 @@
                 {
                   "fields": [
                     {
-                      "type": 21
+                      "type": 22
                     }
                   ],
                   "index": 1,
@@ -1047,7 +1136,7 @@
           "params": [
             {
               "name": "T",
-              "type": 21
+              "type": 22
             }
           ],
           "path": [
@@ -1056,7 +1145,7 @@
         }
       },
       {
-        "id": 21,
+        "id": 22,
         "type": {
           "def": {
             "sequence": {
@@ -1066,7 +1155,7 @@
         }
       },
       {
-        "id": 22,
+        "id": 23,
         "type": {
           "def": {
             "primitive": "bool"
@@ -1074,7 +1163,7 @@
         }
       },
       {
-        "id": 23,
+        "id": 24,
         "type": {
           "def": {
             "variant": {
@@ -1099,7 +1188,7 @@
         }
       },
       {
-        "id": 24,
+        "id": 25,
         "type": {
           "def": {
             "variant": {
