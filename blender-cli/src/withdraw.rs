@@ -15,16 +15,13 @@ pub(super) fn do_withdraw(
     cmd: WithdrawCmd,
     app_state: &mut AppState,
 ) -> Result<()> {
-    let (deposit, deposit_amount) = get_deposit_and_amount(&cmd, app_state)?;
-    let WithdrawCmd {
-        amount: withdraw_amount,
-        ..
-    } = cmd;
+    let (deposit, withdraw_amount) = get_deposit_and_withdraw_amount(&cmd, app_state)?;
 
     let WithdrawCmd {
         recipient,
         caller_seed,
         fee,
+        // amount: withdraw_amount,
         ..
     } = cmd;
 
@@ -48,7 +45,7 @@ pub(super) fn do_withdraw(
     let leaf_idx = contract.withdraw(
         &connection,
         deposit.token_id,
-        deposit_amount,
+        withdraw_amount,
         recipient,
         fee,
         merkle_root,
@@ -59,7 +56,7 @@ pub(super) fn do_withdraw(
 
     app_state.delete_deposit_by_id(deposit.deposit_id);
     // save new deposit to the state
-    let tokens_left = deposit.token_amount - withdraw_amount.expect("withdraw amount should exist");
+    let tokens_left = deposit.token_amount - withdraw_amount;
     if tokens_left > 0 {
         app_state.add_deposit(deposit.token_id, tokens_left, leaf_idx);
     }
@@ -67,7 +64,7 @@ pub(super) fn do_withdraw(
     Ok(())
 }
 
-fn get_deposit_and_amount(
+fn get_deposit_and_withdraw_amount(
     cmd: &WithdrawCmd,
     app_state: &AppState,
 ) -> Result<(Deposit, TokenAmount)> {
