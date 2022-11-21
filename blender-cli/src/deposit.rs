@@ -33,32 +33,14 @@ pub(super) fn do_deposit(
         dummy_nullifier,
     );
 
-    let cs = ConstraintSystem::new_ref();
-    circuit.generate_constraints(cs.clone())?;
-
     let system = NonUniversalProvingSystem::Groth16;
-    let RawKeys { pk, vk } = system.generate_keys(circuit);
+    let RawKeys { pk, .. } = system.generate_keys(circuit);
 
-    println!("pk {:?}", pk);
-    println!("vk {:?}", vk);
+    let system = SomeProvingSystem::NonUniversal(system);
 
-    // let system: SomeProvingSystem =
-    //     SomeProvingSystem::NonUniversal(NonUniversalProvingSystem::Groth16);
-
-    // // system.
-
-    // let keys = NonUniversalProvingSystem::generate_keys(&system.0, circuit);
-
-    // let proof = system.prove(circuit, dummy_pk);
-    // let leaf_idx = contract.deposit(&connection, cmd.token_id, cmd.amount, note, &proof)?;
-    // app_state.add_deposit(cmd.token_id, cmd.amount, leaf_idx);
-
-    // let is_satisfied = cs.is_satisfied().unwrap();
-    // if !is_satisfied {
-    //     println!("{:?}", cs.which_is_unsatisfied());
-    // }
-
-    // assert!(is_satisfied);
+    let proof = system.prove(circuit, pk);
+    let leaf_idx = contract.deposit(&connection, cmd.token_id, cmd.amount, note, &proof)?;
+    app_state.add_deposit(cmd.token_id, cmd.amount, leaf_idx);
 
     Ok(())
 }

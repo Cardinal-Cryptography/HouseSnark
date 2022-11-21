@@ -19,6 +19,12 @@ use contract_transcode::Value;
 use crate::{MerkleRoot, Note, Nullifier, TokenAmount, TokenId};
 
 #[derive(Debug)]
+pub enum Relation {
+    Deposit,
+    Withdraw,
+}
+
+#[derive(Debug)]
 pub struct Blender {
     contract: Arc<ContractInstance>,
 }
@@ -31,6 +37,27 @@ impl Blender {
                 metadata_path.to_str().unwrap(),
             )?),
         })
+    }
+
+    /// Call `register_vk` message of the contract
+    pub fn register_vk(
+        &self,
+        connection: &SignedConnection,
+        relation: Relation,
+        vk: Vec<u8>,
+    ) -> Result<()> {
+        // NOTE: this could still silently fail on-chain due to contract revert
+        // we should add an event an listen to it
+        self.contract.contract_exec(
+            connection,
+            "register_vk",
+            &[
+                &format!("{:?}", relation),
+                &*format!("0x{}", hex::encode(vk)),
+            ],
+        )?;
+
+        Ok(())
     }
 
     /// Call `deposit` message of the contract. If successful, return leaf idx.
@@ -96,7 +123,7 @@ impl Blender {
             Ok(leaf_idx as u32)
         } else {
             Err(anyhow!(
-                "Failed to observe expected event. And actually I do not know where are your tokens."
+                "Failed to observe expected event. And actually I do not know where your tokens are."
             ))
         }
     }

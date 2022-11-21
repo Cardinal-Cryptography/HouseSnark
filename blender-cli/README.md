@@ -35,10 +35,18 @@ cd blender-cli
 cargo run --release -- --seed //Alice set-node ws://127.0.0.1:9943
 ```
 
-### Register Blender contract address instance
+### Persist Blender contract address instance
 
 ```bash
 cargo run --release -- --seed //Alice set-contract-address <blender-addrs>
+```
+
+### Register VK
+
+Registers VKs for Deposit and Withdraw relations
+
+```bash
+cargo run --release -- --seed //Alice register-vk
 ```
 
 ### Deposit a note

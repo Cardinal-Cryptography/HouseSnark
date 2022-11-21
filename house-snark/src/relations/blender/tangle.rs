@@ -33,18 +33,20 @@ const BASE_LENGTH: usize = 4;
 pub(super) fn tangle_in_field<const SQUASH_FACTOR: usize>(
     mut bytes: Vec<ByteVar>,
 ) -> Result<Vec<ByteVar>, SynthesisError> {
-    let number_of_bytes = bytes.len();
-    _tangle_in_field(&mut bytes, 0, number_of_bytes)?;
-    Ok(bytes
-        .chunks(SQUASH_FACTOR)
-        .map(|chunk| {
-            chunk
-                .iter()
-                .cloned()
-                .reduce(|x, y| x.xor(&y).unwrap())
-                .unwrap()
-        })
-        .collect())
+    // let number_of_bytes = bytes.len();
+    // _tangle_in_field(&mut bytes, 0, number_of_bytes)?;
+    // Ok(bytes
+    //     .chunks(SQUASH_FACTOR)
+    //     .map(|chunk| {
+    //         chunk
+    //             .iter()
+    //             .cloned()
+    //             .reduce(|x, y| x.xor(&y).unwrap())
+    //             .unwrap()
+    //     })
+    //     .collect())
+
+    Ok(bytes)
 }
 
 /// Recursive and index-bounded implementation of the first step of the `tangle` procedure.
@@ -86,12 +88,14 @@ fn _tangle_in_field(bytes: &mut [ByteVar], low: usize, high: usize) -> Result<()
 
 /// Tangle elements of `bytes`.
 pub fn tangle<const SQUASH_FACTOR: usize>(mut bytes: Vec<u8>) -> Vec<u8> {
-    let number_of_bytes = bytes.len();
-    _tangle(&mut bytes, 0, number_of_bytes);
+    // let number_of_bytes = bytes.len();
+    // _tangle(&mut bytes, 0, number_of_bytes);
+    // bytes
+    //     .chunks(SQUASH_FACTOR)
+    //     .map(|chunk| chunk.iter().cloned().reduce(|x, y| x ^ y).unwrap())
+    //     .collect()
+
     bytes
-        .chunks(SQUASH_FACTOR)
-        .map(|chunk| chunk.iter().cloned().reduce(|x, y| x ^ y).unwrap())
-        .collect()
 }
 
 /// Recursive and index-bounded implementation of the first step of the `tangle` procedure.
