@@ -2,10 +2,7 @@
 //! `withdraw`. It also exposes some functions and types that might be useful for input generation.
 //!
 //! Currently, instead of using some real hash function, we chose to incorporate a simple tangling
-//! algorithm. Essentially, it is a procedure that just mangles a byte array in-place. Usually, the
-//! input to tangling will be just 128 bytes, but the desired output of the whole step would be a
-//! single field element, which is just 32 bytes. Hence, we will save only first quarter of the
-//! tangling result and simply abandoning the suffix.
+//! algorithm. Essentially, it is a procedure that just mangles a byte sequence.
 
 #[allow(dead_code)]
 mod deposit;

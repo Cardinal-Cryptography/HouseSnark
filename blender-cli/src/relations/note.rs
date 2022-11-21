@@ -23,28 +23,22 @@ pub(super) fn check_note(
     nullifier: &FpVar,
     note: &FpVar,
 ) -> Result<(), SynthesisError> {
-    let mut bytes: Vec<ByteVar> = [
+    let bytes: Vec<ByteVar> = [
         token_id.to_bytes()?,
         token_amount.to_bytes()?,
         trapdoor.to_bytes()?,
         nullifier.to_bytes()?,
     ]
     .concat();
+    let bytes = tangle_in_field::<4>(bytes)?;
 
-    tangle_in_field(&mut bytes)?;
-
-    let note_bytes = note.to_bytes()?;
-
-    for (a, b) in note_bytes.iter().zip(bytes.iter()) {
+    for (a, b) in note.to_bytes()?.iter().zip(bytes.iter()) {
         a.enforce_equal(b)?;
     }
     Ok(())
 }
 
 /// Compute note as the result of tangling `(token_id, token_amount, trapdoor, nullifier)`.
-///
-/// To be precise, the result of tangling will be 128 bytes. Then, the note will be created from
-/// the first 32 bytes. The rest will be just abandoned.
 ///
 /// Useful for input preparation and offline note generation.
 pub fn compute_note(
@@ -53,7 +47,7 @@ pub fn compute_note(
     trapdoor: FrontendTrapdoor,
     nullifier: FrontendNullifier,
 ) -> FrontendNote {
-    let mut bytes = [
+    let bytes = [
         BigInteger256::from(token_id as u64).to_bytes_le(),
         BigInteger256::from(token_amount).to_bytes_le(),
         BigInteger256::from(trapdoor).to_bytes_le(),
@@ -61,9 +55,7 @@ pub fn compute_note(
     ]
     .concat();
 
-    tangle(&mut bytes);
-
-    note_from_bytes(bytes.as_slice())
+    note_from_bytes(tangle::<4>(bytes).as_slice())
 }
 
 /// Create a note from the first 32 bytes of `bytes`.

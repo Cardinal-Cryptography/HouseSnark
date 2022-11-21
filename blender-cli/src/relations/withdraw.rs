@@ -161,14 +161,13 @@ impl ConstraintSynthesizer<CircuitField> for WithdrawRelation {
         let mut current_hash_bytes = old_note.to_bytes()?;
         for hash in self.merkle_path {
             let sibling = FpVar::new_witness(ns!(cs, "merkle path node"), || Ok(hash))?;
-            let mut bytes: Vec<ByteVar> = if leaf_index.value()?.0.is_even() {
+            let bytes: Vec<ByteVar> = if leaf_index.value()?.0.is_even() {
                 [current_hash_bytes.clone(), sibling.to_bytes()?].concat()
             } else {
                 [sibling.to_bytes()?, current_hash_bytes.clone()].concat()
             };
 
-            tangle_in_field(&mut bytes)?;
-            current_hash_bytes = bytes[0..(bytes.len() / 2)].to_vec();
+            current_hash_bytes = tangle_in_field::<2>(bytes)?;
 
             leaf_index = FpVar::constant(leaf_index.value()?.div(CircuitField::from(2)));
         }
@@ -197,13 +196,12 @@ mod tests {
     };
 
     fn compute_parent_hash(left: FrontendNote, right: FrontendNote) -> FrontendNote {
-        let mut bytes = [
+        let bytes = [
             BigInteger256::new(left).to_bytes_le(),
             BigInteger256::new(right).to_bytes_le(),
         ]
         .concat();
-        tangle(&mut bytes);
-        note_from_bytes(bytes.as_slice())
+        note_from_bytes(tangle::<2>(bytes).as_slice())
     }
 
     #[test]
