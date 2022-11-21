@@ -33,7 +33,6 @@ mod app_state;
 mod config;
 mod contract;
 mod deposit;
-mod relations;
 mod state_file;
 mod withdraw;
 

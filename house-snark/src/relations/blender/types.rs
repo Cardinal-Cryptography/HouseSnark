@@ -1,5 +1,4 @@
-/// All our circuits will operate over the scalar field of the BLS12-381 curve.
-pub type CircuitField = ark_bls12_381::Fr;
+use super::CircuitField;
 
 /// The circuit lifting for `CircuitField`.
 pub(super) type FpVar = ark_r1cs_std::fields::fp::FpVar<CircuitField>;

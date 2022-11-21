@@ -15,7 +15,12 @@ mod types;
 #[allow(dead_code)]
 mod withdraw;
 
+pub use deposit::DepositRelation;
+pub use note::compute_note;
 pub use types::{
     FrontendNote as Note, FrontendNullifier as Nullifier, FrontendTokenAmount as TokenAmount,
     FrontendTokenId as TokenId, FrontendTrapdoor as Trapdoor,
 };
+pub use withdraw::WithdrawRelation;
+
+pub use crate::relations::types::CircuitField;

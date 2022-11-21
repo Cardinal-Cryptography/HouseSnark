@@ -30,5 +30,11 @@ ark-gm17 = { version = "^0.3.0", default-features = false }
 ark-marlin = { version = "^0.3.0", default-features = false }
 
 [features]
-default = ["std"]
+default = ["std", "all_relations"]
 std = []
+all_relations = ["deposit", "linear", "merkle_tree", "withdraw", "xor"]
+deposit = []
+linear = []
+merkle_tree = []
+withdraw = []
+xor = []

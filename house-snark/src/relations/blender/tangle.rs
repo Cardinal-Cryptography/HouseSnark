@@ -22,7 +22,7 @@
 use ark_r1cs_std::R1CSVar;
 use ark_relations::r1cs::SynthesisError;
 
-use crate::relations::types::ByteVar;
+use super::types::ByteVar;
 
 /// Bottom-level chunk length.
 const BASE_LENGTH: usize = 4;

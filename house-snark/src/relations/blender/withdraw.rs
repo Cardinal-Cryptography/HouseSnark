@@ -7,16 +7,16 @@ use ark_relations::{
     r1cs::{ConstraintSynthesizer, ConstraintSystemRef, SynthesisError},
 };
 
-use crate::relations::{
+use super::{
     note::check_note,
     tangle::tangle_in_field,
     types::{
         BackendAccount, BackendLeafIndex, BackendMerklePath, BackendMerkleRoot, BackendNote,
-        BackendNullifier, BackendTokenAmount, BackendTokenId, BackendTrapdoor, ByteVar,
-        CircuitField, FpVar, FrontendAccount, FrontendLeafIndex, FrontendMerklePath,
-        FrontendMerkleRoot, FrontendNote, FrontendNullifier, FrontendTokenAmount, FrontendTokenId,
-        FrontendTrapdoor,
+        BackendNullifier, BackendTokenAmount, BackendTokenId, BackendTrapdoor, ByteVar, FpVar,
+        FrontendAccount, FrontendLeafIndex, FrontendMerklePath, FrontendMerkleRoot, FrontendNote,
+        FrontendNullifier, FrontendTokenAmount, FrontendTokenId, FrontendTrapdoor,
     },
+    CircuitField,
 };
 
 /// 'Withdraw' relation for the Blender application.
@@ -186,23 +186,10 @@ impl ConstraintSynthesizer<CircuitField> for WithdrawRelation {
 
 #[cfg(test)]
 mod tests {
-    use ark_ff::BigInteger;
     use ark_relations::r1cs::ConstraintSystem;
 
     use super::*;
-    use crate::relations::{
-        note::{compute_note, note_from_bytes},
-        tangle::tangle,
-    };
-
-    fn compute_parent_hash(left: FrontendNote, right: FrontendNote) -> FrontendNote {
-        let bytes = [
-            BigInteger256::new(left).to_bytes_le(),
-            BigInteger256::new(right).to_bytes_le(),
-        ]
-        .concat();
-        note_from_bytes(tangle::<2>(bytes).as_slice())
-    }
+    use crate::relations::blender::note::{compute_note, compute_parent_hash};
 
     #[test]
     fn withdraw_constraints_correctness() {

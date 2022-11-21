@@ -6,19 +6,16 @@ use ark_r1cs_std::{boolean::Boolean, eq::EqGadget, prelude::AllocVar, uint8::UIn
 use ark_relations::r1cs::{ConstraintSynthesizer, ConstraintSystemRef, SynthesisError};
 use clap::Args;
 
-use crate::{
-    relations::{
-        byte_to_bits,
-        merkle_tree::{
-            gadgets::{
-                LeafHashGadget, LeafHashParamsVar, TwoToOneHashGadget, TwoToOneHashParamsVar,
-            },
-            hash_functions::{LeafHash, TwoToOneHash},
-            tree::{new_tree, MerkleConfig, Root, SimplePath},
-        },
-        string_to_padded_bytes,
+use crate::relations::{
+    byte_to_bits,
+    merkle_tree::{
+        gadgets::{LeafHashGadget, LeafHashParamsVar, TwoToOneHashGadget, TwoToOneHashParamsVar},
+        hash_functions::{LeafHash, TwoToOneHash},
+        tree::{new_tree, MerkleConfig, Root, SimplePath},
     },
-    CircuitField, GetPublicInput,
+    string_to_padded_bytes,
+    types::CircuitField,
+    GetPublicInput,
 };
 
 /// The R1CS equivalent of the the Merkle tree root.

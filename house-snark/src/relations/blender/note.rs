@@ -4,7 +4,7 @@ use ark_ff::{BigInteger, BigInteger256};
 use ark_r1cs_std::{eq::EqGadget, ToBytesGadget};
 use ark_relations::r1cs::SynthesisError;
 
-use crate::relations::{
+use super::{
     tangle::{tangle, tangle_in_field},
     types::{
         ByteVar, FpVar, FrontendNote, FrontendNullifier, FrontendTokenAmount, FrontendTokenId,
@@ -56,6 +56,15 @@ pub fn compute_note(
     .concat();
 
     note_from_bytes(tangle::<4>(bytes).as_slice())
+}
+
+pub fn compute_parent_hash(left: FrontendNote, right: FrontendNote) -> FrontendNote {
+    let bytes = [
+        BigInteger256::new(left).to_bytes_le(),
+        BigInteger256::new(right).to_bytes_le(),
+    ]
+    .concat();
+    note_from_bytes(tangle::<2>(bytes).as_slice())
 }
 
 /// Create a note from the first 32 bytes of `bytes`.
