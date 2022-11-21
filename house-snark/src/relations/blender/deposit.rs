@@ -18,6 +18,7 @@ use crate::relations::types::CircuitField;
 ///
 /// It expresses the fact that `note` is a prefix of the result of tangling together `token_id`,
 /// `token_amount`, `trapdoor` and `nullifier`.
+#[derive(Default, Clone, Copy)]
 pub struct DepositRelation {
     // Public inputs.
     pub note: BackendNote,

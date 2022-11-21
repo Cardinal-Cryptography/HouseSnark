@@ -2,7 +2,7 @@ mod environment;
 mod relations;
 pub mod serialization;
 
-pub use environment::{CircuitField, NonUniversalProvingSystem, SomeProvingSystem};
+pub use environment::{CircuitField, NonUniversalProvingSystem, RawKeys, SomeProvingSystem};
 #[cfg(feature = "deposit")]
 pub use relations::blender::DepositRelation;
 #[cfg(feature = "withdraw")]
