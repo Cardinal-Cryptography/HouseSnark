@@ -10,9 +10,9 @@ use ark_crypto_primitives::{
 };
 use ark_ed_on_bls12_381::{constraints::EdwardsVar, EdwardsProjective};
 
-use crate::{
-    relations::merkle_tree::hash_functions::{LeafHash, LeafWindow, TwoToOneHash, TwoToOneWindow},
-    CircuitField,
+use crate::relations::{
+    merkle_tree::hash_functions::{LeafHash, LeafWindow, TwoToOneHash, TwoToOneWindow},
+    types::CircuitField,
 };
 
 pub type TwoToOneHashGadget = PedersenCRHCompressorGadget<

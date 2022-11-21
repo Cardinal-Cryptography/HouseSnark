@@ -5,14 +5,14 @@ use ark_relations::{
     r1cs::{ConstraintSynthesizer, ConstraintSystemRef, SynthesisError},
 };
 
-use crate::relations::{
+use super::{
     note::check_note,
     types::{
-        BackendNote, BackendNullifier, BackendTokenAmount, BackendTokenId, BackendTrapdoor,
-        CircuitField, FpVar, FrontendNote, FrontendNullifier, FrontendTokenAmount, FrontendTokenId,
-        FrontendTrapdoor,
+        BackendNote, BackendNullifier, BackendTokenAmount, BackendTokenId, BackendTrapdoor, FpVar,
+        FrontendNote, FrontendNullifier, FrontendTokenAmount, FrontendTokenId, FrontendTrapdoor,
     },
 };
+use crate::relations::types::CircuitField;
 
 /// 'Deposit' relation for the Blender application.
 ///
@@ -68,7 +68,7 @@ mod tests {
     use ark_relations::r1cs::ConstraintSystem;
 
     use super::*;
-    use crate::relations::note::compute_note;
+    use crate::relations::blender::note::compute_note;
 
     #[test]
     fn deposit_constraints_correctness() {
