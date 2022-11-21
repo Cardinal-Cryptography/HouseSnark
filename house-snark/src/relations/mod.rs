@@ -36,7 +36,6 @@ pub enum Relation {
 
 impl Relation {
     /// Relation identifier.
-    #[allow(dead_code)]
     pub fn id(&self) -> String {
         match &self {
             #[cfg(feature = "xor")]

@@ -186,14 +186,10 @@ impl ConstraintSynthesizer<CircuitField> for WithdrawRelation {
 
 #[cfg(test)]
 mod tests {
-    use ark_ff::BigInteger;
     use ark_relations::r1cs::ConstraintSystem;
 
     use super::*;
-    use crate::relations::{
-        note::{compute_note, compute_parent_hash, note_from_bytes},
-        tangle::tangle,
-    };
+    use crate::relations::blender::note::{compute_note, compute_parent_hash};
 
     #[test]
     fn withdraw_constraints_correctness() {

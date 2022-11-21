@@ -68,7 +68,7 @@ mod tests {
     use ark_relations::r1cs::ConstraintSystem;
 
     use super::*;
-    use crate::relations::note::compute_note;
+    use crate::relations::blender::note::compute_note;
 
     #[test]
     fn deposit_constraints_correctness() {
