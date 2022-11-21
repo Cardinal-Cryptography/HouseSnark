@@ -186,7 +186,8 @@ impl Blender {
     }
 }
 
-// todo: could be made generic over elements
+// TODO: could be made generic over elements
+// TODO: move to aleph-client
 fn to_seq(value: &Value) -> Result<Vec<u64>> {
     match value {
         Value::Seq(seq) => {
