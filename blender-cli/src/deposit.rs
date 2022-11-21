@@ -9,6 +9,9 @@ pub(super) fn do_deposit(
     cmd: DepositCmd,
     app_state: &mut AppState,
 ) -> Result<()> {
+    // TODO:
+    // - create real proof
+    // - create real note
     let dummy_proof = vec![1, 2, 3];
     let dummy_note = Default::default();
 

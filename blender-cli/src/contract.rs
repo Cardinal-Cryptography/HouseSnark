@@ -97,17 +97,70 @@ impl Blender {
     #[allow(clippy::too_many_arguments)]
     pub fn withdraw(
         &self,
-        _connection: &SignedConnection,
-        _token_id: TokenId,
-        _token_amount: TokenAmount,
-        _recipient: AccountId,
-        _fee_for_caller: Option<TokenAmount>,
-        _merkle_root: MerkleRoot,
-        _nullifier: Nullifier,
-        _new_note: Note,
-        _proof: &[u8],
-    ) -> Result<()> {
-        Ok(())
+        connection: &SignedConnection,
+        token_id: TokenId,
+        value: TokenAmount,
+        recipient: AccountId,
+        fee_for_caller: Option<TokenAmount>,
+        merkle_root: MerkleRoot,
+        nullifier: Nullifier,
+        new_note: Note,
+        proof: &[u8],
+    ) -> Result<u32> {
+        let subscription = subscribe_events(connection)?;
+        let (cancel_tx, cancel_rx) = channel();
+        let (leaf_tx, leaf_rx) = channel();
+
+        let contract_ptr = self.contract.clone();
+
+        thread::spawn(move || {
+            listen_contract_events(
+                subscription,
+                &[&contract_ptr],
+                Some(cancel_rx),
+                |event_or_error| {
+                    println!("{:?}", event_or_error);
+                    if let Ok(ContractEvent { ident, data, .. }) = event_or_error {
+                        if Some(String::from("Withdrawn")) == ident {
+                            let leaf_idx = data.get("leaf_idx").unwrap().clone();
+                            leaf_tx.send(to_u128(leaf_idx).unwrap()).unwrap();
+                        }
+                    }
+                },
+            );
+        });
+
+        self.contract
+            .contract_exec(
+                connection,
+                "withdraw",
+                &[
+                    &*token_id.to_string(),
+                    &*value.to_string(),
+                    &*recipient.to_string(),
+                    &*format!("{:?}", fee_for_caller),
+                    &*format!("0x{}", hex::encode(merkle_root)),
+                    &*nullifier.to_string(),
+                    &*format!("0x{}", hex::encode(new_note)),
+                    &*format!("0x{}", hex::encode(proof)),
+                ],
+            )
+            .map_err(|e| {
+                cancel_tx.send(()).unwrap();
+                e
+            })?;
+
+        thread::sleep(Duration::from_secs(3));
+        cancel_tx.send(()).unwrap();
+
+        if let Ok(leaf_idx) = leaf_rx.try_recv() {
+            println!("Successfully withdrawn tokens.");
+            Ok(leaf_idx as u32)
+        } else {
+            Err(anyhow!(
+                "Failed to observe expected event. Funds may not be SAFU."
+            ))
+        }
     }
 
     /// Fetch the current merkle root.

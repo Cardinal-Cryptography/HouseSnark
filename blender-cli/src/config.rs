@@ -85,7 +85,7 @@ pub(super) struct DepositCmd {
     /// Registered token id.
     pub token_id: TokenId,
 
-    /// Registered token id.
+    /// Amount of the token to deposit.
     pub amount: TokenAmount,
 
     /// Contract metadata file.
