@@ -55,31 +55,20 @@ impl Blender {
                 |event_or_error| {
                     println!("{:?}", event_or_error);
                     if let Ok(ContractEvent { ident, data, .. }) = event_or_error {
-                        // todo: contain in the event `note` as well to identify unambiguously
                         if Some(String::from("Deposited")) == ident {
-                            // let event_note: Value = data.get("note").unwrap().clone();
-                            // let decoded_note: [u64; 4] =
-                            //     to_seq(&event_note).unwrap().try_into().unwrap();
-
-                            // println!(
-                            //     "@@@ deposit, expected note {:?}, received note {:?}",
-                            //     note, event_note
-                            // );
-
-                            // if note.eq(&decoded_note) {
-                            //     println!("@@@ we have a match!!!");
-                            // }
-
-                            let leaf_idx = data.get("leaf_idx").unwrap().clone();
-
-                            leaf_tx.send(to_u128(leaf_idx).unwrap()).unwrap();
+                            let event_note: Value = data.get("note").unwrap().clone();
+                            let decoded_note: [u64; 4] =
+                                to_seq(&event_note).unwrap().try_into().unwrap();
+                            // check the `note` in the event as well to identify unambiguously
+                            if note.eq(&decoded_note) {
+                                let leaf_idx = data.get("leaf_idx").unwrap().clone();
+                                leaf_tx.send(to_u128(leaf_idx).unwrap()).unwrap();
+                            }
                         }
                     }
                 },
             );
         });
-
-        // slice
 
         let note_bytes = unsafe { note.align_to::<u8>().1 };
 
@@ -141,8 +130,17 @@ impl Blender {
                     println!("{:?}", event_or_error);
                     if let Ok(ContractEvent { ident, data, .. }) = event_or_error {
                         if Some(String::from("Withdrawn")) == ident {
-                            let leaf_idx = data.get("leaf_idx").unwrap().clone();
-                            leaf_tx.send(to_u128(leaf_idx).unwrap()).unwrap();
+                            // let leaf_idx = data.get("leaf_idx").unwrap().clone();
+                            // leaf_tx.send(to_u128(leaf_idx).unwrap()).unwrap();
+
+                            let event_note: Value = data.get("new_note").unwrap().clone();
+                            let decoded_note: [u64; 4] =
+                                to_seq(&event_note).unwrap().try_into().unwrap();
+                            // check the `note` in the event as well to identify it unambiguously
+                            if new_note.eq(&decoded_note) {
+                                let leaf_idx = data.get("leaf_idx").unwrap().clone();
+                                leaf_tx.send(to_u128(leaf_idx).unwrap()).unwrap();
+                            }
                         }
                     }
                 },
@@ -150,7 +148,6 @@ impl Blender {
         });
 
         let new_note_bytes = unsafe { new_note.align_to::<u8>().1 };
-
         let args = [
             &*token_id.to_string(),
             &*value.to_string(),
@@ -165,20 +162,7 @@ impl Blender {
         println!("Calling withdraw tx with arguments {:?}", &args);
 
         self.contract
-            .contract_exec(
-                connection, "withdraw",
-                &args,
-                // &[
-                //     &*token_id.to_string(),
-                //     &*value.to_string(),
-                //     &*recipient.to_string(),
-                //     &*format!("{:?}", fee_for_caller),
-                //     &*format!("0x{}", hex::encode(merkle_root)),
-                //     &*nullifier.to_string(),
-                //     &*format!("0x{}", hex::encode(new_note)),
-                //     &*format!("0x{}", hex::encode(proof)),
-                // ],
-            )
+            .contract_exec(connection, "withdraw", &args)
             .map_err(|e| {
                 cancel_tx.send(()).unwrap();
                 e
@@ -204,19 +188,17 @@ impl Blender {
 }
 
 // todo: could be made generic over elements
-pub fn to_seq(value: &Value) -> Result<Vec<u64>> {
+fn to_seq(value: &Value) -> Result<Vec<u64>> {
     match value {
         Value::Seq(seq) => {
-            let elements = seq
-                .elems()
-                .iter()
-                .map(|element| match element {
-                    Value::Int(integer) => *integer as u64,
-                    _ => panic!("Expected {:?} to be an Int", value),
-                })
-                .collect();
-
-            Ok(elements)
+            let mut result = vec![];
+            for element in seq.elems() {
+                match element {
+                    Value::UInt(integer) => result.push(*integer as u64),
+                    _ => panic!("Expected {:?} to be an UInt", &element),
+                }
+            }
+            Ok(result)
         }
         _ => Err(anyhow!("Expected {:?} to be a sequence", value)),
     }

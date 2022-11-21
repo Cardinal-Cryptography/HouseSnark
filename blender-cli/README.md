@@ -23,19 +23,22 @@ Script will register the token with the blender contract at id 0 as well as give
 
 ## Interact with the blender contract
 
-Use `//Alice` as account seed
+Use `//Alice` as account seed and issue cli commands from the tool directory:
+
+```bash
+cd blender-cli
+```
 
 ### Set node RPC endpoint address
 
 ```bash
-cargo run --release -- set-node ws://127.0.0.1:9943
+cargo run --release -- --seed //Alice set-node ws://127.0.0.1:9943
 ```
 
 ### Register Blender contract address instance
 
 ```bash
-cd blender-cli
-cargo run --release -- set-contract-address <blender-addrs>
+cargo run --release -- --seed //Alice set-contract-address <blender-addrs>
 ```
 
 ### Deposit a note
@@ -57,5 +60,5 @@ cargo run --release -- --seed //Alice show-assets 0
 Withdraws a note of 45 tokens of a PSP token registered with an id 0:
 
 ```bash
-cargo run --release -- withdraw --seed //Alice --deposit-id 0 --amount 45 --recipient 5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY
+cargo run --release -- --seed //Alice withdraw  --deposit-id 0 --amount 45 --recipient 5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY
 ```
