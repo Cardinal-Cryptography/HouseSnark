@@ -130,13 +130,11 @@ impl Blender {
                     println!("{:?}", event_or_error);
                     if let Ok(ContractEvent { ident, data, .. }) = event_or_error {
                         if Some(String::from("Withdrawn")) == ident {
-                            // let leaf_idx = data.get("leaf_idx").unwrap().clone();
-                            // leaf_tx.send(to_u128(leaf_idx).unwrap()).unwrap();
 
                             let event_note: Value = data.get("new_note").unwrap().clone();
                             let decoded_note: [u64; 4] =
                                 to_seq(&event_note).unwrap().try_into().unwrap();
-                            // check the `note` in the event as well to identify it unambiguously
+                            // check the `new_note` in the event as well to identify it unambiguously
                             if new_note.eq(&decoded_note) {
                                 let leaf_idx = data.get("leaf_idx").unwrap().clone();
                                 leaf_tx.send(to_u128(leaf_idx).unwrap()).unwrap();
