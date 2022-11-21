@@ -5,6 +5,7 @@ mod linear;
 #[cfg(feature = "merkle_tree")]
 mod merkle_tree;
 mod types;
+#[cfg(feature = "xor")]
 mod xor;
 
 use ark_ff::{One, PrimeField, Zero};
@@ -15,6 +16,7 @@ use clap::Subcommand;
 pub use linear::LinearEqRelation;
 #[cfg(feature = "merkle_tree")]
 pub use merkle_tree::{MerkleTreeRelation, MerkleTreeRelationArgs};
+#[cfg(feature = "xor")]
 pub use xor::XorRelation;
 
 use crate::relations::types::CircuitField;
@@ -24,6 +26,7 @@ use crate::relations::types::CircuitField;
 /// They should have corresponding definition in submodule.
 #[derive(Clone, Eq, PartialEq, Hash, Debug, Subcommand)]
 pub enum Relation {
+    #[cfg(feature = "xor")]
     Xor(XorRelation),
     #[cfg(feature = "linear")]
     LinearEquation(LinearEqRelation),
@@ -35,6 +38,7 @@ impl Relation {
     /// Relation identifier.
     pub fn id(&self) -> String {
         match &self {
+            #[cfg(feature = "xor")]
             Relation::Xor(_) => String::from("xor"),
             #[cfg(feature = "linear")]
             Relation::LinearEquation(_) => String::from("linear_equation"),
@@ -50,6 +54,7 @@ impl ConstraintSynthesizer<CircuitField> for Relation {
         cs: ConstraintSystemRef<CircuitField>,
     ) -> ark_relations::r1cs::Result<()> {
         match self {
+            #[cfg(feature = "xor")]
             Relation::Xor(relation @ XorRelation { .. }) => relation.generate_constraints(cs),
             #[cfg(feature = "linear")]
             Relation::LinearEquation(relation @ LinearEqRelation { .. }) => {
@@ -73,6 +78,7 @@ pub trait GetPublicInput<CircuitField: PrimeField + CanonicalSerialize> {
 impl GetPublicInput<CircuitField> for Relation {
     fn public_input(&self) -> Vec<CircuitField> {
         match self {
+            #[cfg(feature = "xor")]
             Relation::Xor(relation @ XorRelation { .. }) => relation.public_input(),
             #[cfg(feature = "linear")]
             Relation::LinearEquation(relation @ LinearEqRelation { .. }) => relation.public_input(),
