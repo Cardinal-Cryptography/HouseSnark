@@ -3,7 +3,7 @@ use std::path::PathBuf;
 use aleph_client::AccountId;
 use clap::{Args, Parser, Subcommand};
 
-use crate::{TokenAmount, TokenId};
+use crate::{DepositId, TokenAmount, TokenId};
 
 #[derive(Clone, Eq, PartialEq, Parser)]
 pub(super) struct CliConfig {
@@ -46,12 +46,16 @@ pub(super) enum StateReadCommand {
 #[derive(Clone, Eq, PartialEq, Debug, Subcommand)]
 pub(super) enum ContractInteractionCommand {
     Deposit(DepositCmd),
+    Withdraw(WithdrawCmd),
 }
 
 impl ContractInteractionCommand {
     pub fn get_metadata_file(&self) -> PathBuf {
         match self {
             ContractInteractionCommand::Deposit(DepositCmd { metadata_file, .. }) => {
+                metadata_file.clone()
+            }
+            ContractInteractionCommand::Withdraw(WithdrawCmd { metadata_file, .. }) => {
                 metadata_file.clone()
             }
         }
@@ -83,6 +87,34 @@ pub(super) struct DepositCmd {
 
     /// Registered token id.
     pub amount: TokenAmount,
+
+    /// Contract metadata file.
+    #[clap(default_value = "blender-metadata.json", value_parser = parsing::parse_path)]
+    pub metadata_file: PathBuf,
+}
+
+#[derive(Clone, Eq, PartialEq, Debug, Args)]
+pub(super) struct WithdrawCmd {
+    /// Which note should be spent.
+    #[clap(required_unless_present("interactive"))]
+    pub deposit_id: Option<DepositId>,
+
+    /// How many tokens should be withdrawn.
+    #[clap(required_unless_present("interactive"))]
+    pub amount: Option<TokenAmount>,
+
+    /// Perform action interactively.
+    #[clap(short, conflicts_with_all(["deposit_id", "amount"]))]
+    pub interactive: bool,
+
+    /// The destination account. If `None`, the tokens will be transferred to the main seed account.
+    pub recipient: Option<AccountId>,
+
+    /// Seed for submitting the transaction. If `None`, the main seed is used.
+    pub caller_seed: Option<String>,
+
+    /// Fee for the caller.
+    pub fee: Option<TokenAmount>,
 
     /// Contract metadata file.
     #[clap(default_value = "blender-metadata.json", value_parser = parsing::parse_path)]

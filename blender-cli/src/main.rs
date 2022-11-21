@@ -3,7 +3,7 @@ use anyhow::Result;
 use clap::Parser;
 use inquire::Password;
 use zeroize::Zeroize;
-use ContractInteractionCommand::Deposit;
+use ContractInteractionCommand::{Deposit, Withdraw};
 use StateReadCommand::{PrintState, ShowAssets};
 use StateWriteCommand::{SetContractAddress, SetNode};
 
@@ -12,22 +12,29 @@ use crate::{
     config::{
         CliConfig,
         Command::{ContractInteraction, StateRead, StateWrite},
-        ContractInteractionCommand, DepositCmd, SetContractAddressCmd, SetNodeCmd, ShowAssetsCmd,
+        ContractInteractionCommand, SetContractAddressCmd, SetNodeCmd, ShowAssetsCmd,
         StateReadCommand, StateWriteCommand,
     },
     contract::Blender,
+    deposit::do_deposit,
     state_file::{get_app_state, save_app_state},
+    withdraw::do_withdraw,
 };
 
+type DepositId = u16;
 type TokenId = u16;
 type TokenAmount = u64;
 type Note = [u8; 32];
+type MerkleRoot = [u8; 32];
+type Nullifier = u64;
 
 mod app_state;
 mod config;
 mod contract;
+mod deposit;
 mod relations;
 mod state_file;
+mod withdraw;
 
 fn perform_state_write_action(app_state: &mut AppState, command: StateWriteCommand) -> Result<()> {
     match command {
@@ -68,21 +75,8 @@ fn perform_contract_action(
     let contract = Blender::new(&app_state.contract_address, &metadata_file)?;
 
     match command {
-        Deposit(DepositCmd {
-            token_id, amount, ..
-        }) => {
-            let dummy_proof = vec![1, 2, 3];
-            let dummy_note = Default::default();
-
-            let leaf_idx =
-                contract.deposit(&connection, token_id, amount, dummy_note, &dummy_proof)?;
-
-            app_state.deposits.push(app_state::Deposit {
-                token_id,
-                token_amount: amount,
-                leaf_idx,
-            });
-        }
+        Deposit(cmd) => do_deposit(contract, connection, cmd, app_state)?,
+        Withdraw(cmd) => do_withdraw(contract, connection, cmd, app_state)?,
     };
     Ok(())
 }

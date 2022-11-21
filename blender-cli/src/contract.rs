@@ -15,7 +15,7 @@ use aleph_client::{
 };
 use anyhow::{anyhow, Result};
 
-use crate::{Note, TokenAmount, TokenId};
+use crate::{MerkleRoot, Note, Nullifier, TokenAmount, TokenId};
 
 #[derive(Debug)]
 pub struct Blender {
@@ -91,5 +91,27 @@ impl Blender {
                 "Failed to observe expected event. And actually I do not know where are your tokens."
             ))
         }
+    }
+
+    /// Call `withdraw` message of the contract.
+    #[allow(clippy::too_many_arguments)]
+    pub fn withdraw(
+        &self,
+        _connection: &SignedConnection,
+        _token_id: TokenId,
+        _token_amount: TokenAmount,
+        _recipient: AccountId,
+        _fee_for_caller: Option<TokenAmount>,
+        _merkle_root: MerkleRoot,
+        _nullifier: Nullifier,
+        _new_note: Note,
+        _proof: &[u8],
+    ) -> Result<()> {
+        Ok(())
+    }
+
+    /// Fetch the current merkle root.
+    pub fn get_merkle_root(&self, _connection: &SignedConnection) -> MerkleRoot {
+        Default::default()
     }
 }
