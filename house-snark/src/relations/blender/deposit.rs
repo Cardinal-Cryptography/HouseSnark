@@ -12,12 +12,13 @@ use super::{
         FrontendNote, FrontendNullifier, FrontendTokenAmount, FrontendTokenId, FrontendTrapdoor,
     },
 };
-use crate::relations::types::CircuitField;
+use crate::relations::{types::CircuitField, GetPublicInput};
 
 /// 'Deposit' relation for the Blender application.
 ///
 /// It expresses the fact that `note` is a prefix of the result of tangling together `token_id`,
 /// `token_amount`, `trapdoor` and `nullifier`.
+#[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
 pub struct DepositRelation {
     // Public inputs.
     pub note: BackendNote,
@@ -60,6 +61,17 @@ impl ConstraintSynthesizer<CircuitField> for DepositRelation {
         let nullifier = FpVar::new_witness(ns!(cs, "nullifier"), || Ok(&self.nullifier))?;
 
         check_note(&token_id, &token_amount, &trapdoor, &nullifier, &note)
+    }
+}
+
+impl GetPublicInput<CircuitField> for DepositRelation {
+    fn public_input(&self) -> Vec<CircuitField> {
+        [
+            vec![self.note],
+            vec![self.token_id],
+            vec![self.token_amount],
+        ]
+        .concat()
     }
 }
 

@@ -18,6 +18,7 @@ use super::{
     },
     CircuitField,
 };
+use crate::relations::GetPublicInput;
 
 /// 'Withdraw' relation for the Blender application.
 ///
@@ -31,6 +32,7 @@ use super::{
 ///    Merkle tree with `merkle_root` hash in the root
 /// It also includes two artificial inputs `fee` and `recipient` just to strengthen the application
 /// security by treating them as public inputs (and thus integral part of the SNARK).
+#[derive(Clone, Eq, PartialEq, Hash, Debug)]
 pub struct WithdrawRelation {
     // Public inputs.
     pub old_nullifier: BackendNullifier,
@@ -181,6 +183,21 @@ impl ConstraintSynthesizer<CircuitField> for WithdrawRelation {
         }
 
         Ok(())
+    }
+}
+
+impl GetPublicInput<CircuitField> for WithdrawRelation {
+    fn public_input(&self) -> Vec<CircuitField> {
+        [
+            vec![self.old_nullifier],
+            vec![self.merkle_root],
+            vec![self.new_note],
+            vec![self.token_id],
+            vec![self.token_amount_out],
+            vec![self.fee],
+            vec![self.recipient],
+        ]
+        .concat()
     }
 }
 

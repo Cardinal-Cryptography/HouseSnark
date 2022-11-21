@@ -11,6 +11,10 @@ mod xor;
 use ark_ff::{One, PrimeField, Zero};
 use ark_relations::r1cs::{ConstraintSynthesizer, ConstraintSystemRef};
 use ark_serialize::CanonicalSerialize;
+#[cfg(feature = "deposit")]
+pub use blender::DepositRelation;
+#[cfg(feature = "withdraw")]
+pub use blender::WithdrawRelation;
 use clap::Subcommand;
 #[cfg(feature = "linear")]
 pub use linear::LinearEqRelation;
@@ -32,6 +36,10 @@ pub enum Relation {
     LinearEquation(LinearEqRelation),
     #[cfg(feature = "merkle_tree")]
     MerkleTree(MerkleTreeRelationArgs),
+    #[cfg(feature = "deposit")]
+    Deposit(DepositRelation),
+    #[cfg(feature = "withdraw")]
+    Withdraw(WithdrawRelation),
 }
 
 impl Relation {
@@ -45,6 +53,10 @@ impl Relation {
             Relation::LinearEquation(_) => String::from("linear_equation"),
             #[cfg(feature = "merkle_tree")]
             Relation::MerkleTree(_) => String::from("merkle_tree"),
+            #[cfg(feature = "deposit")]
+            Relation::Deposit(_) => String::from("deposit"),
+            #[cfg(feature = "withdraw")]
+            Relation::Withdraw(_) => String::from("withdraw"),
         }
     }
 }
@@ -65,6 +77,14 @@ impl ConstraintSynthesizer<CircuitField> for Relation {
             Relation::MerkleTree(args @ MerkleTreeRelationArgs { .. }) => {
                 <MerkleTreeRelationArgs as Into<MerkleTreeRelation>>::into(args)
                     .generate_constraints(cs)
+            }
+            #[cfg(feature = "deposit")]
+            Relation::Deposit(relation @ DepositRelation { .. }) => {
+                relation.generate_constraints(cs)
+            }
+            #[cfg(feature = "withdraw")]
+            Relation::Withdraw(relation @ WithdrawRelation { .. }) => {
+                relation.generate_constraints(cs)
             }
         }
     }
@@ -88,6 +108,10 @@ impl GetPublicInput<CircuitField> for Relation {
                 <MerkleTreeRelationArgs as Into<MerkleTreeRelation>>::into(args.to_owned())
                     .public_input()
             }
+            #[cfg(feature = "deposit")]
+            Relation::Deposit(relation @ DepositRelation { .. }) => relation.public_input(),
+            #[cfg(feature = "withdraw")]
+            Relation::Withdraw(relation @ WithdrawRelation { .. }) => relation.public_input(),
         }
     }
 }
