@@ -145,13 +145,14 @@ impl Blender {
         });
 
         let new_note_bytes = convert(&new_note);
+        let merkle_root_bytes = convert(&merkle_root);
 
         let args = [
             &*token_id.to_string(),
             &*value.to_string(),
             &*recipient.to_string(),
             &*format!("{:?}", fee_for_caller),
-            &*format!("0x{}", hex::encode(merkle_root)),
+            &*format!("0x{}", hex::encode(merkle_root_bytes)),
             &*nullifier.to_string(),
             &*format!("0x{}", hex::encode(new_note_bytes)),
             &*format!("0x{}", hex::encode(proof)),
