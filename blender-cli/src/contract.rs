@@ -70,7 +70,7 @@ impl Blender {
             );
         });
 
-        let note_bytes = unsafe { note.align_to::<u8>().1 };
+        let note_bytes = convert(&note);
 
         self.contract
             .contract_exec(
@@ -130,7 +130,6 @@ impl Blender {
                     println!("{:?}", event_or_error);
                     if let Ok(ContractEvent { ident, data, .. }) = event_or_error {
                         if Some(String::from("Withdrawn")) == ident {
-
                             let event_note: Value = data.get("new_note").unwrap().clone();
                             let decoded_note: [u64; 4] =
                                 to_seq(&event_note).unwrap().try_into().unwrap();
@@ -145,7 +144,8 @@ impl Blender {
             );
         });
 
-        let new_note_bytes = unsafe { new_note.align_to::<u8>().1 };
+        let new_note_bytes = convert(&new_note);
+
         let args = [
             &*token_id.to_string(),
             &*value.to_string(),
@@ -200,4 +200,9 @@ fn to_seq(value: &Value) -> Result<Vec<u64>> {
         }
         _ => Err(anyhow!("Expected {:?} to be a sequence", value)),
     }
+}
+
+/// this is super safe
+fn convert(v: &'_ [u64; 4]) -> &'_ [u8] {
+    unsafe { v.align_to::<u8>().1 }
 }
