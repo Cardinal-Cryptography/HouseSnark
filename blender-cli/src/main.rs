@@ -24,7 +24,8 @@ use crate::{
 type DepositId = u16;
 type TokenId = u16;
 type TokenAmount = u64;
-type Note = [u8; 32];
+// type Note = [u8; 32];
+type Note = [u64; 4];
 type MerkleRoot = [u8; 32];
 type Nullifier = u64;
 

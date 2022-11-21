@@ -14,6 +14,7 @@ use aleph_client::{
     AccountId, SignedConnection,
 };
 use anyhow::{anyhow, Result};
+use contract_transcode::Value;
 
 use crate::{MerkleRoot, Note, Nullifier, TokenAmount, TokenId};
 
@@ -56,13 +57,31 @@ impl Blender {
                     if let Ok(ContractEvent { ident, data, .. }) = event_or_error {
                         // todo: contain in the event `note` as well to identify unambiguously
                         if Some(String::from("Deposited")) == ident {
+                            // let event_note: Value = data.get("note").unwrap().clone();
+                            // let decoded_note: [u64; 4] =
+                            //     to_seq(&event_note).unwrap().try_into().unwrap();
+
+                            // println!(
+                            //     "@@@ deposit, expected note {:?}, received note {:?}",
+                            //     note, event_note
+                            // );
+
+                            // if note.eq(&decoded_note) {
+                            //     println!("@@@ we have a match!!!");
+                            // }
+
                             let leaf_idx = data.get("leaf_idx").unwrap().clone();
+
                             leaf_tx.send(to_u128(leaf_idx).unwrap()).unwrap();
                         }
                     }
                 },
             );
         });
+
+        // slice
+
+        let note_bytes = unsafe { note.align_to::<u8>().1 };
 
         self.contract
             .contract_exec(
@@ -71,7 +90,7 @@ impl Blender {
                 &[
                     &*token_id.to_string(),
                     &*token_amount.to_string(),
-                    &*format!("0x{}", hex::encode(note)),
+                    &*format!("0x{}", hex::encode(note_bytes)),
                     &*format!("0x{}", hex::encode(proof)),
                 ],
             )
@@ -130,20 +149,35 @@ impl Blender {
             );
         });
 
+        let new_note_bytes = unsafe { new_note.align_to::<u8>().1 };
+
+        let args = [
+            &*token_id.to_string(),
+            &*value.to_string(),
+            &*recipient.to_string(),
+            &*format!("{:?}", fee_for_caller),
+            &*format!("0x{}", hex::encode(merkle_root)),
+            &*nullifier.to_string(),
+            &*format!("0x{}", hex::encode(new_note_bytes)),
+            &*format!("0x{}", hex::encode(proof)),
+        ];
+
+        println!("Calling withdraw tx with arguments {:?}", &args);
+
         self.contract
             .contract_exec(
-                connection,
-                "withdraw",
-                &[
-                    &*token_id.to_string(),
-                    &*value.to_string(),
-                    &*recipient.to_string(),
-                    &*format!("{:?}", fee_for_caller),
-                    &*format!("0x{}", hex::encode(merkle_root)),
-                    &*nullifier.to_string(),
-                    &*format!("0x{}", hex::encode(new_note)),
-                    &*format!("0x{}", hex::encode(proof)),
-                ],
+                connection, "withdraw",
+                &args,
+                // &[
+                //     &*token_id.to_string(),
+                //     &*value.to_string(),
+                //     &*recipient.to_string(),
+                //     &*format!("{:?}", fee_for_caller),
+                //     &*format!("0x{}", hex::encode(merkle_root)),
+                //     &*nullifier.to_string(),
+                //     &*format!("0x{}", hex::encode(new_note)),
+                //     &*format!("0x{}", hex::encode(proof)),
+                // ],
             )
             .map_err(|e| {
                 cancel_tx.send(()).unwrap();
@@ -166,5 +200,24 @@ impl Blender {
     /// Fetch the current merkle root.
     pub fn get_merkle_root(&self, _connection: &SignedConnection) -> MerkleRoot {
         Default::default()
+    }
+}
+
+// todo: could be made generic over elements
+pub fn to_seq(value: &Value) -> Result<Vec<u64>> {
+    match value {
+        Value::Seq(seq) => {
+            let elements = seq
+                .elems()
+                .iter()
+                .map(|element| match element {
+                    Value::Int(integer) => *integer as u64,
+                    _ => panic!("Expected {:?} to be an Int", value),
+                })
+                .collect();
+
+            Ok(elements)
+        }
+        _ => Err(anyhow!("Expected {:?} to be a sequence", value)),
     }
 }

@@ -31,3 +31,5 @@ ark-bls12-381 = { version = "^0.3.0" }
 ark-groth16 = { version = "^0.3.0", default-features = false }
 
 aleph_client = { git = "https://github.com/Cardinal-Cryptography/aleph-node/", branch = "blender-cli" }
+# TODO: needed for some type casting magic, should eventually be merged into aleph_client
+contract-transcode = "0.1"

@@ -21,7 +21,6 @@ pub(super) fn do_withdraw(
         recipient,
         caller_seed,
         fee,
-        // amount: withdraw_amount,
         ..
     } = cmd;
 
