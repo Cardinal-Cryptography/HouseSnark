@@ -7,7 +7,7 @@ use ark_relations::r1cs::{ConstraintSynthesizer, ConstraintSystemRef, SynthesisE
 use ark_serialize::CanonicalSerialize;
 use clap::Args;
 
-use crate::GetPublicInput;
+use crate::relations::GetPublicInput;
 
 /// Linear equation relation: a*x + b = y
 ///

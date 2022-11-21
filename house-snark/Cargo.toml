@@ -32,3 +32,8 @@ ark-marlin = { version = "^0.3.0", default-features = false }
 [features]
 default = ["std"]
 std = []
+deposit = []
+linear = []
+merkle_tree = []
+withdraw = []
+xor = []

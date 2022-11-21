@@ -1,0 +1,26 @@
+//! This module contains two relations that are the core of the Blender application: `deposit` and
+//! `withdraw`. It also exposes some functions and types that might be useful for input generation.
+//!
+//! Currently, instead of using some real hash function, we chose to incorporate a simple tangling
+//! algorithm. Essentially, it is a procedure that just mangles a byte sequence.
+
+#[allow(dead_code)]
+mod deposit;
+#[allow(dead_code)]
+mod note;
+#[allow(dead_code)]
+mod tangle;
+#[allow(dead_code)]
+mod types;
+#[allow(dead_code)]
+mod withdraw;
+
+pub use deposit::DepositRelation;
+pub use note::compute_note;
+pub use types::{
+    FrontendNote as Note, FrontendNullifier as Nullifier, FrontendTokenAmount as TokenAmount,
+    FrontendTokenId as TokenId, FrontendTrapdoor as Trapdoor,
+};
+pub use withdraw::WithdrawRelation;
+
+pub use crate::relations::types::CircuitField;
