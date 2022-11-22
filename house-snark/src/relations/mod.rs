@@ -57,8 +57,14 @@ impl Relation {
             Relation::Deposit(_) => String::from("deposit"),
             #[cfg(feature = "withdraw")]
             Relation::Withdraw(_) => String::from("withdraw"),
-            #[cfg(not(any(feature = "xor", feature = "deposit", feature="linear", feature="merkle_tree", feature="withdraw")))] 
-            _ => panic!("No relation available")
+            #[cfg(not(any(
+                feature = "xor",
+                feature = "deposit",
+                feature = "linear",
+                feature = "merkle_tree",
+                feature = "withdraw"
+            )))]
+            _ => panic!("No relation available"),
         }
     }
 }

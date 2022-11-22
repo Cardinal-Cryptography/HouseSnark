@@ -101,12 +101,7 @@ impl ConstraintSynthesizer<CircuitField> for DepositRelation {
 
 impl GetPublicInput<CircuitField> for DepositRelation {
     fn public_input(&self) -> Vec<CircuitField> {
-        [
-            vec![self.note],
-            vec![self.token_id],
-            vec![self.token_amount],
-        ]
-        .concat()
+        vec![self.note, self.token_id, self.token_amount]
     }
 }
 
