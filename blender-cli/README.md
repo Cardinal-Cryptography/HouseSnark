@@ -41,14 +41,6 @@ cargo run --release -- --seed //Alice set-node ws://127.0.0.1:9943
 cargo run --release -- --seed //Alice set-contract-address <blender-addrs>
 ```
 
-### Register VK
-
-Registers VKs for Deposit and Withdraw relations
-
-```bash
-cargo run --release -- --seed //Alice register-vk
-```
-
 ### Deposit a note
 
 Deposits a note of 50 tokens of a PSP token registered with an id 0:

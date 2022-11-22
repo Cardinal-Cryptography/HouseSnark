@@ -4,7 +4,7 @@ use clap::Parser;
 use house_snark::{MerkleRoot, Note, Nullifier, TokenAmount, TokenId, Trapdoor};
 use inquire::Password;
 use zeroize::Zeroize;
-use ContractInteractionCommand::{Deposit, RegisterVK, Withdraw};
+use ContractInteractionCommand::{Deposit, Withdraw};
 use StateReadCommand::{PrintState, ShowAssets};
 use StateWriteCommand::{SetContractAddress, SetNode};
 
@@ -18,7 +18,6 @@ use crate::{
     },
     contract::Blender,
     deposit::do_deposit,
-    register::do_register,
     state_file::{get_app_state, save_app_state},
     withdraw::do_withdraw,
 };
@@ -74,7 +73,6 @@ fn perform_contract_action(
     match command {
         Deposit(cmd) => do_deposit(contract, connection, cmd, app_state)?,
         Withdraw(cmd) => do_withdraw(contract, connection, cmd, app_state)?,
-        RegisterVK(_) => do_register(contract, connection)?,
     };
     Ok(())
 }

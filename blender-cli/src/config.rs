@@ -45,7 +45,6 @@ pub(super) enum StateReadCommand {
 
 #[derive(Clone, Eq, PartialEq, Debug, Subcommand)]
 pub(super) enum ContractInteractionCommand {
-    RegisterVK(RegisterCmd),
     Deposit(DepositCmd),
     Withdraw(WithdrawCmd),
 }
@@ -57,9 +56,6 @@ impl ContractInteractionCommand {
                 metadata_file.clone()
             }
             ContractInteractionCommand::Withdraw(WithdrawCmd { metadata_file, .. }) => {
-                metadata_file.clone()
-            }
-            ContractInteractionCommand::RegisterVK(RegisterCmd { metadata_file, .. }) => {
                 metadata_file.clone()
             }
         }
