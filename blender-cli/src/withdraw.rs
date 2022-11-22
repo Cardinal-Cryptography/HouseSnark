@@ -2,7 +2,9 @@ use std::fs;
 
 use aleph_client::{account_from_keypair, keypair_from_string, SignedConnection};
 use anyhow::{anyhow, Result};
-use house_snark::{compute_note, NonUniversalProvingSystem, SomeProvingSystem, WithdrawRelation};
+use house_snark::{
+    compute_note, NonUniversalProvingSystem, RawKeys, SomeProvingSystem, WithdrawRelation,
+};
 use inquire::{CustomType, Select};
 use rand::Rng;
 
@@ -38,11 +40,6 @@ pub(super) fn do_withdraw(
         ..
     } = deposit;
 
-    let pk = match fs::read(proving_key_file) {
-        Ok(bytes) => bytes,
-        Err(e) => panic!("Could not read pk: {}", e),
-    };
-
     let old_note = compute_note(token_id, whole_token_amount, old_trapdoor, old_nullifier);
 
     if let Some(seed) = caller_seed {
@@ -53,7 +50,7 @@ pub(super) fn do_withdraw(
         Some(recipient) => recipient,
     };
 
-    let recipient_bytes = recipient.clone().into();
+    let recipient_bytes = [0u8; 32]; // its not checked anyway
 
     let merkle_root = contract.get_merkle_root(&connection);
     let merkle_path = contract
@@ -85,6 +82,20 @@ pub(super) fn do_withdraw(
         fee.unwrap_or_default(),
         recipient_bytes,
     );
+
+    let pk = match fs::read(proving_key_file) {
+        Ok(bytes) => bytes,
+        Err(_e) => {
+            let system = NonUniversalProvingSystem::Groth16;
+            let RawKeys { pk, vk } = system.generate_keys(circuit.clone());
+
+            fs::write("withdraw.pk.bytes", pk.clone()).unwrap();
+            // NOTE: not needed here but usefull for registering in the snarcos pallet
+            fs::write("withdraw.vk.bytes", vk).unwrap();
+
+            pk
+        }
+    };
 
     let system = SomeProvingSystem::NonUniversal(NonUniversalProvingSystem::Groth16);
     let proof = system.prove(circuit, pk);
