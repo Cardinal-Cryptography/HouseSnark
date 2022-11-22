@@ -233,7 +233,35 @@ impl Blender {
         connection: &SignedConnection,
         leaf_idx: u32,
     ) -> Option<MerklePath> {
-        todo!()
+        let value = self
+            .contract
+            .contract_read(connection, "merkle_path", &[&*leaf_idx.to_string()])
+            .unwrap();
+
+        let mut path: Vec<[u64; 4]> = vec![];
+        match value {
+            Value::Seq(notes) => {
+                for element in notes.elems() {
+                    let mut note: [u64; 4] = [0; 4];
+                    match element {
+                        Value::Seq(seq) => {
+                            seq.elems()
+                                .iter()
+                                .enumerate()
+                                .for_each(|(index, value)| match value {
+                                    Value::UInt(integer) => note[index] = *integer as u64,
+                                    _ => panic!("Expected {:?} to be an Uint", &value),
+                                });
+                        }
+                        _ => panic!("Expected {:?} to be an Seq", &element),
+                    }
+                    path.push(note);
+                }
+            }
+            _ => panic!("Expected {:?} to be an Seq", &value),
+        }
+
+        Some(path)
     }
 }
 
