@@ -56,7 +56,13 @@ fn _tangle_in_field(bytes: &mut [ByteVar], low: usize, high: usize) -> Result<()
     if high - low <= BASE_LENGTH {
         let mut i = high - 2;
         loop {
-            bytes[i] = ByteVar::constant(bytes[i].value()? + bytes[i + 1].value()?);
+            bytes[i] = ByteVar::constant(
+                u8::overflowing_add(
+                    bytes[i].value().unwrap_or_default(),
+                    bytes[i + 1].value().unwrap_or_default(),
+                )
+                .0,
+            );
             if i == low {
                 break;
             } else {
@@ -80,7 +86,13 @@ fn _tangle_in_field(bytes: &mut [ByteVar], low: usize, high: usize) -> Result<()
 
         // Prefix products.
         for i in low + 1..high {
-            bytes[i] = ByteVar::constant(bytes[i].value()? * bytes[i - 1].value()?)
+            bytes[i] = ByteVar::constant(
+                u8::overflowing_mul(
+                    bytes[i].value().unwrap_or_default(),
+                    bytes[i - 1].value().unwrap_or_default(),
+                )
+                .0,
+            )
         }
     }
     Ok(())
@@ -105,7 +117,7 @@ fn _tangle(bytes: &mut [u8], low: usize, high: usize) {
     if high - low <= BASE_LENGTH {
         let mut i = high - 2;
         loop {
-            bytes[i] += bytes[i + 1];
+            bytes[i] = u8::overflowing_add(bytes[i], bytes[i + 1]).0;
             if i == low {
                 break;
             } else {
@@ -122,7 +134,7 @@ fn _tangle(bytes: &mut [u8], low: usize, high: usize) {
         }
 
         for i in low + 1..high {
-            bytes[i] *= bytes[i - 1]
+            bytes[i] = u8::overflowing_mul(bytes[i], bytes[i - 1]).0;
         }
     }
 }
