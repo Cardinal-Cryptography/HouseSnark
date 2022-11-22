@@ -68,7 +68,7 @@ pub(super) fn do_withdraw(
         whole_token_amount,
         new_token_amount,
         fee.unwrap_or_default(),
-        recipient,
+        [0u32; 4], // NOTE recipient is not checked in the circuit anyway
     );
 
     let leaf_idx = contract.withdraw(
