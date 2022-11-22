@@ -40,6 +40,7 @@ pub struct DepositRelationArgs {
 ///
 /// When providing a public input to proof verification, you should keep the order of variable
 /// declarations in circuit, i.e.: `note`, `token_id`, `token_amount`.
+#[derive(Clone)]
 pub struct DepositRelation {
     // Public inputs.
     pub note: BackendNote,
