@@ -219,11 +219,7 @@ impl Blender {
             .contract
             .contract_read0(connection, "current_merkle_root")
             .unwrap();
-        println!("retireved root {:?}", root);
-
         let decoded_root = to_seq(&root).unwrap();
-        println!("decoded root {:?}", decoded_root);
-
         decoded_root.try_into().unwrap()
     }
 
@@ -238,30 +234,54 @@ impl Blender {
             .contract_read(connection, "merkle_path", &[&*leaf_idx.to_string()])
             .unwrap();
 
-        let mut path: Vec<[u64; 4]> = vec![];
+        // println!("retrieved path {:?}", value);
+
         match value {
-            Value::Seq(notes) => {
-                for element in notes.elems() {
-                    let mut note: [u64; 4] = [0; 4];
-                    match element {
-                        Value::Seq(seq) => {
-                            seq.elems()
-                                .iter()
-                                .enumerate()
-                                .for_each(|(index, value)| match value {
-                                    Value::UInt(integer) => note[index] = *integer as u64,
-                                    _ => panic!("Expected {:?} to be an Uint", &value),
+            Value::Tuple(value) => {
+                match value.ident() {
+                    Some(ident) => match ident.as_str() {
+                        "Some" => match value.values().next().unwrap() {
+                            Value::Seq(seq) => {
+                                let mut path: Vec<[u64; 4]> = vec![];
+
+                                seq.elems().iter().for_each(|value| {
+                                    match value {
+                                        Value::Seq(seq) => {
+                                            let mut note: [u64; 4] = [0; 4];
+                                            println!("@ seq el {:?}", seq);
+                                            seq.elems().iter().enumerate().for_each(
+                                                |(index, value)| {
+                                                    // note [index] =
+                                                    // println!("@ seq val {:?}", value);
+
+                                                    match value {
+                                                        Value::UInt(uinteger) => {
+                                                            note[index] = *uinteger as u64;
+                                                        }
+                                                        _ => panic!("Unexpected value {}", value),
+                                                    }
+                                                },
+                                            );
+
+                                            path.push(note);
+                                            // todo!()
+                                        }
+                                        _ => panic!("Unexpected value: {:?}", value),
+                                    }
                                 });
-                        }
-                        _ => panic!("Expected {:?} to be an Seq", &element),
-                    }
-                    path.push(note);
+                                // todo!()
+                                Some(path)
+                            }
+                            _ => panic!("Unexpected value: {:?}", value),
+                        },
+                        "None" => None,
+                        _ => panic!("Unexpected string value: {:?}", value),
+                    },
+                    None => None,
                 }
             }
-            _ => panic!("Expected {:?} to be an Seq", &value),
+            _ => panic!("Expected {:?} to be a Tuple", &value),
         }
-
-        Some(path)
     }
 }
 

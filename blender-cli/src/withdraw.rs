@@ -60,6 +60,8 @@ pub(super) fn do_withdraw(
         .get_merkle_path(&connection, leaf_idx)
         .expect("Path does not exist");
 
+
+    
     let mut rng = rand::thread_rng();
     let new_trapdoor: Trapdoor = rng.gen::<u64>();
     let new_nullifier: Nullifier = rng.gen::<u64>();
@@ -81,7 +83,7 @@ pub(super) fn do_withdraw(
         whole_token_amount,
         new_token_amount,
         fee.unwrap_or_default(),
-        recipient_bytes, // [0u8; 32], // NOTE recipient is not checked in the circuit anyway
+        recipient_bytes,
     );
 
     let system = SomeProvingSystem::NonUniversal(NonUniversalProvingSystem::Groth16);
