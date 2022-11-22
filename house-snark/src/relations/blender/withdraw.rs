@@ -284,13 +284,13 @@ impl ConstraintSynthesizer<CircuitField> for WithdrawRelation {
 impl GetPublicInput<CircuitField> for WithdrawRelation {
     fn public_input(&self) -> Vec<CircuitField> {
         [
-            vec![self.old_nullifier],
-            vec![self.merkle_root],
-            vec![self.new_note],
-            vec![self.token_id],
-            vec![self.token_amount_out],
             vec![self.fee],
             vec![self.recipient],
+            vec![self.token_id],
+            vec![self.old_nullifier],
+            vec![self.new_note],
+            vec![self.token_amount_out],
+            vec![self.merkle_root],
         ]
         .concat()
     }

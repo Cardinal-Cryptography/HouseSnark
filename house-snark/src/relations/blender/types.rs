@@ -15,6 +15,7 @@ pub type FrontendMerkleRoot = [u64; 4];
 pub type FrontendMerklePath = Vec<[u64; 4]>;
 pub type FrontendLeafIndex = u64;
 pub type FrontendAccount = [u8; 32];
+pub type FrontendMerklePathNode = [u64; 4];
 
 // Types used internally by the relations (but still outside circuit environment).
 pub(super) type BackendNullifier = CircuitField;
@@ -26,8 +27,6 @@ pub(super) type BackendMerkleRoot = CircuitField;
 pub(super) type BackendMerklePath = Vec<CircuitField>;
 pub(super) type BackendLeafIndex = CircuitField;
 pub(super) type BackendAccount = CircuitField;
-
-pub type FrontendMerklePathSingle = [u64; 4];
 
 /*
 This is a setup for using Pedersen hashing (with field element compressing). It would work well, but

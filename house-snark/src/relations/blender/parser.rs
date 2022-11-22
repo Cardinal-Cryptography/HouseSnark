@@ -1,6 +1,6 @@
 use anyhow::Result;
 
-use super::types::{FrontendAccount, FrontendMerklePathSingle, FrontendMerkleRoot, FrontendNote};
+use super::types::{FrontendAccount, FrontendMerklePathNode, FrontendMerkleRoot, FrontendNote};
 use crate::relations::blender::note::note_from_bytes;
 
 pub fn parse_frontend_note(frontend_note: &str) -> Result<FrontendNote> {
@@ -17,6 +17,6 @@ pub fn parse_frontend_account(frontend_account: &str) -> Result<FrontendAccount>
 
 pub fn parse_frontend_merkle_path_single(
     frontend_merkle_path_single: &str,
-) -> Result<FrontendMerklePathSingle> {
+) -> Result<FrontendMerklePathNode> {
     Ok(note_from_bytes(frontend_merkle_path_single.as_bytes()))
 }
