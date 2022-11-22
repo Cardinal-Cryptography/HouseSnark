@@ -9,7 +9,8 @@ pub use relations::blender::DepositRelation;
 pub use relations::blender::WithdrawRelation;
 #[cfg(any(feature = "deposit", feature = "withdraw"))]
 pub use relations::blender::{
-    compute_note, MerkleRoot, Note, Nullifier, TokenAmount, TokenId, Trapdoor,
+    bytes_from_note, compute_note, note_from_bytes, MerkleRoot, Note, Nullifier, TokenAmount,
+    TokenId, Trapdoor,
 };
 #[cfg(feature = "linear")]
 pub use relations::LinearEqRelation;
