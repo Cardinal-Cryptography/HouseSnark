@@ -31,6 +31,11 @@ use super::{
 ///    Merkle tree with `merkle_root` hash in the root
 /// It also includes two artificial inputs `fee` and `recipient` just to strengthen the application
 /// security by treating them as public inputs (and thus integral part of the SNARK).
+///
+/// When providing a public input to proof verification, you should keep the order of variable
+/// declarations in circuit, i.e.: `fee`, `recipient`, `token_id`, `old_nullifier`, `new_note`,
+/// `token_amount_out`, `merkle_root`.
+#[derive(Clone)]
 pub struct WithdrawRelation {
     // Public inputs.
     pub old_nullifier: BackendNullifier,
@@ -161,7 +166,7 @@ impl ConstraintSynthesizer<CircuitField> for WithdrawRelation {
         let mut current_hash_bytes = old_note.to_bytes()?;
         for hash in self.merkle_path {
             let sibling = FpVar::new_witness(ns!(cs, "merkle path node"), || Ok(hash))?;
-            let bytes: Vec<ByteVar> = if leaf_index.value()?.0.is_even() {
+            let bytes: Vec<ByteVar> = if leaf_index.value().unwrap_or_default().0.is_even() {
                 [current_hash_bytes.clone(), sibling.to_bytes()?].concat()
             } else {
                 [sibling.to_bytes()?, current_hash_bytes.clone()].concat()
@@ -169,7 +174,12 @@ impl ConstraintSynthesizer<CircuitField> for WithdrawRelation {
 
             current_hash_bytes = tangle_in_field::<2>(bytes)?;
 
-            leaf_index = FpVar::constant(leaf_index.value()?.div(CircuitField::from(2)));
+            leaf_index = FpVar::constant(
+                leaf_index
+                    .value()
+                    .unwrap_or_default()
+                    .div(CircuitField::from(2)),
+            );
         }
 
         for (a, b) in merkle_root
@@ -186,13 +196,15 @@ impl ConstraintSynthesizer<CircuitField> for WithdrawRelation {
 
 #[cfg(test)]
 mod tests {
+    use ark_bls12_381::Bls12_381;
+    use ark_groth16::Groth16;
     use ark_relations::r1cs::ConstraintSystem;
+    use ark_snark::SNARK;
 
     use super::*;
     use crate::relations::blender::note::{compute_note, compute_parent_hash};
 
-    #[test]
-    fn withdraw_constraints_correctness() {
+    fn get_circuit_and_input() -> (WithdrawRelation, [CircuitField; 7]) {
         let token_id: FrontendTokenId = 1;
 
         let old_trapdoor: FrontendTrapdoor = 17;
@@ -239,6 +251,23 @@ mod tests {
             recipient,
         );
 
+        let input = [
+            circuit.fee.clone(),
+            circuit.recipient.clone(),
+            circuit.token_id.clone(),
+            circuit.old_nullifier.clone(),
+            circuit.new_note.clone(),
+            circuit.token_amount_out.clone(),
+            circuit.merkle_root.clone(),
+        ];
+
+        (circuit, input)
+    }
+
+    #[test]
+    fn withdraw_constraints_correctness() {
+        let (circuit, _input) = get_circuit_and_input();
+
         let cs = ConstraintSystem::new_ref();
         circuit.generate_constraints(cs.clone()).unwrap();
 
@@ -248,5 +277,18 @@ mod tests {
         }
 
         assert!(is_satisfied);
+    }
+
+    #[test]
+    fn withdraw_proving_procedure() {
+        let (circuit, input) = get_circuit_and_input();
+
+        let mut rng = ark_std::test_rng();
+        let (pk, vk) =
+            Groth16::<Bls12_381>::circuit_specific_setup(circuit.clone(), &mut rng).unwrap();
+
+        let proof = Groth16::prove(&pk, circuit, &mut rng).unwrap();
+        let valid_proof = Groth16::verify(&vk, &input, &proof).unwrap();
+        assert!(valid_proof);
     }
 }
