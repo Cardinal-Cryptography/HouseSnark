@@ -31,6 +31,10 @@ use super::{
 ///    Merkle tree with `merkle_root` hash in the root
 /// It also includes two artificial inputs `fee` and `recipient` just to strengthen the application
 /// security by treating them as public inputs (and thus integral part of the SNARK).
+///
+/// When providing a public input to proof verification, you should keep the order of variable
+/// declarations in circuit, i.e.: `fee`, `recipient`, `token_id`, `old_nullifier`, `new_note`,
+/// `token_amount_out`, `merkle_root`.
 #[derive(Clone)]
 pub struct WithdrawRelation {
     // Public inputs.

@@ -18,6 +18,9 @@ use crate::relations::types::CircuitField;
 ///
 /// It expresses the fact that `note` is a prefix of the result of tangling together `token_id`,
 /// `token_amount`, `trapdoor` and `nullifier`.
+///
+/// When providing a public input to proof verification, you should keep the order of variable
+/// declarations in circuit, i.e.: `note`, `token_id`, `token_amount`.
 #[derive(Clone)]
 pub struct DepositRelation {
     // Public inputs.
