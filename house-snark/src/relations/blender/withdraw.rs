@@ -94,7 +94,12 @@ impl WithdrawRelation {
             whole_token_amount: BackendTokenAmount::from(whole_token_amount),
             new_token_amount: BackendTokenAmount::from(new_token_amount),
             fee: BackendTokenAmount::from(fee),
-            recipient: BackendAccount::from(BigInteger256::new(recipient.map(|x| x as u64))),
+            recipient: BackendAccount::from(BigInteger256::new([
+                u64::from_le_bytes(recipient[0..8].try_into().unwrap()),
+                u64::from_le_bytes(recipient[8..16].try_into().unwrap()),
+                u64::from_le_bytes(recipient[16..24].try_into().unwrap()),
+                u64::from_le_bytes(recipient[24..32].try_into().unwrap()),
+            ])),
         }
     }
 }
@@ -231,7 +236,7 @@ mod tests {
         let merkle_path = vec![sibling_note, uncle_note];
 
         let fee: FrontendTokenAmount = 1;
-        let recipient: FrontendAccount = [0u32; 4];
+        let recipient: FrontendAccount = [0u8; 32];
 
         let circuit = WithdrawRelation::new(
             old_nullifier,
