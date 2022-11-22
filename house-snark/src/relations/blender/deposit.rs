@@ -4,9 +4,11 @@ use ark_relations::{
     ns,
     r1cs::{ConstraintSynthesizer, ConstraintSystemRef, SynthesisError},
 };
+use clap::Args;
 
 use super::{
     note::check_note,
+    parser::parse_frontend_note,
     types::{
         BackendNote, BackendNullifier, BackendTokenAmount, BackendTokenId, BackendTrapdoor, FpVar,
         FrontendNote, FrontendNullifier, FrontendTokenAmount, FrontendTokenId, FrontendTrapdoor,
@@ -14,11 +16,27 @@ use super::{
 };
 use crate::relations::{types::CircuitField, GetPublicInput};
 
+#[derive(Copy, Clone, Eq, PartialEq, Hash, Debug, Args)]
+pub struct DepositRelationArgs {
+    // Public inputs.
+    #[clap(long, value_parser = parse_frontend_note)]
+    pub note: FrontendNote,
+    #[clap(long)]
+    pub token_id: FrontendTokenId,
+    #[clap(long)]
+    pub token_amount: FrontendTokenAmount,
+
+    // Private inputs.
+    #[clap(long)]
+    pub trapdoor: FrontendTrapdoor,
+    #[clap(long)]
+    pub nullifier: FrontendNullifier,
+}
+
 /// 'Deposit' relation for the Blender application.
 ///
 /// It expresses the fact that `note` is a prefix of the result of tangling together `token_id`,
 /// `token_amount`, `trapdoor` and `nullifier`.
-#[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
 pub struct DepositRelation {
     // Public inputs.
     pub note: BackendNote,
@@ -45,6 +63,19 @@ impl DepositRelation {
             trapdoor: BackendTrapdoor::from(trapdoor),
             nullifier: BackendNullifier::from(nullifier),
         }
+    }
+}
+
+impl From<DepositRelationArgs> for DepositRelation {
+    fn from(args: DepositRelationArgs) -> Self {
+        let DepositRelationArgs {
+            note,
+            token_id,
+            token_amount,
+            trapdoor,
+            nullifier,
+        } = args;
+        DepositRelation::new(note, token_id, token_amount, trapdoor, nullifier)
     }
 }
 

@@ -12,9 +12,9 @@ use ark_ff::{One, PrimeField, Zero};
 use ark_relations::r1cs::{ConstraintSynthesizer, ConstraintSystemRef};
 use ark_serialize::CanonicalSerialize;
 #[cfg(feature = "deposit")]
-pub use blender::DepositRelation;
+pub use blender::{DepositRelation, DepositRelationArgs};
 #[cfg(feature = "withdraw")]
-pub use blender::WithdrawRelation;
+pub use blender::{WithdrawRelation, WithdrawRelationArgs};
 use clap::Subcommand;
 #[cfg(feature = "linear")]
 pub use linear::LinearEqRelation;
@@ -37,9 +37,9 @@ pub enum Relation {
     #[cfg(feature = "merkle_tree")]
     MerkleTree(MerkleTreeRelationArgs),
     #[cfg(feature = "deposit")]
-    Deposit(DepositRelation),
+    Deposit(DepositRelationArgs),
     #[cfg(feature = "withdraw")]
-    Withdraw(WithdrawRelation),
+    Withdraw(WithdrawRelationArgs),
 }
 
 impl Relation {
@@ -79,12 +79,13 @@ impl ConstraintSynthesizer<CircuitField> for Relation {
                     .generate_constraints(cs)
             }
             #[cfg(feature = "deposit")]
-            Relation::Deposit(relation @ DepositRelation { .. }) => {
-                relation.generate_constraints(cs)
+            Relation::Deposit(args @ DepositRelationArgs { .. }) => {
+                <DepositRelationArgs as Into<DepositRelation>>::into(args).generate_constraints(cs)
             }
             #[cfg(feature = "withdraw")]
-            Relation::Withdraw(relation @ WithdrawRelation { .. }) => {
-                relation.generate_constraints(cs)
+            Relation::Withdraw(args @ WithdrawRelationArgs { .. }) => {
+                <WithdrawRelationArgs as Into<WithdrawRelation>>::into(args)
+                    .generate_constraints(cs)
             }
         }
     }
@@ -109,9 +110,14 @@ impl GetPublicInput<CircuitField> for Relation {
                     .public_input()
             }
             #[cfg(feature = "deposit")]
-            Relation::Deposit(relation @ DepositRelation { .. }) => relation.public_input(),
+            Relation::Deposit(args @ DepositRelationArgs { .. }) => {
+                <DepositRelationArgs as Into<DepositRelation>>::into(*args).public_input()
+            }
             #[cfg(feature = "withdraw")]
-            Relation::Withdraw(relation @ WithdrawRelation { .. }) => relation.public_input(),
+            Relation::Withdraw(args @ WithdrawRelationArgs { .. }) => {
+                <WithdrawRelationArgs as Into<WithdrawRelation>>::into(args.to_owned())
+                    .public_input()
+            }
         }
     }
 }

@@ -27,6 +27,8 @@ pub(super) type BackendMerklePath = Vec<CircuitField>;
 pub(super) type BackendLeafIndex = CircuitField;
 pub(super) type BackendAccount = CircuitField;
 
+pub type FrontendMerklePathSingle = [u64; 4];
+
 /*
 This is a setup for using Pedersen hashing (with field element compressing). It would work well, but
 there is a serious problem with keeping/retrieving parameters in the contract. With the window

@@ -6,9 +6,14 @@ use ark_relations::{
     ns,
     r1cs::{ConstraintSynthesizer, ConstraintSystemRef, SynthesisError},
 };
+use clap::Args;
 
 use super::{
     note::check_note,
+    parser::{
+        parse_frontend_account, parse_frontend_merkle_path_single, parse_frontend_merkle_root,
+        parse_frontend_note,
+    },
     tangle::tangle_in_field,
     types::{
         BackendAccount, BackendLeafIndex, BackendMerklePath, BackendMerkleRoot, BackendNote,
@@ -19,6 +24,43 @@ use super::{
     CircuitField,
 };
 use crate::relations::GetPublicInput;
+
+#[derive(Clone, Eq, PartialEq, Hash, Debug, Args)]
+pub struct WithdrawRelationArgs {
+    // Public inputs.
+    #[clap(long)]
+    pub old_nullifier: FrontendNullifier,
+    #[clap(long, value_parser = parse_frontend_merkle_root)]
+    pub merkle_root: FrontendMerkleRoot,
+    #[clap(long, value_parser = parse_frontend_note)]
+    pub new_note: FrontendNote,
+    #[clap(long)]
+    pub token_id: FrontendTokenId,
+    #[clap(long)]
+    pub token_amount_out: FrontendTokenAmount,
+    #[clap(long)]
+    pub fee: FrontendTokenAmount,
+    #[clap(long, value_parser = parse_frontend_account)]
+    pub recipient: FrontendAccount,
+
+    // Private inputs.
+    #[clap(long)]
+    pub old_trapdoor: FrontendTrapdoor,
+    #[clap(long)]
+    pub new_trapdoor: FrontendTrapdoor,
+    #[clap(long)]
+    pub new_nullifier: FrontendNullifier,
+    #[clap(long, value_delimiter = ',', value_parser = parse_frontend_merkle_path_single)]
+    pub merkle_path: FrontendMerklePath,
+    #[clap(long)]
+    pub leaf_index: FrontendLeafIndex,
+    #[clap(long, value_parser = parse_frontend_note)]
+    pub old_note: FrontendNote,
+    #[clap(long)]
+    pub whole_token_amount: FrontendTokenAmount,
+    #[clap(long)]
+    pub new_token_amount: FrontendTokenAmount,
+}
 
 /// 'Withdraw' relation for the Blender application.
 ///
@@ -32,7 +74,6 @@ use crate::relations::GetPublicInput;
 ///    Merkle tree with `merkle_root` hash in the root
 /// It also includes two artificial inputs `fee` and `recipient` just to strengthen the application
 /// security by treating them as public inputs (and thus integral part of the SNARK).
-#[derive(Clone, Eq, PartialEq, Hash, Debug)]
 pub struct WithdrawRelation {
     // Public inputs.
     pub old_nullifier: BackendNullifier,
@@ -93,6 +134,45 @@ impl WithdrawRelation {
             fee: BackendTokenAmount::from(fee),
             recipient: BackendAccount::from(BigInteger256::new(recipient.map(|x| x as u64))),
         }
+    }
+}
+
+impl From<WithdrawRelationArgs> for WithdrawRelation {
+    fn from(args: WithdrawRelationArgs) -> Self {
+        let WithdrawRelationArgs {
+            old_nullifier,
+            merkle_root,
+            new_note,
+            token_id,
+            token_amount_out,
+            old_trapdoor,
+            new_trapdoor,
+            new_nullifier,
+            merkle_path,
+            leaf_index,
+            old_note,
+            whole_token_amount,
+            new_token_amount,
+            fee,
+            recipient,
+        } = args;
+        WithdrawRelation::new(
+            old_nullifier,
+            merkle_root,
+            new_note,
+            token_id,
+            token_amount_out,
+            old_trapdoor,
+            new_trapdoor,
+            new_nullifier,
+            merkle_path,
+            leaf_index,
+            old_note,
+            whole_token_amount,
+            new_token_amount,
+            fee,
+            recipient,
+        )
     }
 }
 

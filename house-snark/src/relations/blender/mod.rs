@@ -9,18 +9,20 @@ mod deposit;
 #[allow(dead_code)]
 mod note;
 #[allow(dead_code)]
+mod parser;
+#[allow(dead_code)]
 mod tangle;
 #[allow(dead_code)]
 mod types;
 #[allow(dead_code)]
 mod withdraw;
 
-pub use deposit::DepositRelation;
+pub use deposit::{DepositRelation, DepositRelationArgs};
 pub use note::compute_note;
 pub use types::{
     FrontendNote as Note, FrontendNullifier as Nullifier, FrontendTokenAmount as TokenAmount,
     FrontendTokenId as TokenId, FrontendTrapdoor as Trapdoor,
 };
-pub use withdraw::WithdrawRelation;
+pub use withdraw::{WithdrawRelation, WithdrawRelationArgs};
 
 pub use crate::relations::types::CircuitField;
