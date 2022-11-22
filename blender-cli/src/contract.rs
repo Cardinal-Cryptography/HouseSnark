@@ -19,6 +19,7 @@ use house_snark::bytes_from_note;
 
 use crate::{MerklePath, MerkleRoot, Note, Nullifier, TokenAmount, TokenId};
 
+#[allow(dead_code)]
 #[derive(Debug)]
 pub enum Relation {
     Deposit,
@@ -41,6 +42,7 @@ impl Blender {
     }
 
     /// Call `register_vk` message of the contract
+    #[allow(dead_code)]
     pub fn register_vk(
         &self,
         connection: &SignedConnection,
