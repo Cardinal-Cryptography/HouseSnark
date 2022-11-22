@@ -177,7 +177,7 @@ impl Blender {
         });
 
         let new_note_bytes = bytes_from_note(&new_note);
-        // TODO
+        // NOTE: a bit of a misnomer but types fit (and root is also a note)
         let merkle_root_bytes = bytes_from_note(&merkle_root);
 
         let args = [
