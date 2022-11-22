@@ -18,6 +18,7 @@ use crate::relations::types::CircuitField;
 ///
 /// It expresses the fact that `note` is a prefix of the result of tangling together `token_id`,
 /// `token_amount`, `trapdoor` and `nullifier`.
+#[derive(Clone)]
 pub struct DepositRelation {
     // Public inputs.
     pub note: BackendNote,
@@ -65,13 +66,15 @@ impl ConstraintSynthesizer<CircuitField> for DepositRelation {
 
 #[cfg(test)]
 mod tests {
+    use ark_bls12_381::Bls12_381;
+    use ark_groth16::Groth16;
     use ark_relations::r1cs::ConstraintSystem;
+    use ark_snark::SNARK;
 
     use super::*;
     use crate::relations::blender::note::compute_note;
 
-    #[test]
-    fn deposit_constraints_correctness() {
+    fn get_circuit_and_input() -> (DepositRelation, [CircuitField; 3]) {
         let token_id: FrontendTokenId = 1;
         let token_amount: FrontendTokenAmount = 10;
         let trapdoor: FrontendTrapdoor = 17;
@@ -79,6 +82,18 @@ mod tests {
         let note = compute_note(token_id, token_amount, trapdoor, nullifier);
 
         let circuit = DepositRelation::new(note, token_id, token_amount, trapdoor, nullifier);
+        let input = [
+            CircuitField::from(BigInteger256::new(note)),
+            CircuitField::from(token_id),
+            CircuitField::from(token_amount),
+        ];
+
+        (circuit, input)
+    }
+
+    #[test]
+    fn deposit_constraints_correctness() {
+        let (circuit, _input) = get_circuit_and_input();
 
         let cs = ConstraintSystem::new_ref();
         circuit.generate_constraints(cs.clone()).unwrap();
@@ -89,5 +104,18 @@ mod tests {
         }
 
         assert!(is_satisfied);
+    }
+
+    #[test]
+    fn deposit_proving_procedure() {
+        let (circuit, input) = get_circuit_and_input();
+
+        let mut rng = ark_std::test_rng();
+        let (pk, vk) =
+            Groth16::<Bls12_381>::circuit_specific_setup(circuit.clone(), &mut rng).unwrap();
+
+        let proof = Groth16::prove(&pk, circuit, &mut rng).unwrap();
+        let valid_proof = Groth16::verify(&vk, &input, &proof).unwrap();
+        assert!(valid_proof);
     }
 }
