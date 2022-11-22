@@ -14,7 +14,7 @@ pub type FrontendTokenAmount = u64;
 pub type FrontendMerkleRoot = [u64; 4];
 pub type FrontendMerklePath = Vec<[u64; 4]>;
 pub type FrontendLeafIndex = u64;
-pub type FrontendAccount = [u32; 4];
+pub type FrontendAccount = [u8; 32];
 
 // Types used internally by the relations (but still outside circuit environment).
 pub(super) type BackendNullifier = CircuitField;

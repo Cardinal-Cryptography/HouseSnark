@@ -15,7 +15,7 @@ pub(super) fn do_withdraw(
     cmd: WithdrawCmd,
     app_state: &mut AppState,
 ) -> Result<()> {
-    let (deposit, amount) = get_deposit_and_amount(&cmd, app_state)?;
+    let (deposit, withdraw_amount) = get_deposit_and_withdraw_amount(&cmd, app_state)?;
 
     let WithdrawCmd {
         recipient,
@@ -37,15 +37,14 @@ pub(super) fn do_withdraw(
     // TODO:
     // - create real proof
     // - create new note
-    // - save new deposit to the state
 
     let dummy_proof = vec![1, 2, 3];
     let dummy_note = Default::default();
 
-    contract.withdraw(
+    let leaf_idx = contract.withdraw(
         &connection,
         deposit.token_id,
-        amount,
+        withdraw_amount,
         recipient,
         fee,
         merkle_root,
@@ -55,11 +54,16 @@ pub(super) fn do_withdraw(
     )?;
 
     app_state.delete_deposit_by_id(deposit.deposit_id);
+    // save new deposit to the state
+    let tokens_left = deposit.token_amount - withdraw_amount;
+    if tokens_left > 0 {
+        app_state.add_deposit(deposit.token_id, tokens_left, leaf_idx);
+    }
 
     Ok(())
 }
 
-fn get_deposit_and_amount(
+fn get_deposit_and_withdraw_amount(
     cmd: &WithdrawCmd,
     app_state: &AppState,
 ) -> Result<(Deposit, TokenAmount)> {
