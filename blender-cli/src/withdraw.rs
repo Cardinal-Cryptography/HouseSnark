@@ -53,6 +53,8 @@ pub(super) fn do_withdraw(
         Some(recipient) => recipient,
     };
 
+    let recipient_bytes = recipient.clone().into();
+
     let merkle_root = contract.get_merkle_root(&connection);
     let merkle_path = contract
         .get_merkle_path(&connection, leaf_idx)
@@ -79,7 +81,7 @@ pub(super) fn do_withdraw(
         whole_token_amount,
         new_token_amount,
         fee.unwrap_or_default(),
-        [0u32; 4], // NOTE recipient is not checked in the circuit anyway
+        recipient_bytes, // [0u8; 32], // NOTE recipient is not checked in the circuit anyway
     );
 
     let system = SomeProvingSystem::NonUniversal(NonUniversalProvingSystem::Groth16);
