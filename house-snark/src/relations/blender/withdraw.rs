@@ -81,13 +81,13 @@ pub struct WithdrawRelationArgs {
 #[derive(Clone)]
 pub struct WithdrawRelation {
     // Public inputs.
-    pub old_nullifier: BackendNullifier,
-    pub merkle_root: BackendMerkleRoot,
-    pub new_note: BackendNote,
-    pub token_id: BackendTokenId,
-    pub token_amount_out: BackendTokenAmount,
     pub fee: BackendTokenAmount,
     pub recipient: BackendAccount,
+    pub token_id: BackendTokenId,
+    pub old_nullifier: BackendNullifier,
+    pub new_note: BackendNote,
+    pub token_amount_out: BackendTokenAmount,
+    pub merkle_root: BackendMerkleRoot,
 
     // Private inputs.
     pub old_trapdoor: BackendTrapdoor,
