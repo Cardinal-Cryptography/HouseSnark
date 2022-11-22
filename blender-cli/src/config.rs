@@ -81,13 +81,6 @@ pub(super) struct ShowAssetsCmd {
 }
 
 #[derive(Clone, Eq, PartialEq, Debug, Args)]
-pub(super) struct RegisterCmd {
-    /// Contract metadata file.
-    #[clap(default_value = "blender-metadata.json", value_parser = parsing::parse_path)]
-    pub metadata_file: PathBuf,
-}
-
-#[derive(Clone, Eq, PartialEq, Debug, Args)]
 pub(super) struct DepositCmd {
     /// Registered token id.
     pub token_id: TokenId,

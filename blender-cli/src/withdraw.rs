@@ -60,8 +60,8 @@ pub(super) fn do_withdraw(
         .get_merkle_path(&connection, leaf_idx)
         .expect("Path does not exist");
 
+    println!("retrieved merkle path {:?}", merkle_path);
 
-    
     let mut rng = rand::thread_rng();
     let new_trapdoor: Trapdoor = rng.gen::<u64>();
     let new_nullifier: Nullifier = rng.gen::<u64>();

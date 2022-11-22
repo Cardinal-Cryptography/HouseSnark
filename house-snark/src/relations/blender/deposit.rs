@@ -55,9 +55,9 @@ impl ConstraintSynthesizer<CircuitField> for DepositRelation {
         self,
         cs: ConstraintSystemRef<CircuitField>,
     ) -> Result<(), SynthesisError> {
+        let note = FpVar::new_input(ns!(cs, "note"), || Ok(&self.note))?;
         let token_id = FpVar::new_input(ns!(cs, "token id"), || Ok(&self.token_id))?;
         let token_amount = FpVar::new_input(ns!(cs, "token amount"), || Ok(&self.token_amount))?;
-        let note = FpVar::new_input(ns!(cs, "note"), || Ok(&self.note))?;
 
         let trapdoor = FpVar::new_witness(ns!(cs, "trapdoor"), || Ok(&self.trapdoor))?;
         let nullifier = FpVar::new_witness(ns!(cs, "nullifier"), || Ok(&self.nullifier))?;

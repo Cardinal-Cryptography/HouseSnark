@@ -234,52 +234,39 @@ impl Blender {
             .contract_read(connection, "merkle_path", &[&*leaf_idx.to_string()])
             .unwrap();
 
-        // println!("retrieved path {:?}", value);
-
         match value {
-            Value::Tuple(value) => {
-                match value.ident() {
-                    Some(ident) => match ident.as_str() {
-                        "Some" => match value.values().next().unwrap() {
-                            Value::Seq(seq) => {
-                                let mut path: Vec<[u64; 4]> = vec![];
+            Value::Tuple(value) => match value.ident() {
+                Some(ident) => match ident.as_str() {
+                    "Some" => match value.values().next().unwrap() {
+                        Value::Seq(seq) => {
+                            let mut path: Vec<[u64; 4]> = vec![];
 
-                                seq.elems().iter().for_each(|value| {
-                                    match value {
-                                        Value::Seq(seq) => {
-                                            let mut note: [u64; 4] = [0; 4];
-                                            println!("@ seq el {:?}", seq);
-                                            seq.elems().iter().enumerate().for_each(
-                                                |(index, value)| {
-                                                    // note [index] =
-                                                    // println!("@ seq val {:?}", value);
-
-                                                    match value {
-                                                        Value::UInt(uinteger) => {
-                                                            note[index] = *uinteger as u64;
-                                                        }
-                                                        _ => panic!("Unexpected value {}", value),
-                                                    }
-                                                },
-                                            );
-
-                                            path.push(note);
-                                            // todo!()
+                            seq.elems().iter().for_each(|value| match value {
+                                Value::Seq(seq) => {
+                                    let mut note: [u64; 4] = [0; 4];
+                                    println!("@ seq el {:?}", seq);
+                                    seq.elems().iter().enumerate().for_each(|(index, value)| {
+                                        match value {
+                                            Value::UInt(uinteger) => {
+                                                note[index] = *uinteger as u64;
+                                            }
+                                            _ => panic!("Unexpected value {}", value),
                                         }
-                                        _ => panic!("Unexpected value: {:?}", value),
-                                    }
-                                });
-                                // todo!()
-                                Some(path)
-                            }
-                            _ => panic!("Unexpected value: {:?}", value),
-                        },
-                        "None" => None,
-                        _ => panic!("Unexpected string value: {:?}", value),
+                                    });
+                                    path.push(note);
+                                }
+                                _ => panic!("Unexpected value: {:?}", value),
+                            });
+
+                            Some(path)
+                        }
+                        _ => panic!("Unexpected value: {:?}", value),
                     },
-                    None => None,
-                }
-            }
+                    "None" => None,
+                    _ => panic!("Unexpected string value: {:?}", value),
+                },
+                None => None,
+            },
             _ => panic!("Expected {:?} to be a Tuple", &value),
         }
     }
