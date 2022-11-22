@@ -37,6 +37,7 @@ pub(super) fn do_deposit(
             let RawKeys { pk, vk } = system.generate_keys(circuit.clone());
 
             fs::write("deposit.pk.bytes", pk.clone()).unwrap();
+            // NOTE: not needed here but for registering in the snarcos pallet
             fs::write("deposit.vk.bytes", vk).unwrap();
 
             pk

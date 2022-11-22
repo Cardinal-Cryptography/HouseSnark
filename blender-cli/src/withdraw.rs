@@ -90,6 +90,7 @@ pub(super) fn do_withdraw(
             let RawKeys { pk, vk } = system.generate_keys(circuit.clone());
 
             fs::write("withdraw.pk.bytes", pk.clone()).unwrap();
+            // NOTE: not needed here but usefull for registering in the snarcos pallet
             fs::write("withdraw.vk.bytes", vk).unwrap();
 
             pk
