@@ -240,26 +240,14 @@ impl Blender {
                     "Some" => match value.values().next().unwrap() {
                         Value::Seq(seq) => {
                             let mut path: Vec<[u64; 4]> = vec![];
-
-                            seq.elems().iter().for_each(|value| match value {
-                                Value::Seq(seq) => {
-                                    let mut note: [u64; 4] = [0; 4];
-                                    println!("@ seq el {:?}", seq);
-                                    seq.elems().iter().enumerate().for_each(|(index, value)| {
-                                        match value {
-                                            Value::UInt(uinteger) => {
-                                                note[index] = *uinteger as u64;
-                                            }
-                                            _ => panic!("Unexpected value {}", value),
-                                        }
-                                    });
-                                    path.push(note);
-                                }
-                                _ => panic!("Unexpected value: {:?}", value),
+                            seq.elems().iter().for_each(|value| {
+                                let note = to_seq(value).unwrap();
+                                path.push(note.try_into().unwrap());
                             });
 
                             Some(path)
                         }
+
                         _ => panic!("Unexpected value: {:?}", value),
                     },
                     "None" => None,
