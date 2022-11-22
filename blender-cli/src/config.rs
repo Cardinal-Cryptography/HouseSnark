@@ -91,6 +91,10 @@ pub(super) struct DepositCmd {
     /// Contract metadata file.
     #[clap(default_value = "blender-metadata.json", value_parser = parsing::parse_path)]
     pub metadata_file: PathBuf,
+
+    /// raw pk bytes file.
+    #[clap(default_value = "deposit.pk.bytes", value_parser = parsing::parse_path)]
+    pub proving_key_file: PathBuf,
 }
 
 #[derive(Clone, Eq, PartialEq, Debug, Args)]
@@ -122,6 +126,10 @@ pub(super) struct WithdrawCmd {
     /// Contract metadata file.
     #[clap(long, default_value = "blender-metadata.json", value_parser = parsing::parse_path)]
     pub metadata_file: PathBuf,
+
+    /// raw pk bytes file.
+    #[clap(default_value = "withdraw.pk.bytes", value_parser = parsing::parse_path)]
+    pub proving_key_file: PathBuf,
 }
 
 mod parsing {

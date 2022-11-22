@@ -15,8 +15,9 @@ use aleph_client::{
 };
 use anyhow::{anyhow, Result};
 use contract_transcode::Value;
+use house_snark::bytes_from_note;
 
-use crate::{MerkleRoot, Note, Nullifier, TokenAmount, TokenId};
+use crate::{MerklePath, MerkleRoot, Note, Nullifier, TokenAmount, TokenId};
 
 #[derive(Debug)]
 pub struct Blender {
@@ -70,19 +71,19 @@ impl Blender {
             );
         });
 
-        let note_bytes = unsafe { note.align_to::<u8>().1 };
+        let note_bytes = bytes_from_note(&note);
+
+        let args = [
+            &*token_id.to_string(),
+            &*token_amount.to_string(),
+            &*format!("0x{}", hex::encode(note_bytes)),
+            &*format!("0x{}", hex::encode(proof)),
+        ];
+
+        println!("Calling deposit tx with arguments {:?}", &args);
 
         self.contract
-            .contract_exec(
-                connection,
-                "deposit",
-                &[
-                    &*token_id.to_string(),
-                    &*token_amount.to_string(),
-                    &*format!("0x{}", hex::encode(note_bytes)),
-                    &*format!("0x{}", hex::encode(proof)),
-                ],
-            )
+            .contract_exec(connection, "deposit", &args)
             .map_err(|e| {
                 cancel_tx.send(()).unwrap();
                 e
@@ -96,7 +97,7 @@ impl Blender {
             Ok(leaf_idx as u32)
         } else {
             Err(anyhow!(
-                "Failed to observe expected event. And actually I do not know where are your tokens."
+                "Failed to observe expected event. And actually I do not know where your tokens are."
             ))
         }
     }
@@ -130,13 +131,10 @@ impl Blender {
                     println!("{:?}", event_or_error);
                     if let Ok(ContractEvent { ident, data, .. }) = event_or_error {
                         if Some(String::from("Withdrawn")) == ident {
-                            // let leaf_idx = data.get("leaf_idx").unwrap().clone();
-                            // leaf_tx.send(to_u128(leaf_idx).unwrap()).unwrap();
-
                             let event_note: Value = data.get("new_note").unwrap().clone();
                             let decoded_note: [u64; 4] =
                                 to_seq(&event_note).unwrap().try_into().unwrap();
-                            // check the `note` in the event as well to identify it unambiguously
+                            // check the `new_note` in the event as well to identify it unambiguously
                             if new_note.eq(&decoded_note) {
                                 let leaf_idx = data.get("leaf_idx").unwrap().clone();
                                 leaf_tx.send(to_u128(leaf_idx).unwrap()).unwrap();
@@ -147,13 +145,16 @@ impl Blender {
             );
         });
 
-        let new_note_bytes = unsafe { new_note.align_to::<u8>().1 };
+        let new_note_bytes = bytes_from_note(&new_note);
+        // NOTE: a bit of a misnomer but types fit (and root is also a note)
+        let merkle_root_bytes = bytes_from_note(&merkle_root);
+
         let args = [
             &*token_id.to_string(),
             &*value.to_string(),
             &*recipient.to_string(),
             &*format!("{:?}", fee_for_caller),
-            &*format!("0x{}", hex::encode(merkle_root)),
+            &*format!("0x{}", hex::encode(merkle_root_bytes)),
             &*nullifier.to_string(),
             &*format!("0x{}", hex::encode(new_note_bytes)),
             &*format!("0x{}", hex::encode(proof)),
@@ -182,12 +183,54 @@ impl Blender {
     }
 
     /// Fetch the current merkle root.
-    pub fn get_merkle_root(&self, _connection: &SignedConnection) -> MerkleRoot {
-        Default::default()
+    pub fn get_merkle_root(&self, connection: &SignedConnection) -> MerkleRoot {
+        let root = self
+            .contract
+            .contract_read0(connection, "current_merkle_root")
+            .unwrap();
+        let decoded_root = to_seq(&root).unwrap();
+        decoded_root.try_into().unwrap()
+    }
+
+    /// Fetch the current merkle root.
+    pub fn get_merkle_path(
+        &self,
+        connection: &SignedConnection,
+        leaf_idx: u32,
+    ) -> Option<MerklePath> {
+        let value = self
+            .contract
+            .contract_read(connection, "merkle_path", &[&*leaf_idx.to_string()])
+            .unwrap();
+
+        match value {
+            Value::Tuple(value) => match value.ident() {
+                Some(ident) => match ident.as_str() {
+                    "Some" => match value.values().next().unwrap() {
+                        Value::Seq(seq) => {
+                            let mut path: Vec<[u64; 4]> = vec![];
+                            seq.elems().iter().for_each(|value| {
+                                let note = to_seq(value).unwrap();
+                                path.push(note.try_into().unwrap());
+                            });
+
+                            Some(path)
+                        }
+
+                        _ => panic!("Unexpected value: {:?}", value),
+                    },
+                    "None" => None,
+                    _ => panic!("Unexpected string value: {:?}", value),
+                },
+                None => None,
+            },
+            _ => panic!("Expected {:?} to be a Tuple", &value),
+        }
     }
 }
 
-// todo: could be made generic over elements
+// TODO: could be made generic over elements
+// TODO: move to aleph-client
 fn to_seq(value: &Value) -> Result<Vec<u64>> {
     match value {
         Value::Seq(seq) => {

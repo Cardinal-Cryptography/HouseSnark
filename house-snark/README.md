@@ -38,6 +38,7 @@ cargo run --release -- generate-keys --system groth16 merkle-tree --leaf 1 --lea
 cargo run --release -- generate-proof  --system groth16 --proving-key-file merkle_tree.groth16.pk.bytes merkle-tree --leaf 1 --leaves 0,1,2,3,4,5,6,7 --seed deadbeef
 
 ```
+
 ### Example scenario (universal system)
 
 ```shell

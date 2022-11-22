@@ -1,6 +1,7 @@
 use aleph_client::{keypair_from_string, SignedConnection};
 use anyhow::Result;
 use clap::Parser;
+use house_snark::{MerklePath, MerkleRoot, Note, Nullifier, TokenAmount, TokenId, Trapdoor};
 use inquire::Password;
 use zeroize::Zeroize;
 use ContractInteractionCommand::{Deposit, Withdraw};
@@ -22,12 +23,6 @@ use crate::{
 };
 
 type DepositId = u16;
-type TokenId = u16;
-type TokenAmount = u64;
-// type Note = [u8; 32];
-type Note = [u64; 4];
-type MerkleRoot = [u8; 32];
-type Nullifier = u64;
 
 mod app_state;
 mod config;

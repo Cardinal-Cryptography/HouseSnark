@@ -195,8 +195,10 @@ impl ConstraintSynthesizer<CircuitField> for WithdrawRelation {
         // Dummy constraint so that the `fee` and `recipient` are actually used.
         //----------------------------------------------------------------------
         let fee = FpVar::new_input(ns!(cs, "fee"), || Ok(&self.fee))?;
+        fee.enforce_equal(&fee.clone())?;
+
         let recipient = FpVar::new_input(ns!(cs, "recipient"), || Ok(&self.recipient))?;
-        (fee.clone().add(&recipient)).enforce_equal(&recipient.add(&fee))?;
+        recipient.enforce_equal(&recipient.clone())?;
 
         //------------------------------
         // Check the old note arguments.

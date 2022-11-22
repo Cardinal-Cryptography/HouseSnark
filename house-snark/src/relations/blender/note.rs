@@ -68,11 +68,43 @@ pub fn compute_parent_hash(left: FrontendNote, right: FrontendNote) -> FrontendN
 }
 
 /// Create a note from the first 32 bytes of `bytes`.
-pub(super) fn note_from_bytes(bytes: &[u8]) -> FrontendNote {
+pub fn note_from_bytes(bytes: &[u8]) -> FrontendNote {
     [
         u64::from_le_bytes(bytes[0..8].try_into().unwrap()),
         u64::from_le_bytes(bytes[8..16].try_into().unwrap()),
         u64::from_le_bytes(bytes[16..24].try_into().unwrap()),
         u64::from_le_bytes(bytes[24..32].try_into().unwrap()),
     ]
+}
+
+fn convert(x: u64) -> [u8; 8] {
+    x.to_le_bytes()
+}
+
+pub fn bytes_from_note(note: &FrontendNote) -> Vec<u8> {
+    let mut res = vec![];
+    for elem in note {
+        let mut arr: Vec<u8> = convert(*elem).into();
+        res.append(&mut arr);
+    }
+    res
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn note_conversion() {
+        let token_id: FrontendTokenId = 1;
+        let token_amount: FrontendTokenAmount = 10;
+        let trapdoor: FrontendTrapdoor = 17;
+        let nullifier: FrontendNullifier = 19;
+        let note = compute_note(token_id, token_amount, trapdoor, nullifier);
+
+        let bytes = bytes_from_note(&note);
+        let note_again = note_from_bytes(&bytes);
+
+        assert_eq!(note, note_again);
+    }
 }

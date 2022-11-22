@@ -1,12 +1,16 @@
+use std::fs;
+
 use aleph_client::{account_from_keypair, keypair_from_string, SignedConnection};
 use anyhow::{anyhow, Result};
+use house_snark::{compute_note, NonUniversalProvingSystem, SomeProvingSystem, WithdrawRelation};
 use inquire::{CustomType, Select};
+use rand::Rng;
 
 use crate::{
     app_state::{AppState, Deposit},
     config::WithdrawCmd,
     contract::Blender,
-    TokenAmount,
+    Nullifier, TokenAmount, Trapdoor,
 };
 
 pub(super) fn do_withdraw(
@@ -21,8 +25,25 @@ pub(super) fn do_withdraw(
         recipient,
         caller_seed,
         fee,
+        proving_key_file,
         ..
     } = cmd;
+
+    let Deposit {
+        token_id,
+        token_amount: whole_token_amount,
+        trapdoor: old_trapdoor,
+        nullifier: old_nullifier,
+        leaf_idx,
+        ..
+    } = deposit;
+
+    let pk = match fs::read(proving_key_file) {
+        Ok(bytes) => bytes,
+        Err(e) => panic!("Could not read pk: {}", e),
+    };
+
+    let old_note = compute_note(token_id, whole_token_amount, old_trapdoor, old_nullifier);
 
     if let Some(seed) = caller_seed {
         connection = SignedConnection::new(&app_state.node_address, keypair_from_string(&seed));
@@ -32,32 +53,65 @@ pub(super) fn do_withdraw(
         Some(recipient) => recipient,
     };
 
+    let recipient_bytes = recipient.clone().into();
+
     let merkle_root = contract.get_merkle_root(&connection);
+    let merkle_path = contract
+        .get_merkle_path(&connection, leaf_idx)
+        .expect("Path does not exist");
 
-    // TODO:
-    // - create real proof
-    // - create new note
+    println!("retrieved merkle path {:?}", merkle_path);
 
-    let dummy_proof = vec![1, 2, 3];
-    let dummy_note = Default::default();
+    let mut rng = rand::thread_rng();
+    let new_trapdoor: Trapdoor = rng.gen::<u64>();
+    let new_nullifier: Nullifier = rng.gen::<u64>();
+    let new_token_amount = whole_token_amount - withdraw_amount;
+    let new_note = compute_note(token_id, new_token_amount, new_trapdoor, new_nullifier);
+
+    let circuit = WithdrawRelation::new(
+        old_nullifier,
+        merkle_root,
+        new_note,
+        token_id,
+        withdraw_amount,
+        old_trapdoor,
+        new_trapdoor,
+        new_nullifier,
+        merkle_path,
+        leaf_idx.into(),
+        old_note,
+        whole_token_amount,
+        new_token_amount,
+        fee.unwrap_or_default(),
+        recipient_bytes,
+    );
+
+    let system = SomeProvingSystem::NonUniversal(NonUniversalProvingSystem::Groth16);
+    let proof = system.prove(circuit, pk);
 
     let leaf_idx = contract.withdraw(
         &connection,
-        deposit.token_id,
+        token_id,
         withdraw_amount,
         recipient,
         fee,
         merkle_root,
-        deposit.nullifier,
-        dummy_note,
-        &dummy_proof,
+        old_nullifier,
+        new_note,
+        &proof,
     )?;
 
     app_state.delete_deposit_by_id(deposit.deposit_id);
+
     // save new deposit to the state
-    let tokens_left = deposit.token_amount - withdraw_amount;
-    if tokens_left > 0 {
-        app_state.add_deposit(deposit.token_id, tokens_left, leaf_idx);
+    if new_token_amount > 0 {
+        app_state.add_deposit(
+            token_id,
+            new_token_amount,
+            new_trapdoor,
+            new_nullifier,
+            leaf_idx,
+        );
     }
 
     Ok(())
