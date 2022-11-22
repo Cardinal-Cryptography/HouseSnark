@@ -1,5 +1,4 @@
 # HouseSnark
-_Brace yourself, verifier is coming_
 
 This repository contains a few simple R1CS relations.
 Each of them can generate outputs useful for interacting with `snarcos` pallet in `aleph-node`.
