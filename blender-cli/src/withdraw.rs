@@ -1,6 +1,11 @@
+use std::fs;
+
 use aleph_client::{account_from_keypair, keypair_from_string, SignedConnection};
 use anyhow::{anyhow, Result};
-use house_snark::{compute_note, WithdrawRelation};
+use house_snark::{
+    compute_note, DepositRelation, NonUniversalProvingSystem, RawKeys, SomeProvingSystem,
+    WithdrawRelation,
+};
 use inquire::{CustomType, Select};
 use rand::Rng;
 
@@ -23,6 +28,7 @@ pub(super) fn do_withdraw(
         recipient,
         caller_seed,
         fee,
+        proving_key_file,
         ..
     } = cmd;
 
@@ -35,6 +41,11 @@ pub(super) fn do_withdraw(
         ..
     } = deposit;
 
+    let pk = match fs::read(proving_key_file) {
+        Ok(bytes) => bytes,
+        Err(e) => panic!("Could not read pk: {}", e),
+    };
+
     let old_note = compute_note(token_id, whole_token_amount, old_trapdoor, old_nullifier);
 
     if let Some(seed) = caller_seed {
@@ -46,6 +57,9 @@ pub(super) fn do_withdraw(
     };
 
     let merkle_root = contract.get_merkle_root(&connection);
+    let merkle_path = contract
+        .get_merkle_path(&connection, leaf_idx)
+        .expect("Path does not exist");
 
     let mut rng = rand::thread_rng();
     let new_trapdoor: Trapdoor = rng.gen::<u64>();
@@ -71,6 +85,9 @@ pub(super) fn do_withdraw(
         [0u32; 4], // NOTE recipient is not checked in the circuit anyway
     );
 
+    let system = SomeProvingSystem::NonUniversal(NonUniversalProvingSystem::Groth16);
+    let proof = system.prove(circuit, pk);
+
     let leaf_idx = contract.withdraw(
         &connection,
         token_id,
@@ -80,7 +97,7 @@ pub(super) fn do_withdraw(
         merkle_root,
         old_nullifier,
         new_note,
-        &dummy_proof,
+        &proof,
     )?;
 
     app_state.delete_deposit_by_id(deposit.deposit_id);

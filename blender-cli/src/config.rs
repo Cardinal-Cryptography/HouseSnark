@@ -133,6 +133,10 @@ pub(super) struct WithdrawCmd {
     /// Contract metadata file.
     #[clap(long, default_value = "blender-metadata.json", value_parser = parsing::parse_path)]
     pub metadata_file: PathBuf,
+
+    /// raw pk bytes file.
+    #[clap(default_value = "pk.bytes", value_parser = parsing::parse_path)]
+    pub proving_key_file: PathBuf,
 }
 
 mod parsing {
