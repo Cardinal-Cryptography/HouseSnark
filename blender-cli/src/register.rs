@@ -3,6 +3,7 @@ use anyhow::Result;
 
 use crate::contract::{Blender, Relation};
 
+#[allow(dead_code)]
 pub fn do_register(
     contract: Blender,
     connection: SignedConnection,

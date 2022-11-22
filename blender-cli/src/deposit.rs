@@ -2,12 +2,7 @@ use std::fs;
 
 use aleph_client::SignedConnection;
 use anyhow::Result;
-use ark_crypto_primitives::SNARK;
-use ark_relations::r1cs::{ConstraintSynthesizer, ConstraintSystem};
-use ark_serialize::CanonicalDeserialize;
-use house_snark::{
-    compute_note, DepositRelation, NonUniversalProvingSystem, RawKeys, SomeProvingSystem,
-};
+use house_snark::{compute_note, DepositRelation, NonUniversalProvingSystem, SomeProvingSystem};
 use rand::Rng;
 
 use crate::{app_state::AppState, config::DepositCmd, contract::Blender, Nullifier, Trapdoor};

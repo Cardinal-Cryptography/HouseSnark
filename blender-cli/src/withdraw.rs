@@ -2,10 +2,7 @@ use std::fs;
 
 use aleph_client::{account_from_keypair, keypair_from_string, SignedConnection};
 use anyhow::{anyhow, Result};
-use house_snark::{
-    compute_note, DepositRelation, NonUniversalProvingSystem, RawKeys, SomeProvingSystem,
-    WithdrawRelation,
-};
+use house_snark::{compute_note, NonUniversalProvingSystem, SomeProvingSystem, WithdrawRelation};
 use inquire::{CustomType, Select};
 use rand::Rng;
 
