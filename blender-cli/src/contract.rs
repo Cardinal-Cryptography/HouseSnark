@@ -231,16 +231,6 @@ impl Blender {
         connection: &SignedConnection,
         leaf_idx: u32,
     ) -> Option<MerklePath> {
-        let path =
-            self.contract
-                .contract_read(connection, "merkle_path", &[&*leaf_idx.to_string()]);
-
-        // println!("retireved root {:?}", root);
-
-        // let decoded_root = to_seq(&root).unwrap();
-        // println!("decoded root {:?}", decoded_root);
-
-        // decoded_root.try_into().unwrap()
         todo!()
     }
 }
