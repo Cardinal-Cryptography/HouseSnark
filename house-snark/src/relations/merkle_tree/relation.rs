@@ -27,7 +27,7 @@ pub type SimplePathVar = PathVar<MerkleConfig, LeafHashGadget, TwoToOneHashGadge
 /// Arguments for creating a MerkeTreeRelation
 #[derive(Clone, Eq, PartialEq, Hash, Debug, Args)]
 pub struct MerkleTreeRelationArgs {
-    /// Seed bytes for rng, the more the marrier
+    /// Seed bytes for rng, the more the merrier
     #[clap(long)]
     pub seed: Option<String>,
 

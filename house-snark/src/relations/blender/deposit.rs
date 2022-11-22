@@ -4,15 +4,34 @@ use ark_relations::{
     ns,
     r1cs::{ConstraintSynthesizer, ConstraintSystemRef, SynthesisError},
 };
+use clap::Args;
 
 use super::{
     note::check_note,
+    parser::parse_frontend_note,
     types::{
         BackendNote, BackendNullifier, BackendTokenAmount, BackendTokenId, BackendTrapdoor, FpVar,
         FrontendNote, FrontendNullifier, FrontendTokenAmount, FrontendTokenId, FrontendTrapdoor,
     },
 };
-use crate::relations::types::CircuitField;
+use crate::relations::{types::CircuitField, GetPublicInput};
+
+#[derive(Copy, Clone, Eq, PartialEq, Hash, Debug, Args)]
+pub struct DepositRelationArgs {
+    // Public inputs.
+    #[clap(long, value_parser = parse_frontend_note)]
+    pub note: FrontendNote,
+    #[clap(long)]
+    pub token_id: FrontendTokenId,
+    #[clap(long)]
+    pub token_amount: FrontendTokenAmount,
+
+    // Private inputs.
+    #[clap(long)]
+    pub trapdoor: FrontendTrapdoor,
+    #[clap(long)]
+    pub nullifier: FrontendNullifier,
+}
 
 /// 'Deposit' relation for the Blender application.
 ///
@@ -51,6 +70,19 @@ impl DepositRelation {
     }
 }
 
+impl From<DepositRelationArgs> for DepositRelation {
+    fn from(args: DepositRelationArgs) -> Self {
+        let DepositRelationArgs {
+            note,
+            token_id,
+            token_amount,
+            trapdoor,
+            nullifier,
+        } = args;
+        DepositRelation::new(note, token_id, token_amount, trapdoor, nullifier)
+    }
+}
+
 impl ConstraintSynthesizer<CircuitField> for DepositRelation {
     fn generate_constraints(
         self,
@@ -64,6 +96,12 @@ impl ConstraintSynthesizer<CircuitField> for DepositRelation {
         let nullifier = FpVar::new_witness(ns!(cs, "nullifier"), || Ok(&self.nullifier))?;
 
         check_note(&token_id, &token_amount, &trapdoor, &nullifier, &note)
+    }
+}
+
+impl GetPublicInput<CircuitField> for DepositRelation {
+    fn public_input(&self) -> Vec<CircuitField> {
+        vec![self.note, self.token_id, self.token_amount]
     }
 }
 
