@@ -19,13 +19,6 @@ use house_snark::bytes_from_note;
 
 use crate::{MerklePath, MerkleRoot, Note, Nullifier, TokenAmount, TokenId};
 
-#[allow(dead_code)]
-#[derive(Debug)]
-pub enum Relation {
-    Deposit,
-    Withdraw,
-}
-
 #[derive(Debug)]
 pub struct Blender {
     contract: Arc<ContractInstance>,
@@ -39,30 +32,6 @@ impl Blender {
                 metadata_path.to_str().unwrap(),
             )?),
         })
-    }
-
-    /// Call `register_vk` message of the contract
-    #[allow(dead_code)]
-    pub fn register_vk(
-        &self,
-        connection: &SignedConnection,
-        relation: Relation,
-        vk: Vec<u8>,
-    ) -> Result<()> {
-        // NOTE: this could still silently fail on-chain due to contract revert
-        // we should add an event an listen to it
-
-        let args = [
-            &format!("{:?}", relation),
-            &*format!("0x{}", hex::encode(vk)),
-        ];
-
-        println!("Calling register_vk tx with arguments {:?}", &args);
-
-        self.contract
-            .contract_exec(connection, "register_vk", &args)?;
-
-        Ok(())
     }
 
     /// Call `deposit` message of the contract. If successful, return leaf idx.
