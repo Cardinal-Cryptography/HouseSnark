@@ -1,12 +1,14 @@
 use aleph_client::{account_from_keypair, keypair_from_string, SignedConnection};
 use anyhow::{anyhow, Result};
+use house_snark::{compute_note, WithdrawRelation};
 use inquire::{CustomType, Select};
+use rand::Rng;
 
 use crate::{
     app_state::{AppState, Deposit},
     config::WithdrawCmd,
     contract::Blender,
-    TokenAmount,
+    Nullifier, TokenAmount, Trapdoor,
 };
 
 pub(super) fn do_withdraw(
@@ -24,6 +26,17 @@ pub(super) fn do_withdraw(
         ..
     } = cmd;
 
+    let Deposit {
+        token_id,
+        token_amount: whole_token_amount,
+        trapdoor: old_trapdoor,
+        nullifier: old_nullifier,
+        leaf_idx,
+        ..
+    } = deposit;
+
+    let old_note = compute_note(token_id, whole_token_amount, old_trapdoor, old_nullifier);
+
     if let Some(seed) = caller_seed {
         connection = SignedConnection::new(&app_state.node_address, keypair_from_string(&seed));
     }
@@ -34,30 +47,53 @@ pub(super) fn do_withdraw(
 
     let merkle_root = contract.get_merkle_root(&connection);
 
-    // TODO:
-    // - create real proof
-    // - create new note
+    let mut rng = rand::thread_rng();
+    let new_trapdoor: Trapdoor = rng.gen::<u64>();
+    let new_nullifier: Nullifier = rng.gen::<u64>();
+    let new_token_amount = whole_token_amount - withdraw_amount;
+    let new_note = compute_note(token_id, new_token_amount, new_trapdoor, new_nullifier);
 
-    let dummy_proof = vec![1, 2, 3];
-    let dummy_note = Default::default();
+    let circuit = WithdrawRelation::new(
+        old_nullifier,
+        merkle_root,
+        new_note,
+        token_id,
+        withdraw_amount,
+        old_trapdoor,
+        new_trapdoor,
+        new_nullifier,
+        merkle_path,
+        leaf_idx.into(),
+        old_note,
+        whole_token_amount,
+        new_token_amount,
+        fee.unwrap_or_default(),
+        recipient,
+    );
 
     let leaf_idx = contract.withdraw(
         &connection,
-        deposit.token_id,
+        token_id,
         withdraw_amount,
         recipient,
         fee,
         merkle_root,
-        deposit.nullifier,
-        dummy_note,
+        old_nullifier,
+        new_note,
         &dummy_proof,
     )?;
 
     app_state.delete_deposit_by_id(deposit.deposit_id);
+
     // save new deposit to the state
-    let tokens_left = deposit.token_amount - withdraw_amount;
-    if tokens_left > 0 {
-        app_state.add_deposit(deposit.token_id, tokens_left, leaf_idx);
+    if new_token_amount > 0 {
+        app_state.add_deposit(
+            token_id,
+            new_token_amount,
+            new_trapdoor,
+            new_nullifier,
+            leaf_idx,
+        );
     }
 
     Ok(())

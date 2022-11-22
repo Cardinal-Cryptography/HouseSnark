@@ -7,7 +7,7 @@ use aleph_client::AccountId;
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 
-use crate::{DepositId, Nullifier, TokenAmount, TokenId};
+use crate::{DepositId, Nullifier, TokenAmount, TokenId, Trapdoor};
 
 #[derive(Clone, Eq, PartialEq, Debug, Deserialize, Serialize)]
 pub struct Deposit {
@@ -15,6 +15,7 @@ pub struct Deposit {
     pub token_id: TokenId,
     pub token_amount: TokenAmount,
     pub leaf_idx: u32,
+    pub trapdoor: Trapdoor,
     pub nullifier: Nullifier,
 }
 
@@ -103,13 +104,21 @@ impl AppState {
             .collect()
     }
 
-    pub fn add_deposit(&mut self, token_id: TokenId, token_amount: TokenAmount, leaf_idx: u32) {
+    pub fn add_deposit(
+        &mut self,
+        token_id: TokenId,
+        token_amount: TokenAmount,
+        trapdoor: Trapdoor,
+        nullifier: Nullifier,
+        leaf_idx: u32,
+    ) {
         self.deposits.push(Deposit {
             deposit_id: self.deposit_counter,
             token_id,
             token_amount,
             leaf_idx,
-            nullifier: Default::default(),
+            trapdoor,
+            nullifier,
         });
         self.deposit_counter += 1;
     }

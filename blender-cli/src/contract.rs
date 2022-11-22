@@ -15,6 +15,7 @@ use aleph_client::{
 };
 use anyhow::{anyhow, Result};
 use contract_transcode::Value;
+use house_snark::bytes_from_note;
 
 use crate::{MerkleRoot, Note, Nullifier, TokenAmount, TokenId};
 
@@ -48,14 +49,16 @@ impl Blender {
     ) -> Result<()> {
         // NOTE: this could still silently fail on-chain due to contract revert
         // we should add an event an listen to it
-        self.contract.contract_exec(
-            connection,
-            "register_vk",
-            &[
-                &format!("{:?}", relation),
-                &*format!("0x{}", hex::encode(vk)),
-            ],
-        )?;
+
+        let args = [
+            &format!("{:?}", relation),
+            &*format!("0x{}", hex::encode(vk)),
+        ];
+
+        println!("Calling register_vk tx with arguments {:?}", &args);
+
+        self.contract
+            .contract_exec(connection, "register_vk", &args)?;
 
         Ok(())
     }
@@ -97,19 +100,19 @@ impl Blender {
             );
         });
 
-        let note_bytes = convert(&note);
+        let note_bytes = bytes_from_note(&note);
+
+        let args = [
+            &*token_id.to_string(),
+            &*token_amount.to_string(),
+            &*format!("0x{}", hex::encode(note_bytes)),
+            &*format!("0x{}", hex::encode(proof)),
+        ];
+
+        println!("Calling deposit tx with arguments {:?}", &args);
 
         self.contract
-            .contract_exec(
-                connection,
-                "deposit",
-                &[
-                    &*token_id.to_string(),
-                    &*token_amount.to_string(),
-                    &*format!("0x{}", hex::encode(note_bytes)),
-                    &*format!("0x{}", hex::encode(proof)),
-                ],
-            )
+            .contract_exec(connection, "deposit", &args)
             .map_err(|e| {
                 cancel_tx.send(()).unwrap();
                 e
@@ -171,8 +174,9 @@ impl Blender {
             );
         });
 
-        let new_note_bytes = convert(&new_note);
-        let merkle_root_bytes = convert(&merkle_root);
+        let new_note_bytes = bytes_from_note(&new_note);
+        // TODO
+        let merkle_root_bytes = bytes_from_note(&merkle_root);
 
         let args = [
             &*token_id.to_string(),
@@ -229,9 +233,4 @@ fn to_seq(value: &Value) -> Result<Vec<u64>> {
         }
         _ => Err(anyhow!("Expected {:?} to be a sequence", value)),
     }
-}
-
-/// this is super safe
-fn convert(v: &'_ [u64; 4]) -> &'_ [u8] {
-    unsafe { v.align_to::<u8>().1 }
 }
