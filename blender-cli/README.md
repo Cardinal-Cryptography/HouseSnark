@@ -60,5 +60,5 @@ cargo run --release -- --seed //Alice show-assets 0
 Withdraws a note of 50 tokens of a PSP22 token registered under an id 0:
 
 ```bash
-cargo run --release -- --seed //Alice withdraw  --deposit-id 0 --amount 50 --recipient 5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY
+cargo run --release -- --seed //Alice withdraw  --deposit-id 0 --amount 50
 ```
