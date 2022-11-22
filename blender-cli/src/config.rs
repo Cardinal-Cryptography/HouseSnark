@@ -93,7 +93,7 @@ pub(super) struct DepositCmd {
     pub metadata_file: PathBuf,
 
     /// raw pk bytes file.
-    #[clap(default_value = "pk.bytes", value_parser = parsing::parse_path)]
+    #[clap(default_value = "deposit.pk.bytes", value_parser = parsing::parse_path)]
     pub proving_key_file: PathBuf,
 }
 
@@ -128,7 +128,7 @@ pub(super) struct WithdrawCmd {
     pub metadata_file: PathBuf,
 
     /// raw pk bytes file.
-    #[clap(default_value = "pk.bytes", value_parser = parsing::parse_path)]
+    #[clap(default_value = "withdraw.pk.bytes", value_parser = parsing::parse_path)]
     pub proving_key_file: PathBuf,
 }
 
