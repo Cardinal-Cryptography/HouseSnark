@@ -17,7 +17,7 @@ use anyhow::{anyhow, Result};
 use contract_transcode::Value;
 use house_snark::bytes_from_note;
 
-use crate::{MerkleRoot, Note, Nullifier, TokenAmount, TokenId};
+use crate::{MerklePath, MerkleRoot, Note, Nullifier, TokenAmount, TokenId};
 
 #[derive(Debug)]
 pub enum Relation {
@@ -212,8 +212,36 @@ impl Blender {
     }
 
     /// Fetch the current merkle root.
-    pub fn get_merkle_root(&self, _connection: &SignedConnection) -> MerkleRoot {
-        Default::default()
+    pub fn get_merkle_root(&self, connection: &SignedConnection) -> MerkleRoot {
+        let root = self
+            .contract
+            .contract_read0(connection, "current_merkle_root")
+            .unwrap();
+        println!("retireved root {:?}", root);
+
+        let decoded_root = to_seq(&root).unwrap();
+        println!("decoded root {:?}", decoded_root);
+
+        decoded_root.try_into().unwrap()
+    }
+
+    /// Fetch the current merkle root.
+    pub fn get_merkle_path(
+        &self,
+        connection: &SignedConnection,
+        leaf_idx: u32,
+    ) -> Option<MerklePath> {
+        let path =
+            self.contract
+                .contract_read(connection, "merkle_path", &[&*leaf_idx.to_string()]);
+
+        // println!("retireved root {:?}", root);
+
+        // let decoded_root = to_seq(&root).unwrap();
+        // println!("decoded root {:?}", decoded_root);
+
+        // decoded_root.try_into().unwrap()
+        todo!()
     }
 }
 
