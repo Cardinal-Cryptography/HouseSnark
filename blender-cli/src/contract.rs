@@ -8,7 +8,7 @@ use std::{
 use aleph_client::{
     contract::{
         event::{listen_contract_events, subscribe_events, ContractEvent},
-        util::to_u128,
+        util::{to_account_id, to_u128},
         ContractInstance,
     },
     AccountId, SignedConnection,
@@ -225,6 +225,68 @@ impl Blender {
                 None => None,
             },
             _ => panic!("Expected {:?} to be a Tuple", &value),
+        }
+    }
+
+    pub fn register_new_token(
+        &self,
+        connection: &SignedConnection,
+        token_id: u16,
+        token_address: AccountId,
+    ) -> Result<()> {
+        let subscription = subscribe_events(connection)?;
+        let (cancel_tx, cancel_rx) = channel();
+        let (signal_tx, signal_rx) = channel::<()>();
+
+        let contract_ptr = self.contract.clone();
+
+        let token_address_copy = token_address.clone();
+
+        thread::spawn(move || {
+            listen_contract_events(
+                subscription,
+                &[&contract_ptr],
+                Some(cancel_rx),
+                |event_or_error| {
+                    println!("{:?}", event_or_error);
+                    if let Ok(ContractEvent { ident, data, .. }) = event_or_error {
+                        if Some(String::from("TokenRegistered")) == ident {
+                            let event_token_id = data.get("token_id").unwrap().clone();
+                            let event_token_address = data.get("token_address").unwrap().clone();
+
+                            if (to_u128(event_token_id).unwrap() as u16) == token_id
+                                && to_account_id(event_token_address).unwrap() == token_address
+                            {
+                                signal_tx.send(()).unwrap()
+                            }
+                        }
+                    }
+                },
+            );
+        });
+
+        self.contract
+            .contract_exec(
+                connection,
+                "register_new_token",
+                &[&token_id.to_string(), &token_address_copy.to_string()],
+            )
+            .map_err(|e| {
+                cancel_tx.send(()).unwrap();
+                e
+            })?;
+
+        thread::sleep(Duration::from_secs(3));
+        cancel_tx.send(()).unwrap();
+
+        if signal_rx.try_recv().is_ok() {
+            println!(
+                "Successfuly registered ${:?} token contract under {:?} token id",
+                &token_address_copy, &token_id
+            );
+            Ok(())
+        } else {
+            Err(anyhow!("Failed to observe expected event."))
         }
     }
 }

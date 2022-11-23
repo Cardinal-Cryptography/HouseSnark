@@ -4,7 +4,7 @@ use clap::Parser;
 use house_snark::{MerklePath, MerkleRoot, Note, Nullifier, TokenAmount, TokenId, Trapdoor};
 use inquire::Password;
 use zeroize::Zeroize;
-use ContractInteractionCommand::{Deposit, Withdraw};
+use ContractInteractionCommand::{Deposit, RegisterToken, Withdraw};
 use StateReadCommand::{PrintState, ShowAssets};
 use StateWriteCommand::{SetContractAddress, SetNode};
 
@@ -72,6 +72,9 @@ fn perform_contract_action(
     match command {
         Deposit(cmd) => do_deposit(contract, connection, cmd, app_state)?,
         Withdraw(cmd) => do_withdraw(contract, connection, cmd, app_state)?,
+        RegisterToken(cmd) => {
+            contract.register_new_token(&connection, cmd.token_id, cmd.token_address)?
+        }
     };
     Ok(())
 }

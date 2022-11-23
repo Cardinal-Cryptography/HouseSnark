@@ -1,8 +1,8 @@
 {
   "source": {
-    "hash": "0xcf57f05ba80fb6161a12261068734bc64148ebcb42241352efcf9019c4e2d007",
+    "hash": "0x519a049d23c6b344b7cca40c1d44b4f182ba41a2a6b6bc300a02db23431ad049",
     "language": "ink! 3.4.0",
-    "compiler": "rustc 1.65.0-nightly"
+    "compiler": "rustc 1.67.0-nightly"
   },
   "contract": {
     "name": "blender",
@@ -149,6 +149,34 @@
           ],
           "docs": [],
           "label": "Withdrawn"
+        },
+        {
+          "args": [
+            {
+              "docs": [],
+              "indexed": true,
+              "label": "token_id",
+              "type": {
+                "displayName": [
+                  "TokenId"
+                ],
+                "type": 11
+              }
+            },
+            {
+              "docs": [],
+              "indexed": false,
+              "label": "token_address",
+              "type": {
+                "displayName": [
+                  "AccountId"
+                ],
+                "type": 12
+              }
+            }
+          ],
+          "docs": [],
+          "label": "TokenRegistered"
         }
       ],
       "messages": [
