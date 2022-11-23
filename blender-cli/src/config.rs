@@ -47,6 +47,7 @@ pub(super) enum StateReadCommand {
 pub(super) enum ContractInteractionCommand {
     Deposit(DepositCmd),
     Withdraw(WithdrawCmd),
+    RegisterToken(RegisterTokenCmd),
 }
 
 impl ContractInteractionCommand {
@@ -58,6 +59,9 @@ impl ContractInteractionCommand {
             ContractInteractionCommand::Withdraw(WithdrawCmd { metadata_file, .. }) => {
                 metadata_file.clone()
             }
+            ContractInteractionCommand::RegisterToken(RegisterTokenCmd {
+                metadata_file, ..
+            }) => metadata_file.clone(),
         }
     }
 }
@@ -130,6 +134,21 @@ pub(super) struct WithdrawCmd {
     /// raw pk bytes file.
     #[clap(default_value = "withdraw.pk.bytes", value_parser = parsing::parse_path)]
     pub proving_key_file: PathBuf,
+}
+
+#[derive(Clone, Eq, PartialEq, Debug, Args)]
+pub(super) struct RegisterTokenCmd {
+    /// Token ID to register this particular token contract under.
+    #[clap(long)]
+    pub token_id: u16,
+
+    /// Address where the token contract can be found.
+    #[clap(long)]
+    pub token_address: AccountId,
+
+    /// Contract metadata file.
+    #[clap(long, default_value = "blender-metadata.json", value_parser = parsing::parse_path)]
+    pub metadata_file: PathBuf,
 }
 
 mod parsing {
