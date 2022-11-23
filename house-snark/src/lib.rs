@@ -12,6 +12,7 @@ pub use relations::blender::{
     bytes_from_note, compute_note, note_from_bytes, MerklePath, MerkleRoot, Note, Nullifier,
     TokenAmount, TokenId, Trapdoor,
 };
+pub use relations::GetPublicInput;
 #[cfg(feature = "linear")]
 pub use relations::LinearEqRelation;
 #[cfg(feature = "merkle_tree")]

@@ -137,11 +137,11 @@ impl WithdrawRelation {
             whole_token_amount: BackendTokenAmount::from(whole_token_amount),
             new_token_amount: BackendTokenAmount::from(new_token_amount),
             fee: BackendTokenAmount::from(fee),
-            recipient: BackendAccount::from(BigInteger256::new([
-                u64::from_le_bytes(recipient[0..8].try_into().unwrap()),
-                u64::from_le_bytes(recipient[8..16].try_into().unwrap()),
-                u64::from_le_bytes(recipient[16..24].try_into().unwrap()),
-                u64::from_le_bytes(recipient[24..32].try_into().unwrap()),
+            recipient: BackendAccount::new(BigInteger256::new([
+                u64::from_le_bytes(recipient[0..8].try_into().expect("0-8")),
+                u64::from_le_bytes(recipient[8..16].try_into().expect("8-16")),
+                u64::from_le_bytes(recipient[16..24].try_into().expect("16-24")),
+                u64::from_le_bytes(recipient[24..32].try_into().expect("24-32")),
             ])),
         }
     }
@@ -335,7 +335,10 @@ mod tests {
         let merkle_path = vec![sibling_note, uncle_note];
 
         let fee: FrontendTokenAmount = 1;
-        let recipient: FrontendAccount = [0u8; 32];
+        let recipient: FrontendAccount = [
+            212, 53, 147, 199, 21, 253, 211, 28, 97, 20, 26, 189, 4, 169, 159, 214, 130, 44, 133,
+            88, 133, 76, 205, 227, 154, 86, 132, 231, 165, 109, 162, 125,
+        ];
 
         let circuit = WithdrawRelation::new(
             old_nullifier,
@@ -355,17 +358,9 @@ mod tests {
             recipient,
         );
 
-        let input = [
-            circuit.fee.clone(),
-            circuit.recipient.clone(),
-            circuit.token_id.clone(),
-            circuit.old_nullifier.clone(),
-            circuit.new_note.clone(),
-            circuit.token_amount_out.clone(),
-            circuit.merkle_root.clone(),
-        ];
+        let input = circuit.public_input();
 
-        (circuit, input)
+        (circuit, input.try_into().unwrap())
     }
 
     #[test]
