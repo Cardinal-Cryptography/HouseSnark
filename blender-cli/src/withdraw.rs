@@ -7,6 +7,7 @@ use house_snark::{
 };
 use inquire::{CustomType, Select};
 use rand::Rng;
+use tracing::debug;
 
 use crate::{
     app_state::{AppState, Deposit},
@@ -57,7 +58,7 @@ pub(super) fn do_withdraw(
         .get_merkle_path(&connection, leaf_idx)
         .expect("Path does not exist");
 
-    println!("retrieved merkle path {:?}", merkle_path);
+    debug!("retrieved merkle path {:?}", merkle_path);
 
     let mut rng = rand::thread_rng();
     let new_trapdoor: Trapdoor = rng.gen::<u64>();

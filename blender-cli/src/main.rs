@@ -1,8 +1,13 @@
+use std::{env, io};
+
 use aleph_client::{keypair_from_string, SignedConnection};
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use clap::Parser;
+use config::LoggingFormat;
 use house_snark::{MerklePath, MerkleRoot, Note, Nullifier, TokenAmount, TokenId, Trapdoor};
 use inquire::Password;
+use tracing::info;
+use tracing_subscriber::EnvFilter;
 use zeroize::Zeroize;
 use ContractInteractionCommand::{Deposit, RegisterToken, Withdraw};
 use StateReadCommand::{PrintState, ShowAssets};
@@ -50,10 +55,13 @@ fn perform_state_read_action(app_state: &mut AppState, command: StateReadCommand
                 None => app_state.get_all_assets(),
                 Some(token_id) => app_state.get_single_asset(token_id),
             };
-            println!("{:?}", assets)
+            info!(?assets)
         }
         PrintState => {
-            println!("{}", serde_json::to_string_pretty(&app_state).unwrap())
+            info!(caller_seed=?app_state.caller_seed, 
+                node_address=%app_state.node_address, 
+                contract_address=%app_state.contract_address,
+                deposits=?app_state.deposits())
         }
     };
     Ok(())
@@ -82,6 +90,8 @@ fn perform_contract_action(
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let cli_config: CliConfig = CliConfig::parse();
 
+    init_logging(cli_config.logging_format)?;
+
     let seed = match cli_config.seed {
         Some(seed) => seed,
         _ => Password::new("Password (account seed):")
@@ -104,4 +114,30 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // `cli_config.seed` and `seed` are already moved
 
     Ok(())
+}
+
+const LOG_CONFIGURATION_ENVVAR: &str = "RUST_LOG";
+
+fn init_logging(format: LoggingFormat) -> Result<()> {
+    // We need to disable logging in our dependency crates by default.
+    let filter = EnvFilter::new(
+        env::var(LOG_CONFIGURATION_ENVVAR)
+            .as_deref()
+            .unwrap_or("warn,blender_cli=info"),
+    );
+
+    match format {
+        LoggingFormat::Text => tracing_subscriber::fmt()
+            .with_writer(io::stdout)
+            .with_target(false)
+            .with_env_filter(filter)
+            .try_init(),
+        LoggingFormat::Json => tracing_subscriber::fmt()
+            .with_writer(io::stdout)
+            .with_target(false)
+            .with_env_filter(filter)
+            .json()
+            .try_init(),
+    }
+    .map_err(|err| anyhow!(err))
 }
