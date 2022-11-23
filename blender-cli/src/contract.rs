@@ -265,10 +265,10 @@ impl Blender {
             );
         });
 
-        let _ = self
+        self
             .contract
             .contract_exec(
-                &connection,
+                connection,
                 "register_new_token",
                 &[&token_id.to_string(), &token_address_copy.to_string()],
             )
@@ -280,7 +280,7 @@ impl Blender {
         thread::sleep(Duration::from_secs(3));
         cancel_tx.send(()).unwrap();
 
-        if let Ok(_) = signal_rx.try_recv() {
+        if signal_rx.try_recv().is_ok() {
             println!(
                 "Successfuly registered ${:?} token contract under {:?} token id",
                 &token_address_copy, &token_id
