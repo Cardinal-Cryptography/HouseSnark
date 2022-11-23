@@ -266,8 +266,7 @@ impl Blender {
             );
         });
 
-        self
-            .contract
+        self.contract
             .contract_exec(
                 connection,
                 "register_new_token",
