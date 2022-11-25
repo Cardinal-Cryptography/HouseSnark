@@ -112,7 +112,7 @@ impl Blender {
         recipient: AccountId,
         fee_for_caller: Option<TokenAmount>,
         merkle_root: MerkleRoot,
-        nullifier: Nullifier,
+        old_nullifier: Nullifier,
         new_note: Note,
         proof: &[u8],
     ) -> Result<u32> {
@@ -155,7 +155,7 @@ impl Blender {
             &*recipient.to_string(),
             &*format!("{:?}", fee_for_caller),
             &*format!("0x{}", hex::encode(merkle_root_bytes)),
-            &*nullifier.to_string(),
+            &*old_nullifier.to_string(),
             &*format!("0x{}", hex::encode(new_note_bytes)),
             &*format!("0x{}", hex::encode(proof)),
         ];
