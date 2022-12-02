@@ -61,6 +61,7 @@ pub(super) struct BackendAccount(pub CircuitField);
 ///
 /// Where it made sense and was possible, we used macros, so that to ensure that there is at most
 /// one implementation for particular primitive conversion (like `u64` -> `CircuitField`).
+#[allow(dead_code)]
 mod casting {
     use ark_ff::BigInteger256;
 
@@ -122,12 +123,53 @@ mod casting {
 
     impl From<FrontendAccount> for BackendAccount {
         fn from(FrontendAccount(frontend_account): FrontendAccount) -> Self {
-            Self(CircuitField::new(BigInteger256::new([
-                u64::from_le_bytes(frontend_account[0..8].try_into().unwrap()),
-                u64::from_le_bytes(frontend_account[8..16].try_into().unwrap()),
-                u64::from_le_bytes(frontend_account[16..24].try_into().unwrap()),
-                u64::from_le_bytes(frontend_account[24..32].try_into().unwrap()),
-            ])))
+            Self(CircuitField::new(BigInteger256::new(bytes_to_4xu64(
+                &frontend_account,
+            ))))
+        }
+    }
+
+    //--------------------
+    // Byte representation
+    //--------------------
+
+    impl FrontendNote {
+        /// Create a note from the first 32 bytes of `bytes`.
+        pub fn from_bytes(bytes: &[u8]) -> FrontendNote {
+            FrontendNote(bytes_to_4xu64(bytes))
+        }
+
+        /// Serializes note to bytes.
+        pub fn to_bytes(self) -> Vec<u8> {
+            self.0
+                .iter()
+                .map(|elem| elem.to_le_bytes().to_vec())
+                .collect::<Vec<_>>()
+                .concat()
+        }
+    }
+
+    fn bytes_to_4xu64(bytes: &[u8]) -> [u64; 4] {
+        [
+            u64::from_le_bytes(bytes[0..8].try_into().unwrap()),
+            u64::from_le_bytes(bytes[8..16].try_into().unwrap()),
+            u64::from_le_bytes(bytes[16..24].try_into().unwrap()),
+            u64::from_le_bytes(bytes[24..32].try_into().unwrap()),
+        ]
+    }
+
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+
+        #[test]
+        fn note_conversion() {
+            let note = FrontendNote([1415926535, 8979323846, 26433832795, 028841971]);
+
+            let bytes = note.to_bytes();
+            let note_again = FrontendNote::from_bytes(&bytes);
+
+            assert_eq!(note, note_again);
         }
     }
 }

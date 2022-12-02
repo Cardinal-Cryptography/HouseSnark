@@ -13,7 +13,7 @@ mod types;
 mod withdraw;
 
 pub use deposit::{DepositRelation, DepositRelationArgs};
-pub use note::{bytes_from_note, compute_note, note_from_bytes};
+pub use note::compute_note;
 pub use types::{
     FrontendMerklePath as MerklePath, FrontendMerkleRoot as MerkleRoot, FrontendNote as Note,
     FrontendNullifier as Nullifier, FrontendTokenAmount as TokenAmount, FrontendTokenId as TokenId,
