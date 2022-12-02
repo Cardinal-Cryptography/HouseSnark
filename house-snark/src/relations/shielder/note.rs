@@ -1,6 +1,5 @@
 //! Module exposing some utilities regarding note generation and verification.
 
-use ark_ff::{BigInteger, BigInteger256};
 use ark_r1cs_std::{eq::EqGadget, ToBytesGadget};
 use ark_relations::r1cs::SynthesisError;
 
@@ -48,10 +47,10 @@ pub fn compute_note(
     nullifier: FrontendNullifier,
 ) -> FrontendNote {
     let bytes = [
-        BigInteger256::from(token_id.0 as u64).to_bytes_le(),
-        BigInteger256::from(token_amount.0).to_bytes_le(),
-        BigInteger256::from(trapdoor.0).to_bytes_le(),
-        BigInteger256::from(nullifier.0).to_bytes_le(),
+        token_id.to_bytes_through_backend(),
+        token_amount.to_bytes_through_backend(),
+        trapdoor.to_bytes_through_backend(),
+        nullifier.to_bytes_through_backend(),
     ]
     .concat();
 
@@ -59,10 +58,6 @@ pub fn compute_note(
 }
 
 pub fn compute_parent_hash(left: FrontendNote, right: FrontendNote) -> FrontendNote {
-    let bytes = [
-        BigInteger256::new(left.0).to_bytes_le(),
-        BigInteger256::new(right.0).to_bytes_le(),
-    ]
-    .concat();
+    let bytes = [left.to_bytes(), right.to_bytes()].concat();
     FrontendNote::from_bytes(tangle::<2>(bytes).as_slice())
 }

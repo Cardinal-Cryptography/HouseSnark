@@ -61,9 +61,8 @@ pub(super) struct BackendAccount(pub CircuitField);
 ///
 /// Where it made sense and was possible, we used macros, so that to ensure that there is at most
 /// one implementation for particular primitive conversion (like `u64` -> `CircuitField`).
-#[allow(dead_code)]
 mod casting {
-    use ark_ff::BigInteger256;
+    use ark_ff::{BigInteger, BigInteger256};
 
     use super::*;
 
@@ -149,6 +148,25 @@ mod casting {
         }
     }
 
+    macro_rules! to_bytes_through_backend {
+        ($frontend_type:ty, $backend_type:ty) => {
+            impl $frontend_type {
+                pub fn to_bytes_through_backend(self) -> Vec<u8> {
+                    BigInteger256::from(self.0 as u64).to_bytes_le()
+                }
+            }
+        };
+    }
+
+    to_bytes_through_backend!(FrontendTokenId, BackendTokenId);
+    to_bytes_through_backend!(FrontendTokenAmount, BackendTokenAmount);
+    to_bytes_through_backend!(FrontendTrapdoor, BackendTrapdoor);
+    to_bytes_through_backend!(FrontendNullifier, BackendNullifier);
+
+    // -----------------
+    // Auxiliary methods
+    // -----------------
+
     fn bytes_to_4xu64(bytes: &[u8]) -> [u64; 4] {
         [
             u64::from_le_bytes(bytes[0..8].try_into().unwrap()),
@@ -156,20 +174,5 @@ mod casting {
             u64::from_le_bytes(bytes[16..24].try_into().unwrap()),
             u64::from_le_bytes(bytes[24..32].try_into().unwrap()),
         ]
-    }
-
-    #[cfg(test)]
-    mod tests {
-        use super::*;
-
-        #[test]
-        fn note_conversion() {
-            let note = FrontendNote([1415926535, 8979323846, 26433832795, 028841971]);
-
-            let bytes = note.to_bytes();
-            let note_again = FrontendNote::from_bytes(&bytes);
-
-            assert_eq!(note, note_again);
-        }
     }
 }
