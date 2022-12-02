@@ -48,10 +48,10 @@ pub fn compute_note(
     nullifier: FrontendNullifier,
 ) -> FrontendNote {
     let bytes = [
-        BigInteger256::from(token_id as u64).to_bytes_le(),
-        BigInteger256::from(token_amount).to_bytes_le(),
-        BigInteger256::from(trapdoor).to_bytes_le(),
-        BigInteger256::from(nullifier).to_bytes_le(),
+        BigInteger256::from(token_id.0 as u64).to_bytes_le(),
+        BigInteger256::from(token_amount.0).to_bytes_le(),
+        BigInteger256::from(trapdoor.0).to_bytes_le(),
+        BigInteger256::from(nullifier.0).to_bytes_le(),
     ]
     .concat();
 
@@ -60,8 +60,8 @@ pub fn compute_note(
 
 pub fn compute_parent_hash(left: FrontendNote, right: FrontendNote) -> FrontendNote {
     let bytes = [
-        BigInteger256::new(left).to_bytes_le(),
-        BigInteger256::new(right).to_bytes_le(),
+        BigInteger256::new(left.0).to_bytes_le(),
+        BigInteger256::new(right.0).to_bytes_le(),
     ]
     .concat();
     note_from_bytes(tangle::<2>(bytes).as_slice())
@@ -69,12 +69,12 @@ pub fn compute_parent_hash(left: FrontendNote, right: FrontendNote) -> FrontendN
 
 /// Create a note from the first 32 bytes of `bytes`.
 pub fn note_from_bytes(bytes: &[u8]) -> FrontendNote {
-    [
+    FrontendNote([
         u64::from_le_bytes(bytes[0..8].try_into().unwrap()),
         u64::from_le_bytes(bytes[8..16].try_into().unwrap()),
         u64::from_le_bytes(bytes[16..24].try_into().unwrap()),
         u64::from_le_bytes(bytes[24..32].try_into().unwrap()),
-    ]
+    ])
 }
 
 fn convert(x: u64) -> [u8; 8] {
@@ -83,8 +83,8 @@ fn convert(x: u64) -> [u8; 8] {
 
 pub fn bytes_from_note(note: &FrontendNote) -> Vec<u8> {
     let mut res = vec![];
-    for elem in note {
-        let mut arr: Vec<u8> = convert(*elem).into();
+    for elem in note.0 {
+        let mut arr: Vec<u8> = convert(elem).into();
         res.append(&mut arr);
     }
     res
@@ -96,10 +96,10 @@ mod tests {
 
     #[test]
     fn note_conversion() {
-        let token_id: FrontendTokenId = 1;
-        let token_amount: FrontendTokenAmount = 10;
-        let trapdoor: FrontendTrapdoor = 17;
-        let nullifier: FrontendNullifier = 19;
+        let token_id = FrontendTokenId(1);
+        let token_amount = FrontendTokenAmount(10);
+        let trapdoor = FrontendTrapdoor(17);
+        let nullifier = FrontendNullifier(19);
         let note = compute_note(token_id, token_amount, trapdoor, nullifier);
 
         let bytes = bytes_from_note(&note);

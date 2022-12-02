@@ -4,17 +4,12 @@
 //! Currently, instead of using some real hash function, we chose to incorporate a simple tangling
 //! algorithm. Essentially, it is a procedure that just mangles a byte sequence.
 
-#[allow(dead_code)]
 mod deposit;
 #[allow(dead_code)]
 mod note;
-#[allow(dead_code)]
 mod parser;
-#[allow(dead_code)]
 mod tangle;
-#[allow(dead_code)]
 mod types;
-#[allow(dead_code)]
 mod withdraw;
 
 pub use deposit::{DepositRelation, DepositRelationArgs};
