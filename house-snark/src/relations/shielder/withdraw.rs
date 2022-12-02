@@ -191,14 +191,11 @@ impl ConstraintSynthesizer<CircuitField> for WithdrawRelation {
         self,
         cs: ConstraintSystemRef<CircuitField>,
     ) -> Result<(), SynthesisError> {
-        //----------------------------------------------------------------------
-        // Dummy constraint so that the `fee` and `recipient` are actually used.
-        //----------------------------------------------------------------------
-        let fee = FpVar::new_input(ns!(cs, "fee"), || Ok(&self.fee))?;
-        fee.enforce_equal(&fee.clone())?;
-
-        let recipient = FpVar::new_input(ns!(cs, "recipient"), || Ok(&self.recipient))?;
-        recipient.enforce_equal(&recipient.clone())?;
+        //-----------------------------------------------
+        // Baking `fee` and `recipient` into the circuit.
+        //-----------------------------------------------
+        let _fee = FpVar::new_input(ns!(cs, "fee"), || Ok(&self.fee))?;
+        let _recipient = FpVar::new_input(ns!(cs, "recipient"), || Ok(&self.recipient))?;
 
         //------------------------------
         // Check the old note arguments.
@@ -286,15 +283,15 @@ impl ConstraintSynthesizer<CircuitField> for WithdrawRelation {
 impl GetPublicInput<CircuitField> for WithdrawRelation {
     fn public_input(&self) -> Vec<CircuitField> {
         [
-            vec![self.fee],
-            vec![self.recipient],
-            vec![self.token_id],
-            vec![self.old_nullifier],
-            vec![self.new_note],
-            vec![self.token_amount_out],
-            vec![self.merkle_root],
+            self.fee,
+            self.recipient,
+            self.token_id,
+            self.old_nullifier,
+            self.new_note,
+            self.token_amount_out,
+            self.merkle_root,
         ]
-        .concat()
+        .to_vec()
     }
 }
 
@@ -389,5 +386,36 @@ mod tests {
         let proof = Groth16::prove(&pk, circuit, &mut rng).unwrap();
         let valid_proof = Groth16::verify(&vk, &input, &proof).unwrap();
         assert!(valid_proof);
+    }
+
+    #[test]
+    fn neither_fee_nor_recipient_are_simplified_out() {
+        let (circuit, true_input) = get_circuit_and_input();
+
+        let mut rng = ark_std::test_rng();
+        let (pk, vk) =
+            Groth16::<Bls12_381>::circuit_specific_setup(circuit.clone(), &mut rng).unwrap();
+        let proof = Groth16::prove(&pk, circuit, &mut rng).unwrap();
+
+        let mut input_with_corrupted_fee = true_input.clone();
+        input_with_corrupted_fee[0] = BackendTokenAmount::from(2);
+        assert_ne!(true_input[0], input_with_corrupted_fee[0]);
+
+        let valid_proof = Groth16::verify(&vk, &input_with_corrupted_fee, &proof).unwrap();
+        assert!(!valid_proof);
+
+        let mut input_with_corrupted_recipient = true_input.clone();
+        let fake_recipient = [41; 32];
+        // todo: implement casting between backend and frontend types
+        input_with_corrupted_recipient[1] = BackendAccount::new(BigInteger256::new([
+            u64::from_le_bytes(fake_recipient[0..8].try_into().expect("0-8")),
+            u64::from_le_bytes(fake_recipient[8..16].try_into().expect("8-16")),
+            u64::from_le_bytes(fake_recipient[16..24].try_into().expect("16-24")),
+            u64::from_le_bytes(fake_recipient[24..32].try_into().expect("24-32")),
+        ]));
+        assert_ne!(true_input[1], input_with_corrupted_recipient[1]);
+
+        let valid_proof = Groth16::verify(&vk, &input_with_corrupted_recipient, &proof).unwrap();
+        assert!(!valid_proof);
     }
 }
