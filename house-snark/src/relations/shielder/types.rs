@@ -56,9 +56,12 @@ pub(super) struct BackendLeafIndex(pub CircuitField);
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
 pub(super) struct BackendAccount(pub CircuitField);
 
-pub mod casting {
-    use std::str::FromStr;
-
+/// This module contains implementations for casting between frontend and backend types and some
+/// other useful translations.
+///
+/// Where it made sense and was possible, we used macros, so that to ensure that there is at most
+/// one implementation for particular primitive conversion (like `u64` -> `CircuitField`).
+mod casting {
     use ark_ff::BigInteger256;
 
     use super::*;
@@ -127,24 +130,4 @@ pub mod casting {
             ])))
         }
     }
-
-    macro_rules! parse_frontend_type {
-        ($frontend_type:tt, $inner_type:ty) => {
-            impl FromStr for $frontend_type {
-                type Err = String;
-                fn from_str(s: &str) -> Result<Self, Self::Err> {
-                    Ok(Self(
-                        <$inner_type>::from_str(s)
-                            .map_err(|e| format!("Failed to parse: {e:?}"))?,
-                    ))
-                }
-            }
-        };
-    }
-
-    parse_frontend_type!(FrontendNullifier, u64);
-    parse_frontend_type!(FrontendTrapdoor, u64);
-    parse_frontend_type!(FrontendTokenId, u16);
-    parse_frontend_type!(FrontendTokenAmount, u64);
-    parse_frontend_type!(FrontendLeafIndex, u64);
 }

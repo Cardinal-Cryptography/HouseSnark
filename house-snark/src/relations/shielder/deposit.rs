@@ -7,7 +7,7 @@ use clap::Args;
 
 use super::{
     note::check_note,
-    parser::parse_frontend_note,
+    parsing::parse_frontend_note,
     types::{
         BackendNote, BackendNullifier, BackendTokenAmount, BackendTokenId, BackendTrapdoor, FpVar,
         FrontendNote, FrontendNullifier, FrontendTokenAmount, FrontendTokenId, FrontendTrapdoor,

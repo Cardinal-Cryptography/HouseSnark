@@ -10,7 +10,7 @@ use clap::Args;
 
 use super::{
     note::check_note,
-    parser::{
+    parsing::{
         parse_frontend_account, parse_frontend_merkle_path_single, parse_frontend_merkle_root,
         parse_frontend_note,
     },

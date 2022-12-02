@@ -7,7 +7,7 @@
 mod deposit;
 #[allow(dead_code)]
 mod note;
-mod parser;
+mod parsing;
 mod tangle;
 mod types;
 mod withdraw;
