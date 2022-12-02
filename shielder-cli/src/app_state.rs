@@ -4,10 +4,11 @@ use std::{
 };
 
 use aleph_client::AccountId;
+use house_snark::relations::shielder::{Nullifier, TokenAmount, TokenId, Trapdoor};
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 
-use crate::{DepositId, Nullifier, TokenAmount, TokenId, Trapdoor};
+use crate::DepositId;
 
 #[derive(Clone, Eq, PartialEq, Debug, Deserialize, Serialize)]
 pub struct Deposit {

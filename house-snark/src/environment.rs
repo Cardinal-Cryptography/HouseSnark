@@ -214,12 +214,9 @@ mod trait_implementations {
     use ark_snark::SNARK;
     use ark_std::rand::{rngs::StdRng, SeedableRng};
 
-    use crate::{
-        environment::{
-            traits::{NonUniversalSystem, ProvingSystem, UniversalSystem},
-            Groth16, Marlin, MarlinPolynomialCommitment, GM17,
-        },
-        CircuitField,
+    use crate::environment::{
+        traits::{NonUniversalSystem, ProvingSystem, UniversalSystem},
+        CircuitField, Groth16, Marlin, MarlinPolynomialCommitment, GM17,
     };
 
     fn dummy_rng() -> StdRng {

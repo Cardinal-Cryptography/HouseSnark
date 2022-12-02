@@ -2,8 +2,9 @@ use std::path::PathBuf;
 
 use aleph_client::AccountId;
 use clap::{Args, Parser, Subcommand};
+use house_snark::relations::shielder::{TokenAmount, TokenId};
 
-use crate::{DepositId, TokenAmount, TokenId};
+use crate::DepositId;
 
 #[derive(Clone, Eq, PartialEq, Parser)]
 pub(super) struct CliConfig {

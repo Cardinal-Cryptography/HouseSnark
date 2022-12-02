@@ -3,11 +3,12 @@ use std::fs;
 use aleph_client::SignedConnection;
 use anyhow::Result;
 use house_snark::{
-    compute_note, DepositRelation, NonUniversalProvingSystem, RawKeys, SomeProvingSystem,
+    environment::{NonUniversalProvingSystem, RawKeys, SomeProvingSystem},
+    relations::shielder::{compute_note, DepositRelation, Nullifier, Trapdoor},
 };
 use rand::Rng;
 
-use crate::{app_state::AppState, config::DepositCmd, contract::Shielder, Nullifier, Trapdoor};
+use crate::{app_state::AppState, config::DepositCmd, contract::Shielder};
 
 pub(super) fn do_deposit(
     contract: Shielder,

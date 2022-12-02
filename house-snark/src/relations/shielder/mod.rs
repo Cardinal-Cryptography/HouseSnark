@@ -4,21 +4,16 @@
 //! Currently, instead of using some real hash function, we chose to incorporate a simple tangling
 //! algorithm. Essentially, it is a procedure that just mangles a byte sequence.
 
-#[allow(dead_code)]
 mod deposit;
-#[allow(dead_code)]
+#[allow(dead_code)] // Actually it is needed, even though we are reexporting items from there.
 mod note;
-#[allow(dead_code)]
 mod parser;
-#[allow(dead_code)]
 mod tangle;
-#[allow(dead_code)]
 mod types;
-#[allow(dead_code)]
 mod withdraw;
 
 pub use deposit::{DepositRelation, DepositRelationArgs};
-pub use note::{bytes_from_note, compute_note, note_from_bytes};
+pub use note::{bytes_from_note, compute_note, compute_parent_hash, note_from_bytes};
 pub use types::{
     FrontendMerklePath as MerklePath, FrontendMerkleRoot as MerkleRoot, FrontendNote as Note,
     FrontendNullifier as Nullifier, FrontendTokenAmount as TokenAmount, FrontendTokenId as TokenId,

@@ -3,7 +3,8 @@ use std::fs;
 use aleph_client::{account_from_keypair, keypair_from_string, SignedConnection};
 use anyhow::{anyhow, Result};
 use house_snark::{
-    compute_note, NonUniversalProvingSystem, RawKeys, SomeProvingSystem, WithdrawRelation,
+    environment::{NonUniversalProvingSystem, RawKeys, SomeProvingSystem},
+    relations::shielder::{compute_note, Nullifier, TokenAmount, Trapdoor, WithdrawRelation},
 };
 use inquire::{CustomType, Select};
 use rand::Rng;
@@ -12,7 +13,6 @@ use crate::{
     app_state::{AppState, Deposit},
     config::WithdrawCmd,
     contract::Shielder,
-    Nullifier, TokenAmount, Trapdoor,
 };
 
 pub(super) fn do_withdraw(

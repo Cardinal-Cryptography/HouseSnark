@@ -6,7 +6,6 @@ use crate::{
     config::{
         Cli, Command, GenerateKeysCmd, GenerateKeysFromSrsCmd, GenerateProofCmd, GenerateSrsCmd,
     },
-    environment::CircuitField,
     rains_of_castamere::kill_all_snarks,
     relations::GetPublicInput,
     serialization::{

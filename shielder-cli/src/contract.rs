@@ -15,9 +15,9 @@ use aleph_client::{
 };
 use anyhow::{anyhow, Result};
 use contract_transcode::Value;
-use house_snark::bytes_from_note;
-
-use crate::{MerklePath, MerkleRoot, Note, Nullifier, TokenAmount, TokenId};
+use house_snark::relations::shielder::{
+    bytes_from_note, MerklePath, MerkleRoot, Note, Nullifier, TokenAmount, TokenId,
+};
 
 #[derive(Debug)]
 pub struct Shielder {

@@ -1,27 +1,25 @@
 #[cfg(feature = "linear")]
-mod linear;
+pub mod linear;
 #[cfg(feature = "merkle_tree")]
-mod merkle_tree;
-#[cfg(any(feature = "deposit", feature = "withdraw"))]
+pub mod merkle_tree;
+#[cfg(feature = "shielder")]
 pub mod shielder;
 mod types;
 #[cfg(feature = "xor")]
-mod xor;
+pub mod xor;
 
-use ark_ff::{One, PrimeField, Zero};
+use ark_ff::PrimeField;
 use ark_relations::r1cs::{ConstraintSynthesizer, ConstraintSystemRef};
 use ark_serialize::CanonicalSerialize;
 use clap::Subcommand;
 #[cfg(feature = "linear")]
-pub use linear::LinearEqRelation;
+use linear::LinearEqRelation;
 #[cfg(feature = "merkle_tree")]
-pub use merkle_tree::{MerkleTreeRelation, MerkleTreeRelationArgs};
-#[cfg(feature = "deposit")]
-pub use shielder::{DepositRelation, DepositRelationArgs};
-#[cfg(feature = "withdraw")]
-pub use shielder::{WithdrawRelation, WithdrawRelationArgs};
+use merkle_tree::{MerkleTreeRelation, MerkleTreeRelationArgs};
+#[cfg(feature = "shielder")]
+use shielder::{DepositRelation, DepositRelationArgs, WithdrawRelation, WithdrawRelationArgs};
 #[cfg(feature = "xor")]
-pub use xor::XorRelation;
+use xor::XorRelation;
 
 use crate::relations::types::CircuitField;
 
@@ -36,9 +34,9 @@ pub enum Relation {
     LinearEquation(LinearEqRelation),
     #[cfg(feature = "merkle_tree")]
     MerkleTree(MerkleTreeRelationArgs),
-    #[cfg(feature = "deposit")]
+    #[cfg(feature = "shielder")]
     Deposit(DepositRelationArgs),
-    #[cfg(feature = "withdraw")]
+    #[cfg(feature = "shielder")]
     Withdraw(WithdrawRelationArgs),
 }
 
@@ -53,16 +51,15 @@ impl Relation {
             Relation::LinearEquation(_) => String::from("linear_equation"),
             #[cfg(feature = "merkle_tree")]
             Relation::MerkleTree(_) => String::from("merkle_tree"),
-            #[cfg(feature = "deposit")]
+            #[cfg(feature = "shielder")]
             Relation::Deposit(_) => String::from("deposit"),
-            #[cfg(feature = "withdraw")]
+            #[cfg(feature = "shielder")]
             Relation::Withdraw(_) => String::from("withdraw"),
             #[cfg(not(any(
                 feature = "xor",
-                feature = "deposit",
                 feature = "linear",
                 feature = "merkle_tree",
-                feature = "withdraw"
+                feature = "shielder"
             )))]
             _ => panic!("No relation available"),
         }
@@ -86,11 +83,11 @@ impl ConstraintSynthesizer<CircuitField> for Relation {
                 <MerkleTreeRelationArgs as Into<MerkleTreeRelation>>::into(args)
                     .generate_constraints(cs)
             }
-            #[cfg(feature = "deposit")]
+            #[cfg(feature = "shielder")]
             Relation::Deposit(args @ DepositRelationArgs { .. }) => {
                 <DepositRelationArgs as Into<DepositRelation>>::into(args).generate_constraints(cs)
             }
-            #[cfg(feature = "withdraw")]
+            #[cfg(feature = "shielder")]
             Relation::Withdraw(args @ WithdrawRelationArgs { .. }) => {
                 <WithdrawRelationArgs as Into<WithdrawRelation>>::into(args)
                     .generate_constraints(cs)
@@ -117,21 +114,29 @@ impl GetPublicInput<CircuitField> for Relation {
                 <MerkleTreeRelationArgs as Into<MerkleTreeRelation>>::into(args.to_owned())
                     .public_input()
             }
-            #[cfg(feature = "deposit")]
+            #[cfg(feature = "shielder")]
             Relation::Deposit(args @ DepositRelationArgs { .. }) => {
                 <DepositRelationArgs as Into<DepositRelation>>::into(*args).public_input()
             }
-            #[cfg(feature = "withdraw")]
+            #[cfg(feature = "shielder")]
             Relation::Withdraw(args @ WithdrawRelationArgs { .. }) => {
                 <WithdrawRelationArgs as Into<WithdrawRelation>>::into(args.to_owned())
                     .public_input()
             }
+            #[cfg(not(any(
+                feature = "xor",
+                feature = "linear",
+                feature = "merkle_tree",
+                feature = "shielder"
+            )))]
+            _ => panic!("No relation available"),
         }
     }
 }
 
 /// Convert `u8` into an 8-tuple of bits over `F` (little endian).
-fn byte_to_bits<F: Zero + One + Copy>(byte: u8) -> [F; 8] {
+#[cfg(any(feature = "xor", feature = "merkle_tree"))]
+fn byte_to_bits<F: ark_ff::Zero + ark_ff::One + Copy>(byte: u8) -> [F; 8] {
     let mut bits = [F::zero(); 8];
     for (idx, bit) in bits.iter_mut().enumerate() {
         if (byte >> idx) & 1 == 1 {

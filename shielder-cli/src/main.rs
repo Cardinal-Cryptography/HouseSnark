@@ -1,7 +1,6 @@
 use aleph_client::{keypair_from_string, SignedConnection};
 use anyhow::Result;
 use clap::Parser;
-use house_snark::{MerklePath, MerkleRoot, Note, Nullifier, TokenAmount, TokenId, Trapdoor};
 use inquire::Password;
 use zeroize::Zeroize;
 use ContractInteractionCommand::{Deposit, RegisterToken, Withdraw};
