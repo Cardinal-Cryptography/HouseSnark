@@ -32,6 +32,6 @@ ark-snark = { version = "^0.3.0", default-features = false }
 ark-std = { version = "^0.3.0", default-features = false }
 
 # TODO: needed for event decoding magic that should eventually be merged into aleph_client
-contract-transcode = { version = "0.1", default-features = false }
+contract-transcode = "0.1"
 
 house-snark = { path = "../house-snark", default-features = false, features = ["shielder"]}
