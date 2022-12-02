@@ -33,7 +33,7 @@ pub struct DepositRelationArgs {
     pub nullifier: FrontendNullifier,
 }
 
-/// 'Deposit' relation for the Blender application.
+/// 'Deposit' relation for the Shielder application.
 ///
 /// It expresses the fact that `note` is a prefix of the result of tangling together `token_id`,
 /// `token_amount`, `trapdoor` and `nullifier`.
@@ -113,7 +113,7 @@ mod tests {
     use ark_snark::SNARK;
 
     use super::*;
-    use crate::relations::blender::note::compute_note;
+    use crate::relations::shielder::note::compute_note;
 
     fn get_circuit_and_input() -> (DepositRelation, [CircuitField; 3]) {
         let token_id: FrontendTokenId = 1;

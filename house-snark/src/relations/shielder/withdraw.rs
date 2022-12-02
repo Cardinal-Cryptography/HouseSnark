@@ -62,7 +62,7 @@ pub struct WithdrawRelationArgs {
     pub new_token_amount: FrontendTokenAmount,
 }
 
-/// 'Withdraw' relation for the Blender application.
+/// 'Withdraw' relation for the Shielder application.
 ///
 /// It expresses the facts that:
 ///  - `new_note` is a prefix of the result of tangling together `token_id`, `whole_token_amount`,
@@ -306,7 +306,7 @@ mod tests {
     use ark_snark::SNARK;
 
     use super::*;
-    use crate::relations::blender::note::{compute_note, compute_parent_hash};
+    use crate::relations::shielder::note::{compute_note, compute_parent_hash};
 
     fn get_circuit_and_input() -> (WithdrawRelation, [CircuitField; 7]) {
         let token_id: FrontendTokenId = 1;

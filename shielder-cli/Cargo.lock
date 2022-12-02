@@ -109,7 +109,7 @@ dependencies = [
 [[package]]
 name = "aleph_client"
 version = "1.13.0"
-source = "git+https://github.com/Cardinal-Cryptography/aleph-node/?branch=blender-cli#6e2600978a5f9f1add04b0bf49f344363f6ad18f"
+source = "git+https://github.com/Cardinal-Cryptography/aleph-node/?branch=shielder-cli#6e2600978a5f9f1add04b0bf49f344363f6ad18f"
 dependencies = [
  "ac-node-api",
  "ac-primitives",
@@ -578,38 +578,6 @@ dependencies = [
  "arrayref",
  "arrayvec 0.7.2",
  "constant_time_eq",
-]
-
-[[package]]
-name = "blender-cli"
-version = "0.1.0"
-dependencies = [
- "aleph_client",
- "anyhow",
- "ark-bls12-381",
- "ark-crypto-primitives",
- "ark-ec",
- "ark-ff",
- "ark-groth16",
- "ark-r1cs-std",
- "ark-relations",
- "ark-serialize",
- "ark-snark",
- "ark-std",
- "chacha20poly1305",
- "clap",
- "contract-transcode",
- "hex",
- "house-snark",
- "inquire",
- "itertools",
- "parity-scale-codec",
- "rand 0.8.5",
- "rust-argon2",
- "serde",
- "serde_json",
- "shellexpand",
- "zeroize",
 ]
 
 [[package]]
@@ -2601,7 +2569,7 @@ checksum = "c1b04fb49957986fdce4d6ee7a65027d55d4b6d2265e5848bbb507b58ccfdb6f"
 [[package]]
 name = "pallet-aleph"
 version = "0.5.0"
-source = "git+https://github.com/Cardinal-Cryptography/aleph-node/?branch=blender-cli#6e2600978a5f9f1add04b0bf49f344363f6ad18f"
+source = "git+https://github.com/Cardinal-Cryptography/aleph-node/?branch=shielder-cli#6e2600978a5f9f1add04b0bf49f344363f6ad18f"
 dependencies = [
  "frame-support",
  "frame-system",
@@ -2649,7 +2617,7 @@ dependencies = [
 [[package]]
 name = "pallet-elections"
 version = "0.5.0"
-source = "git+https://github.com/Cardinal-Cryptography/aleph-node/?branch=blender-cli#6e2600978a5f9f1add04b0bf49f344363f6ad18f"
+source = "git+https://github.com/Cardinal-Cryptography/aleph-node/?branch=shielder-cli#6e2600978a5f9f1add04b0bf49f344363f6ad18f"
 dependencies = [
  "frame-election-provider-support",
  "frame-support",
@@ -2791,7 +2759,7 @@ dependencies = [
 [[package]]
 name = "pallets-support"
 version = "0.1.0"
-source = "git+https://github.com/Cardinal-Cryptography/aleph-node/?branch=blender-cli#6e2600978a5f9f1add04b0bf49f344363f6ad18f"
+source = "git+https://github.com/Cardinal-Cryptography/aleph-node/?branch=shielder-cli#6e2600978a5f9f1add04b0bf49f344363f6ad18f"
 dependencies = [
  "frame-support",
 ]
@@ -2969,7 +2937,7 @@ dependencies = [
 [[package]]
 name = "primitives"
 version = "0.5.0"
-source = "git+https://github.com/Cardinal-Cryptography/aleph-node/?branch=blender-cli#6e2600978a5f9f1add04b0bf49f344363f6ad18f"
+source = "git+https://github.com/Cardinal-Cryptography/aleph-node/?branch=shielder-cli#6e2600978a5f9f1add04b0bf49f344363f6ad18f"
 dependencies = [
  "parity-scale-codec",
  "scale-info",
@@ -3550,6 +3518,38 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7ccc8076840c4da029af4f87e4e8daeb0fca6b87bbb02e10cb60b791450e11e4"
 dependencies = [
  "dirs",
+]
+
+[[package]]
+name = "shielder-cli"
+version = "0.1.0"
+dependencies = [
+ "aleph_client",
+ "anyhow",
+ "ark-bls12-381",
+ "ark-crypto-primitives",
+ "ark-ec",
+ "ark-ff",
+ "ark-groth16",
+ "ark-r1cs-std",
+ "ark-relations",
+ "ark-serialize",
+ "ark-snark",
+ "ark-std",
+ "chacha20poly1305",
+ "clap",
+ "contract-transcode",
+ "hex",
+ "house-snark",
+ "inquire",
+ "itertools",
+ "parity-scale-codec",
+ "rand 0.8.5",
+ "rust-argon2",
+ "serde",
+ "serde_json",
+ "shellexpand",
+ "zeroize",
 ]
 
 [[package]]

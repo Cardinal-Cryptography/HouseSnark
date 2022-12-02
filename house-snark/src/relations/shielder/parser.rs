@@ -1,7 +1,7 @@
 use anyhow::Result;
 
 use super::types::{FrontendAccount, FrontendMerklePathNode, FrontendMerkleRoot, FrontendNote};
-use crate::relations::blender::note::note_from_bytes;
+use crate::relations::shielder::note::note_from_bytes;
 
 pub fn parse_frontend_note(frontend_note: &str) -> Result<FrontendNote> {
     Ok(note_from_bytes(frontend_note.as_bytes()))

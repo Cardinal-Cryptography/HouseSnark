@@ -11,12 +11,12 @@ use rand::Rng;
 use crate::{
     app_state::{AppState, Deposit},
     config::WithdrawCmd,
-    contract::Blender,
+    contract::Shielder,
     Nullifier, TokenAmount, Trapdoor,
 };
 
 pub(super) fn do_withdraw(
-    contract: Blender,
+    contract: Shielder,
     mut connection: SignedConnection,
     cmd: WithdrawCmd,
     app_state: &mut AppState,

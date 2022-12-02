@@ -7,10 +7,10 @@ use house_snark::{
 };
 use rand::Rng;
 
-use crate::{app_state::AppState, config::DepositCmd, contract::Blender, Nullifier, Trapdoor};
+use crate::{app_state::AppState, config::DepositCmd, contract::Shielder, Nullifier, Trapdoor};
 
 pub(super) fn do_deposit(
-    contract: Blender,
+    contract: Shielder,
     connection: SignedConnection,
     cmd: DepositCmd,
     app_state: &mut AppState,
