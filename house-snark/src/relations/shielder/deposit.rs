@@ -4,11 +4,9 @@ use ark_relations::{
     ns,
     r1cs::{ConstraintSynthesizer, ConstraintSystemRef, SynthesisError},
 };
-use clap::Args;
 
 use super::{
     note::check_note,
-    parser::parse_frontend_note,
     types::{
         BackendNote, BackendNullifier, BackendTokenAmount, BackendTokenId, BackendTrapdoor, FpVar,
         FrontendNote, FrontendNullifier, FrontendTokenAmount, FrontendTokenId, FrontendTrapdoor,
@@ -16,20 +14,21 @@ use super::{
 };
 use crate::relations::{types::CircuitField, GetPublicInput};
 
-#[derive(Copy, Clone, Eq, PartialEq, Hash, Debug, Args)]
+#[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
+#[cfg_attr(feature = "cli", derive(clap::Args))]
 pub struct DepositRelationArgs {
     // Public inputs.
-    #[clap(long, value_parser = parse_frontend_note)]
+    #[cfg_attr(feature = "cli", clap(long, value_parser = super::parser::parse_frontend_note))]
     pub note: FrontendNote,
-    #[clap(long)]
+    #[cfg_attr(feature = "cli", clap(long))]
     pub token_id: FrontendTokenId,
-    #[clap(long)]
+    #[cfg_attr(feature = "cli", clap(long))]
     pub token_amount: FrontendTokenAmount,
 
     // Private inputs.
-    #[clap(long)]
+    #[cfg_attr(feature = "cli", clap(long))]
     pub trapdoor: FrontendTrapdoor,
-    #[clap(long)]
+    #[cfg_attr(feature = "cli", clap(long))]
     pub nullifier: FrontendNullifier,
 }
 

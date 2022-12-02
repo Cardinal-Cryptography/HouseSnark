@@ -6,14 +6,14 @@ use ark_relations::{
     ns,
     r1cs::{ConstraintSynthesizer, ConstraintSystemRef, SynthesisError},
 };
-use clap::Args;
 
+#[cfg(feature = "cli")]
+use super::parser::{
+    parse_frontend_account, parse_frontend_merkle_path_single, parse_frontend_merkle_root,
+    parse_frontend_note,
+};
 use super::{
     note::check_note,
-    parser::{
-        parse_frontend_account, parse_frontend_merkle_path_single, parse_frontend_merkle_root,
-        parse_frontend_note,
-    },
     tangle::tangle_in_field,
     types::{
         BackendAccount, BackendLeafIndex, BackendMerklePath, BackendMerkleRoot, BackendNote,
@@ -25,40 +25,41 @@ use super::{
 };
 use crate::relations::GetPublicInput;
 
-#[derive(Clone, Eq, PartialEq, Hash, Debug, Args)]
+#[derive(Clone, Eq, PartialEq, Hash, Debug)]
+#[cfg_attr(feature = "cli", derive(clap::Args))]
 pub struct WithdrawRelationArgs {
     // Public inputs.
-    #[clap(long)]
+    #[cfg_attr(feature = "cli", clap(long))]
     pub old_nullifier: FrontendNullifier,
-    #[clap(long, value_parser = parse_frontend_merkle_root)]
+    #[cfg_attr(feature = "cli", clap(long, value_parser = parse_frontend_merkle_root))]
     pub merkle_root: FrontendMerkleRoot,
-    #[clap(long, value_parser = parse_frontend_note)]
+    #[cfg_attr(feature = "cli", clap(long, value_parser = parse_frontend_note))]
     pub new_note: FrontendNote,
-    #[clap(long)]
+    #[cfg_attr(feature = "cli", clap(long))]
     pub token_id: FrontendTokenId,
-    #[clap(long)]
+    #[cfg_attr(feature = "cli", clap(long))]
     pub token_amount_out: FrontendTokenAmount,
-    #[clap(long)]
+    #[cfg_attr(feature = "cli", clap(long))]
     pub fee: FrontendTokenAmount,
-    #[clap(long, value_parser = parse_frontend_account)]
+    #[cfg_attr(feature = "cli", clap(long, value_parser = parse_frontend_account))]
     pub recipient: FrontendAccount,
 
     // Private inputs.
-    #[clap(long)]
+    #[cfg_attr(feature = "cli", clap(long))]
     pub old_trapdoor: FrontendTrapdoor,
-    #[clap(long)]
+    #[cfg_attr(feature = "cli", clap(long))]
     pub new_trapdoor: FrontendTrapdoor,
-    #[clap(long)]
+    #[cfg_attr(feature = "cli", clap(long))]
     pub new_nullifier: FrontendNullifier,
-    #[clap(long, value_delimiter = ',', value_parser = parse_frontend_merkle_path_single)]
+    #[cfg_attr(feature = "cli", clap(long, value_delimiter = ',', value_parser = parse_frontend_merkle_path_single))]
     pub merkle_path: FrontendMerklePath,
-    #[clap(long)]
+    #[cfg_attr(feature = "cli", clap(long))]
     pub leaf_index: FrontendLeafIndex,
-    #[clap(long, value_parser = parse_frontend_note)]
+    #[cfg_attr(feature = "cli", clap(long, value_parser = parse_frontend_note))]
     pub old_note: FrontendNote,
-    #[clap(long)]
+    #[cfg_attr(feature = "cli", clap(long))]
     pub whole_token_amount: FrontendTokenAmount,
-    #[clap(long)]
+    #[cfg_attr(feature = "cli", clap(long))]
     pub new_token_amount: FrontendTokenAmount,
 }
 

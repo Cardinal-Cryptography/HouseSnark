@@ -1,23 +1,22 @@
 extern crate core;
 
 use clap::Parser;
-
-use crate::{
-    config::{
-        Cli, Command, GenerateKeysCmd, GenerateKeysFromSrsCmd, GenerateProofCmd, GenerateSrsCmd,
-    },
-    rains_of_castamere::kill_all_snarks,
+use house_snark::{
     relations::GetPublicInput,
     serialization::{
         read_proving_key, read_srs, save_keys, save_proving_artifacts, save_srs, serialize,
     },
 };
 
+use crate::{
+    config::{
+        Cli, Command, GenerateKeysCmd, GenerateKeysFromSrsCmd, GenerateProofCmd, GenerateSrsCmd,
+    },
+    rains_of_castamere::kill_all_snarks,
+};
+
 mod config;
-mod environment;
 mod rains_of_castamere;
-mod relations;
-mod serialization;
 
 fn setup_eyre() {
     if std::env::var("RUST_LIB_BACKTRACE").is_err() {

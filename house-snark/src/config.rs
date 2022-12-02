@@ -2,8 +2,7 @@ use std::path::PathBuf;
 
 use anyhow::{Error, Result};
 use clap::{Args, Parser, Subcommand, ValueEnum};
-
-use crate::{
+use house_snark::{
     environment::{NonUniversalProvingSystem, SomeProvingSystem, UniversalProvingSystem},
     relations::Relation,
 };

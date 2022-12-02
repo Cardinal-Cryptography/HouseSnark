@@ -7,6 +7,7 @@
 mod deposit;
 #[allow(dead_code)] // Actually it is needed, even though we are reexporting items from there.
 mod note;
+#[cfg(feature = "cli")]
 mod parser;
 mod tangle;
 mod types;

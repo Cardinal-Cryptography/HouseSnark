@@ -11,7 +11,6 @@ pub mod xor;
 use ark_ff::PrimeField;
 use ark_relations::r1cs::{ConstraintSynthesizer, ConstraintSystemRef};
 use ark_serialize::CanonicalSerialize;
-use clap::Subcommand;
 #[cfg(feature = "linear")]
 use linear::LinearEqRelation;
 #[cfg(feature = "merkle_tree")]
@@ -26,7 +25,8 @@ use crate::relations::types::CircuitField;
 /// All implemented relations.
 ///
 /// They should have corresponding definition in submodule.
-#[derive(Clone, Eq, PartialEq, Hash, Debug, Subcommand)]
+#[derive(Clone, Eq, PartialEq, Hash, Debug)]
+#[cfg_attr(feature = "cli", derive(clap::Subcommand))]
 pub enum Relation {
     #[cfg(feature = "xor")]
     Xor(XorRelation),

@@ -5,7 +5,6 @@ use ark_poly_commit::marlin_pc::MarlinKZG10;
 use ark_relations::r1cs::ConstraintSynthesizer;
 use ark_serialize::CanonicalDeserialize;
 use blake2::Blake2s;
-use clap::ValueEnum;
 use traits::{NonUniversalSystem, ProvingSystem};
 
 use crate::{environment::traits::UniversalSystem, serialization::serialize};
@@ -23,14 +22,16 @@ type MarlinPolynomialCommitment = MarlinKZG10<PairingEngine, DensePolynomial<Cir
 type Marlin = ark_marlin::Marlin<CircuitField, MarlinPolynomialCommitment, Blake2s>;
 
 /// All available non universal proving systems.
-#[derive(Copy, Clone, Eq, PartialEq, Hash, Debug, ValueEnum)]
+#[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
+#[cfg_attr(feature = "cli", derive(clap::ValueEnum))]
 pub enum NonUniversalProvingSystem {
     Groth16,
     Gm17,
 }
 
 /// All available universal proving systems.
-#[derive(Copy, Clone, Eq, PartialEq, Hash, Debug, ValueEnum)]
+#[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
+#[cfg_attr(feature = "cli", derive(clap::ValueEnum))]
 pub enum UniversalProvingSystem {
     Marlin,
 }
