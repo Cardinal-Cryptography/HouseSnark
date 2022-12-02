@@ -328,9 +328,9 @@ mod tests {
         let leaf_index = 5;
 
         let sibling_note = compute_note(0, 1, 2, 3);
-        let parent_note = compute_parent_hash(sibling_note, old_note);
+        let parent_note = compute_parent_hash(&sibling_note, &old_note);
         let uncle_note = compute_note(4, 5, 6, 7);
-        let merkle_root = compute_parent_hash(parent_note, uncle_note);
+        let merkle_root = compute_parent_hash(&parent_note, &uncle_note);
 
         let merkle_path = vec![sibling_note, uncle_note];
 

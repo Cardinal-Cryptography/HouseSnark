@@ -58,10 +58,10 @@ pub fn compute_note(
     note_from_bytes(tangle::<4>(bytes).as_slice())
 }
 
-pub fn compute_parent_hash(left: FrontendNote, right: FrontendNote) -> FrontendNote {
+pub fn compute_parent_hash(left: &FrontendNote, right: &FrontendNote) -> FrontendNote {
     let bytes = [
-        BigInteger256::new(left).to_bytes_le(),
-        BigInteger256::new(right).to_bytes_le(),
+        BigInteger256::new(*left).to_bytes_le(),
+        BigInteger256::new(*right).to_bytes_le(),
     ]
     .concat();
     note_from_bytes(tangle::<2>(bytes).as_slice())
