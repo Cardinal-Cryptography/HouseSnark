@@ -8,7 +8,7 @@ use crate::{DepositId, TokenAmount, TokenId};
 #[derive(Clone, Eq, PartialEq, Parser)]
 pub(super) struct CliConfig {
     /// Path to the file containing application state.
-    #[clap(long, default_value = "~/.blender-state", value_parser = parsing::parse_path)]
+    #[clap(long, default_value = "~/.shielder-state", value_parser = parsing::parse_path)]
     pub state_file: PathBuf,
 
     /// Account seed, which is used both for submitting transactions and decrypting `state_file`.
@@ -74,7 +74,7 @@ pub(super) struct SetNodeCmd {
 
 #[derive(Clone, Eq, PartialEq, Debug, Args)]
 pub(super) struct SetContractAddressCmd {
-    /// Address of the Blender contract.
+    /// Address of the Shielder contract.
     pub address: AccountId,
 }
 
@@ -93,7 +93,7 @@ pub(super) struct DepositCmd {
     pub amount: TokenAmount,
 
     /// Contract metadata file.
-    #[clap(default_value = "blender-metadata.json", value_parser = parsing::parse_path)]
+    #[clap(default_value = "shielder-metadata.json", value_parser = parsing::parse_path)]
     pub metadata_file: PathBuf,
 
     /// raw pk bytes file.
@@ -128,7 +128,7 @@ pub(super) struct WithdrawCmd {
     pub fee: Option<TokenAmount>,
 
     /// Contract metadata file.
-    #[clap(long, default_value = "blender-metadata.json", value_parser = parsing::parse_path)]
+    #[clap(long, default_value = "shielder-metadata.json", value_parser = parsing::parse_path)]
     pub metadata_file: PathBuf,
 
     /// raw pk bytes file.
@@ -147,7 +147,7 @@ pub(super) struct RegisterTokenCmd {
     pub token_address: AccountId,
 
     /// Contract metadata file.
-    #[clap(long, default_value = "blender-metadata.json", value_parser = parsing::parse_path)]
+    #[clap(long, default_value = "shielder-metadata.json", value_parser = parsing::parse_path)]
     pub metadata_file: PathBuf,
 }
 

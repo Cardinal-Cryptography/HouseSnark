@@ -20,11 +20,11 @@ use house_snark::bytes_from_note;
 use crate::{MerklePath, MerkleRoot, Note, Nullifier, TokenAmount, TokenId};
 
 #[derive(Debug)]
-pub struct Blender {
+pub struct Shielder {
     contract: Arc<ContractInstance>,
 }
 
-impl Blender {
+impl Shielder {
     pub fn new(address: &AccountId, metadata_path: &Path) -> Result<Self> {
         Ok(Self {
             contract: Arc::new(ContractInstance::new(

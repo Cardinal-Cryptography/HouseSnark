@@ -1,4 +1,4 @@
-//! This module contains two relations that are the core of the Blender application: `deposit` and
+//! This module contains two relations that are the core of the Shielder application: `deposit` and
 //! `withdraw`. It also exposes some functions and types that might be useful for input generation.
 //!
 //! Currently, instead of using some real hash function, we chose to incorporate a simple tangling

@@ -1,11 +1,11 @@
 {
   "source": {
-    "hash": "0x519a049d23c6b344b7cca40c1d44b4f182ba41a2a6b6bc300a02db23431ad049",
+    "hash": "0x5be5b4f0b6abe6d6b88dcb98c9f9c58d505e4678ba499c1ff1c2ea50471722a9",
     "language": "ink! 3.4.0",
-    "compiler": "rustc 1.67.0-nightly"
+    "compiler": "rustc 1.65.0-nightly"
   },
   "contract": {
-    "name": "blender",
+    "name": "shielder",
     "version": "0.1.0",
     "authors": [
       "Cardinal Cryptography"
@@ -952,9 +952,9 @@
             }
           },
           "path": [
-            "blender",
+            "shielder",
             "error",
-            "BlenderError"
+            "ShielderError"
           ]
         }
       },
@@ -1199,9 +1199,9 @@
             }
           },
           "path": [
-            "blender",
+            "shielder",
             "contract",
-            "blender",
+            "shielder",
             "Relation"
           ]
         }
