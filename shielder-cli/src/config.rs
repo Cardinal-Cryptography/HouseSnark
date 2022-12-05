@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 
 use aleph_client::AccountId;
-use clap::{Args, Parser, Subcommand};
+use clap::{Args, Parser, Subcommand, ValueEnum};
 
 use crate::{DepositId, TokenAmount, TokenId};
 
@@ -10,6 +10,10 @@ pub(super) struct CliConfig {
     /// Path to the file containing application state.
     #[clap(long, default_value = "~/.shielder-state", value_parser = parsing::parse_path)]
     pub state_file: PathBuf,
+
+    /// Logging configuration.
+    #[clap(short = 'l', value_enum, default_value = "text")]
+    pub logging_format: LoggingFormat,
 
     /// Account seed, which is used both for submitting transactions and decrypting `state_file`.
     ///
@@ -48,6 +52,12 @@ pub(super) enum ContractInteractionCommand {
     Deposit(DepositCmd),
     Withdraw(WithdrawCmd),
     RegisterToken(RegisterTokenCmd),
+}
+
+#[derive(Clone, Eq, PartialEq, Debug, ValueEnum)]
+pub(super) enum LoggingFormat {
+    Text,
+    Json,
 }
 
 impl ContractInteractionCommand {
