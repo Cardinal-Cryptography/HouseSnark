@@ -21,7 +21,7 @@ use crate::{
         ContractInteractionCommand, SetContractAddressCmd, SetNodeCmd, ShowAssetsCmd,
         StateReadCommand, StateWriteCommand,
     },
-    contract::Blender,
+    contract::Shielder,
     deposit::do_deposit,
     state_file::{get_app_state, save_app_state},
     withdraw::do_withdraw,
@@ -75,7 +75,7 @@ fn perform_contract_action(
     let connection = SignedConnection::new(&app_state.node_address, signer);
 
     let metadata_file = command.get_metadata_file();
-    let contract = Blender::new(&app_state.contract_address, &metadata_file)?;
+    let contract = Shielder::new(&app_state.contract_address, &metadata_file)?;
 
     match command {
         Deposit(cmd) => do_deposit(contract, connection, cmd, app_state)?,

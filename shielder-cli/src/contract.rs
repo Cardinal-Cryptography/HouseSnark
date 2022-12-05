@@ -21,11 +21,11 @@ use tracing::{debug, error, info};
 use crate::{MerklePath, MerkleRoot, Note, Nullifier, TokenAmount, TokenId};
 
 #[derive(Debug)]
-pub struct Blender {
+pub struct Shielder {
     contract: Arc<ContractInstance>,
 }
 
-impl Blender {
+impl Shielder {
     pub fn new(address: &AccountId, metadata_path: &Path) -> Result<Self> {
         Ok(Self {
             contract: Arc::new(ContractInstance::new(
@@ -113,7 +113,7 @@ impl Blender {
         recipient: AccountId,
         fee_for_caller: Option<TokenAmount>,
         merkle_root: MerkleRoot,
-        nullifier: Nullifier,
+        old_nullifier: Nullifier,
         new_note: Note,
         proof: &[u8],
     ) -> Result<u32> {
@@ -156,7 +156,7 @@ impl Blender {
             &*recipient.to_string(),
             &*format!("{:?}", fee_for_caller),
             &*format!("0x{}", hex::encode(merkle_root_bytes)),
-            &*nullifier.to_string(),
+            &*old_nullifier.to_string(),
             &*format!("0x{}", hex::encode(new_note_bytes)),
             &*format!("0x{}", hex::encode(proof)),
         ];

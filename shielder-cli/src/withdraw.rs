@@ -12,12 +12,12 @@ use tracing::debug;
 use crate::{
     app_state::{AppState, Deposit},
     config::WithdrawCmd,
-    contract::Blender,
+    contract::Shielder,
     Nullifier, TokenAmount, Trapdoor,
 };
 
 pub(super) fn do_withdraw(
-    contract: Blender,
+    contract: Shielder,
     mut connection: SignedConnection,
     cmd: WithdrawCmd,
     app_state: &mut AppState,
@@ -50,8 +50,8 @@ pub(super) fn do_withdraw(
         None => account_from_keypair(&keypair_from_string(&app_state.caller_seed)),
         Some(recipient) => recipient,
     };
-
-    let recipient_bytes = [0u8; 32]; // its not checked anyway
+    let recipient_bytes: [u8; 32] = recipient.clone().into();
+    println!("recipient_bytes: {:?}", recipient_bytes);
 
     let merkle_root = contract.get_merkle_root(&connection);
     let merkle_path = contract

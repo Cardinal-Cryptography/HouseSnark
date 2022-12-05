@@ -1,9 +1,9 @@
-#[cfg(any(feature = "deposit", feature = "withdraw"))]
-pub mod blender;
 #[cfg(feature = "linear")]
 mod linear;
 #[cfg(feature = "merkle_tree")]
 mod merkle_tree;
+#[cfg(any(feature = "deposit", feature = "withdraw"))]
+pub mod shielder;
 mod types;
 #[cfg(feature = "xor")]
 mod xor;
@@ -11,15 +11,15 @@ mod xor;
 use ark_ff::{One, PrimeField, Zero};
 use ark_relations::r1cs::{ConstraintSynthesizer, ConstraintSystemRef};
 use ark_serialize::CanonicalSerialize;
-#[cfg(feature = "deposit")]
-pub use blender::{DepositRelation, DepositRelationArgs};
-#[cfg(feature = "withdraw")]
-pub use blender::{WithdrawRelation, WithdrawRelationArgs};
 use clap::Subcommand;
 #[cfg(feature = "linear")]
 pub use linear::LinearEqRelation;
 #[cfg(feature = "merkle_tree")]
 pub use merkle_tree::{MerkleTreeRelation, MerkleTreeRelationArgs};
+#[cfg(feature = "deposit")]
+pub use shielder::{DepositRelation, DepositRelationArgs};
+#[cfg(feature = "withdraw")]
+pub use shielder::{WithdrawRelation, WithdrawRelationArgs};
 #[cfg(feature = "xor")]
 pub use xor::XorRelation;
 
