@@ -6,6 +6,7 @@ use std::{
 
 use anyhow::{anyhow, Result};
 use chacha20poly1305::{aead::Aead, KeyInit, XChaCha20Poly1305};
+use tracing::info;
 
 use crate::app_state::AppState;
 
@@ -16,11 +17,11 @@ use crate::app_state::AppState;
 pub fn get_app_state(path: &PathBuf, password: &str) -> Result<AppState> {
     match path.exists() {
         true => {
-            println!("File with state was found. Reading the state from {path:?}.");
+            info!("File with state was found. Reading the state from {path:?}.");
             read_from(path, password)
         }
         false => {
-            println!("File with state not found. Creating the default state in {path:?}.");
+            info!("File with state not found. Creating the default state in {path:?}.");
             create_and_save_default_state(path, password)
         }
     }
