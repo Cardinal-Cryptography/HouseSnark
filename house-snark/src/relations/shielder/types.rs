@@ -149,7 +149,7 @@ mod casting {
     }
 
     macro_rules! to_bytes_through_backend {
-        ($frontend_type:ty, $backend_type:ty) => {
+        ($frontend_type:ty) => {
             impl $frontend_type {
                 pub fn to_bytes_through_backend(self) -> Vec<u8> {
                     BigInteger256::from(self.0 as u64).to_bytes_le()
@@ -158,10 +158,10 @@ mod casting {
         };
     }
 
-    to_bytes_through_backend!(FrontendTokenId, BackendTokenId);
-    to_bytes_through_backend!(FrontendTokenAmount, BackendTokenAmount);
-    to_bytes_through_backend!(FrontendTrapdoor, BackendTrapdoor);
-    to_bytes_through_backend!(FrontendNullifier, BackendNullifier);
+    to_bytes_through_backend!(FrontendTokenId);
+    to_bytes_through_backend!(FrontendTokenAmount);
+    to_bytes_through_backend!(FrontendTrapdoor);
+    to_bytes_through_backend!(FrontendNullifier);
 
     // -----------------
     // Auxiliary methods
