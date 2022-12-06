@@ -1,24 +1,22 @@
 extern crate core;
 
+use ::relations::{serialize, GetPublicInput};
 use clap::Parser;
 
 use crate::{
     config::{
         Cli, Command, GenerateKeysCmd, GenerateKeysFromSrsCmd, GenerateProofCmd, GenerateSrsCmd,
     },
-    environment::CircuitField,
+    io::{read_proving_key, read_srs, save_keys, save_proving_artifacts, save_srs},
     rains_of_castamere::kill_all_snarks,
-    relations::GetPublicInput,
-    serialization::{
-        read_proving_key, read_srs, save_keys, save_proving_artifacts, save_srs, serialize,
-    },
 };
 
 mod config;
-mod environment;
+mod io;
+mod parser;
+mod proving_systems;
 mod rains_of_castamere;
 mod relations;
-mod serialization;
 
 fn setup_eyre() {
     if std::env::var("RUST_LIB_BACKTRACE").is_err() {
@@ -42,6 +40,7 @@ fn main() {
             let srs = system.generate_srs(num_constraints, num_variables, degree);
             save_srs(&srs, &system.id());
         }
+
         Command::GenerateKeysFromSrs(GenerateKeysFromSrsCmd {
             relation,
             system,
@@ -51,10 +50,12 @@ fn main() {
             let keys = system.generate_keys(relation.clone(), srs);
             save_keys(&relation.id(), &system.id(), &keys.pk, &keys.vk);
         }
+
         Command::GenerateKeys(GenerateKeysCmd { relation, system }) => {
             let keys = system.generate_keys(relation.clone());
             save_keys(&relation.id(), &system.id(), &keys.pk, &keys.vk);
         }
+
         Command::GenerateProof(GenerateProofCmd {
             relation,
             system,
@@ -65,6 +66,7 @@ fn main() {
             let public_input = serialize(&relation.public_input());
             save_proving_artifacts(&relation.id(), &system.id(), &proof, &public_input);
         }
+
         Command::RedWedding => match kill_all_snarks() {
             Ok(_) => println!("Cleaning succeeded"),
             Err(e) => eprintln!("Cleaning failed: {:?}", e),
