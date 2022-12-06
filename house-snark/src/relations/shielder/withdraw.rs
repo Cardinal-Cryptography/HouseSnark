@@ -1,6 +1,6 @@
 use std::ops::{Add, Div};
 
-use ark_ff::{BigInteger, BigInteger256};
+use ark_ff::BigInteger;
 use ark_r1cs_std::{alloc::AllocVar, eq::EqGadget, fields::FieldVar, R1CSVar, ToBytesGadget};
 use ark_relations::{
     ns,
@@ -10,7 +10,7 @@ use clap::Args;
 
 use super::{
     note::check_note,
-    parser::{
+    parsing::{
         parse_frontend_account, parse_frontend_merkle_path_single, parse_frontend_merkle_root,
         parse_frontend_note,
     },
@@ -81,23 +81,23 @@ pub struct WithdrawRelationArgs {
 #[derive(Clone)]
 pub struct WithdrawRelation {
     // Public inputs.
-    pub fee: BackendTokenAmount,
-    pub recipient: BackendAccount,
-    pub token_id: BackendTokenId,
-    pub old_nullifier: BackendNullifier,
-    pub new_note: BackendNote,
-    pub token_amount_out: BackendTokenAmount,
-    pub merkle_root: BackendMerkleRoot,
+    fee: BackendTokenAmount,
+    recipient: BackendAccount,
+    token_id: BackendTokenId,
+    old_nullifier: BackendNullifier,
+    new_note: BackendNote,
+    token_amount_out: BackendTokenAmount,
+    merkle_root: BackendMerkleRoot,
 
     // Private inputs.
-    pub old_trapdoor: BackendTrapdoor,
-    pub new_trapdoor: BackendTrapdoor,
-    pub new_nullifier: BackendNullifier,
-    pub merkle_path: BackendMerklePath,
-    pub leaf_index: BackendLeafIndex,
-    pub old_note: BackendNote,
-    pub whole_token_amount: BackendTokenAmount,
-    pub new_token_amount: BackendTokenAmount,
+    old_trapdoor: BackendTrapdoor,
+    new_trapdoor: BackendTrapdoor,
+    new_nullifier: BackendNullifier,
+    merkle_path: BackendMerklePath,
+    leaf_index: BackendLeafIndex,
+    old_note: BackendNote,
+    whole_token_amount: BackendTokenAmount,
+    new_token_amount: BackendTokenAmount,
 }
 
 impl WithdrawRelation {
@@ -120,29 +120,21 @@ impl WithdrawRelation {
         recipient: FrontendAccount,
     ) -> Self {
         Self {
-            old_nullifier: BackendNullifier::from(old_nullifier),
-            merkle_root: BackendMerkleRoot::from(BigInteger256::new(merkle_root)),
-            new_note: BackendNote::from(BigInteger256::new(new_note)),
-            token_id: BackendTokenId::from(token_id),
-            token_amount_out: BackendTokenAmount::from(token_amount_out),
-            old_trapdoor: BackendTrapdoor::from(old_trapdoor),
-            new_trapdoor: BackendTrapdoor::from(new_trapdoor),
-            new_nullifier: BackendNullifier::from(new_nullifier),
-            merkle_path: merkle_path
-                .iter()
-                .map(|node| BackendNote::from(BigInteger256::new(*node)))
-                .collect(),
-            leaf_index: BackendLeafIndex::from(leaf_index),
-            old_note: BackendNote::from(BigInteger256::new(old_note)),
-            whole_token_amount: BackendTokenAmount::from(whole_token_amount),
-            new_token_amount: BackendTokenAmount::from(new_token_amount),
-            fee: BackendTokenAmount::from(fee),
-            recipient: BackendAccount::new(BigInteger256::new([
-                u64::from_le_bytes(recipient[0..8].try_into().expect("0-8")),
-                u64::from_le_bytes(recipient[8..16].try_into().expect("8-16")),
-                u64::from_le_bytes(recipient[16..24].try_into().expect("16-24")),
-                u64::from_le_bytes(recipient[24..32].try_into().expect("24-32")),
-            ])),
+            old_nullifier: old_nullifier.into(),
+            merkle_root: merkle_root.into(),
+            new_note: new_note.into(),
+            token_id: token_id.into(),
+            token_amount_out: token_amount_out.into(),
+            old_trapdoor: old_trapdoor.into(),
+            new_trapdoor: new_trapdoor.into(),
+            new_nullifier: new_nullifier.into(),
+            merkle_path: merkle_path.into(),
+            leaf_index: leaf_index.into(),
+            old_note: old_note.into(),
+            whole_token_amount: whole_token_amount.into(),
+            new_token_amount: new_token_amount.into(),
+            fee: fee.into(),
+            recipient: recipient.into(),
         }
     }
 }
@@ -194,19 +186,21 @@ impl ConstraintSynthesizer<CircuitField> for WithdrawRelation {
         //-----------------------------------------------
         // Baking `fee` and `recipient` into the circuit.
         //-----------------------------------------------
-        let _fee = FpVar::new_input(ns!(cs, "fee"), || Ok(&self.fee))?;
-        let _recipient = FpVar::new_input(ns!(cs, "recipient"), || Ok(&self.recipient))?;
+        let _fee = FpVar::new_input(ns!(cs, "fee"), || Ok(&self.fee.0))?;
+        let _recipient = FpVar::new_input(ns!(cs, "recipient"), || Ok(&self.recipient.0))?;
 
         //------------------------------
         // Check the old note arguments.
         //------------------------------
-        let old_note = FpVar::new_witness(ns!(cs, "old note"), || Ok(&self.old_note))?;
-        let token_id = FpVar::new_input(ns!(cs, "token id"), || Ok(&self.token_id))?;
+        let old_note = FpVar::new_witness(ns!(cs, "old note"), || Ok(&self.old_note.0))?;
+        let token_id = FpVar::new_input(ns!(cs, "token id"), || Ok(&self.token_id.0))?;
         let whole_token_amount = FpVar::new_witness(ns!(cs, "whole token amount"), || {
-            Ok(&self.whole_token_amount)
+            Ok(&self.whole_token_amount.0)
         })?;
-        let old_trapdoor = FpVar::new_witness(ns!(cs, "old trapdoor"), || Ok(&self.old_trapdoor))?;
-        let old_nullifier = FpVar::new_input(ns!(cs, "old nullifier"), || Ok(&self.old_nullifier))?;
+        let old_trapdoor =
+            FpVar::new_witness(ns!(cs, "old trapdoor"), || Ok(&self.old_trapdoor.0))?;
+        let old_nullifier =
+            FpVar::new_input(ns!(cs, "old nullifier"), || Ok(&self.old_nullifier.0))?;
 
         check_note(
             &token_id,
@@ -219,12 +213,13 @@ impl ConstraintSynthesizer<CircuitField> for WithdrawRelation {
         //------------------------------
         // Check the new note arguments.
         //------------------------------
-        let new_note = FpVar::new_input(ns!(cs, "new note"), || Ok(&self.new_note))?;
+        let new_note = FpVar::new_input(ns!(cs, "new note"), || Ok(&self.new_note.0))?;
         let new_token_amount =
-            FpVar::new_witness(ns!(cs, "new token amount"), || Ok(&self.new_token_amount))?;
-        let new_trapdoor = FpVar::new_witness(ns!(cs, "new trapdoor"), || Ok(&self.new_trapdoor))?;
+            FpVar::new_witness(ns!(cs, "new token amount"), || Ok(&self.new_token_amount.0))?;
+        let new_trapdoor =
+            FpVar::new_witness(ns!(cs, "new trapdoor"), || Ok(&self.new_trapdoor.0))?;
         let new_nullifier =
-            FpVar::new_witness(ns!(cs, "new nullifier"), || Ok(&self.new_nullifier))?;
+            FpVar::new_witness(ns!(cs, "new nullifier"), || Ok(&self.new_nullifier.0))?;
 
         check_note(
             &token_id,
@@ -238,7 +233,7 @@ impl ConstraintSynthesizer<CircuitField> for WithdrawRelation {
         // Check the token values soundness.
         //----------------------------------
         let token_amount_out =
-            FpVar::new_input(ns!(cs, "token amount out"), || Ok(&self.token_amount_out))?;
+            FpVar::new_input(ns!(cs, "token amount out"), || Ok(&self.token_amount_out.0))?;
         // some range checks for overflows?
         let token_sum = token_amount_out.add(new_token_amount);
         token_sum.enforce_equal(&whole_token_amount)?;
@@ -246,11 +241,11 @@ impl ConstraintSynthesizer<CircuitField> for WithdrawRelation {
         //------------------------
         // Check the merkle proof.
         //------------------------
-        let merkle_root = FpVar::new_input(ns!(cs, "merkle root"), || Ok(&self.merkle_root))?;
-        let mut leaf_index = FpVar::new_witness(ns!(cs, "leaf index"), || Ok(&self.leaf_index))?;
+        let merkle_root = FpVar::new_input(ns!(cs, "merkle root"), || Ok(&self.merkle_root.0))?;
+        let mut leaf_index = FpVar::new_witness(ns!(cs, "leaf index"), || Ok(&self.leaf_index.0))?;
 
         let mut current_hash_bytes = old_note.to_bytes()?;
-        for hash in self.merkle_path {
+        for hash in self.merkle_path.0 {
             let sibling = FpVar::new_witness(ns!(cs, "merkle path node"), || Ok(hash))?;
             let bytes: Vec<ByteVar> = if leaf_index.value().unwrap_or_default().0.is_even() {
                 [current_hash_bytes.clone(), sibling.to_bytes()?].concat()
@@ -283,13 +278,13 @@ impl ConstraintSynthesizer<CircuitField> for WithdrawRelation {
 impl GetPublicInput<CircuitField> for WithdrawRelation {
     fn public_input(&self) -> Vec<CircuitField> {
         [
-            self.fee,
-            self.recipient,
-            self.token_id,
-            self.old_nullifier,
-            self.new_note,
-            self.token_amount_out,
-            self.merkle_root,
+            self.fee.0,
+            self.recipient.0,
+            self.token_id.0,
+            self.old_nullifier.0,
+            self.new_note.0,
+            self.token_amount_out.0,
+            self.merkle_root.0,
         ]
         .to_vec()
     }
@@ -298,6 +293,7 @@ impl GetPublicInput<CircuitField> for WithdrawRelation {
 #[cfg(test)]
 mod tests {
     use ark_bls12_381::Bls12_381;
+    use ark_ff::BigInteger256;
     use ark_groth16::Groth16;
     use ark_relations::r1cs::ConstraintSystem;
     use ark_snark::SNARK;
@@ -306,40 +302,50 @@ mod tests {
     use crate::relations::shielder::note::{compute_note, compute_parent_hash};
 
     fn get_circuit_and_input() -> (WithdrawRelation, [CircuitField; 7]) {
-        let token_id: FrontendTokenId = 1;
+        let token_id = FrontendTokenId(1);
 
-        let old_trapdoor: FrontendTrapdoor = 17;
-        let old_nullifier: FrontendNullifier = 19;
-        let whole_token_amount: FrontendTokenAmount = 10;
+        let old_trapdoor = FrontendTrapdoor(17);
+        let old_nullifier = FrontendNullifier(19);
+        let whole_token_amount = FrontendTokenAmount(10);
 
-        let new_trapdoor: FrontendTrapdoor = 27;
-        let new_nullifier: FrontendNullifier = 87;
-        let new_token_amount: FrontendTokenAmount = 3;
+        let new_trapdoor = FrontendTrapdoor(27);
+        let new_nullifier = FrontendNullifier(87);
+        let new_token_amount = FrontendTokenAmount(3);
 
-        let token_amount_out: FrontendTokenAmount = 7;
+        let token_amount_out = FrontendTokenAmount(7);
 
         let old_note = compute_note(token_id, whole_token_amount, old_trapdoor, old_nullifier);
         let new_note = compute_note(token_id, new_token_amount, new_trapdoor, new_nullifier);
 
         // Our leaf has a left bro. Their parent has a right bro. Our grandpa is the root.
-        let leaf_index = 5;
+        let leaf_index = FrontendLeafIndex(5);
 
-        let sibling_note = compute_note(0, 1, 2, 3);
+        let sibling_note = compute_note(
+            FrontendTokenId(0),
+            FrontendTokenAmount(1),
+            FrontendTrapdoor(2),
+            FrontendNullifier(3),
+        );
         let parent_note = compute_parent_hash(sibling_note, old_note);
-        let uncle_note = compute_note(4, 5, 6, 7);
-        let merkle_root = compute_parent_hash(parent_note, uncle_note);
+        let uncle_note = compute_note(
+            FrontendTokenId(4),
+            FrontendTokenAmount(5),
+            FrontendTrapdoor(6),
+            FrontendNullifier(7),
+        );
+        let merkle_root_as_note = compute_parent_hash(parent_note, uncle_note);
 
-        let merkle_path = vec![sibling_note, uncle_note];
+        let merkle_path = FrontendMerklePath(vec![sibling_note.0, uncle_note.0]);
 
-        let fee: FrontendTokenAmount = 1;
-        let recipient: FrontendAccount = [
+        let fee = FrontendTokenAmount(1);
+        let recipient = FrontendAccount([
             212, 53, 147, 199, 21, 253, 211, 28, 97, 20, 26, 189, 4, 169, 159, 214, 130, 44, 133,
             88, 133, 76, 205, 227, 154, 86, 132, 231, 165, 109, 162, 125,
-        ];
+        ]);
 
         let circuit = WithdrawRelation::new(
             old_nullifier,
-            merkle_root,
+            FrontendMerkleRoot(merkle_root_as_note.0),
             new_note,
             token_id,
             token_amount_out,
@@ -398,7 +404,7 @@ mod tests {
         let proof = Groth16::prove(&pk, circuit, &mut rng).unwrap();
 
         let mut input_with_corrupted_fee = true_input.clone();
-        input_with_corrupted_fee[0] = BackendTokenAmount::from(2);
+        input_with_corrupted_fee[0] = BackendTokenAmount::from(FrontendTokenAmount(2)).0;
         assert_ne!(true_input[0], input_with_corrupted_fee[0]);
 
         let valid_proof = Groth16::verify(&vk, &input_with_corrupted_fee, &proof).unwrap();
@@ -407,7 +413,7 @@ mod tests {
         let mut input_with_corrupted_recipient = true_input.clone();
         let fake_recipient = [41; 32];
         // todo: implement casting between backend and frontend types
-        input_with_corrupted_recipient[1] = BackendAccount::new(BigInteger256::new([
+        input_with_corrupted_recipient[1] = CircuitField::new(BigInteger256::new([
             u64::from_le_bytes(fake_recipient[0..8].try_into().expect("0-8")),
             u64::from_le_bytes(fake_recipient[8..16].try_into().expect("8-16")),
             u64::from_le_bytes(fake_recipient[16..24].try_into().expect("16-24")),

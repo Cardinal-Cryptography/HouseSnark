@@ -9,8 +9,7 @@ pub use relations::shielder::DepositRelation;
 pub use relations::shielder::WithdrawRelation;
 #[cfg(any(feature = "deposit", feature = "withdraw"))]
 pub use relations::shielder::{
-    bytes_from_note, compute_note, note_from_bytes, MerklePath, MerkleRoot, Note, Nullifier,
-    TokenAmount, TokenId, Trapdoor,
+    compute_note, MerklePath, MerkleRoot, Note, Nullifier, TokenAmount, TokenId, Trapdoor,
 };
 pub use relations::GetPublicInput;
 #[cfg(feature = "linear")]

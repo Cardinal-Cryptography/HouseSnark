@@ -1,4 +1,3 @@
-use ark_ff::BigInteger256;
 use ark_r1cs_std::alloc::AllocVar;
 use ark_relations::{
     ns,
@@ -8,7 +7,7 @@ use clap::Args;
 
 use super::{
     note::check_note,
-    parser::parse_frontend_note,
+    parsing::parse_frontend_note,
     types::{
         BackendNote, BackendNullifier, BackendTokenAmount, BackendTokenId, BackendTrapdoor, FpVar,
         FrontendNote, FrontendNullifier, FrontendTokenAmount, FrontendTokenId, FrontendTrapdoor,
@@ -43,13 +42,13 @@ pub struct DepositRelationArgs {
 #[derive(Clone)]
 pub struct DepositRelation {
     // Public inputs.
-    pub note: BackendNote,
-    pub token_id: BackendTokenId,
-    pub token_amount: BackendTokenAmount,
+    note: BackendNote,
+    token_id: BackendTokenId,
+    token_amount: BackendTokenAmount,
 
     // Private inputs.
-    pub trapdoor: BackendTrapdoor,
-    pub nullifier: BackendNullifier,
+    trapdoor: BackendTrapdoor,
+    nullifier: BackendNullifier,
 }
 
 impl DepositRelation {
@@ -61,11 +60,11 @@ impl DepositRelation {
         nullifier: FrontendNullifier,
     ) -> Self {
         Self {
-            note: BackendNote::from(BigInteger256::new(note)),
-            token_id: BackendTokenId::from(token_id),
-            token_amount: BackendTokenAmount::from(token_amount),
-            trapdoor: BackendTrapdoor::from(trapdoor),
-            nullifier: BackendNullifier::from(nullifier),
+            note: note.into(),
+            token_id: token_id.into(),
+            token_amount: token_amount.into(),
+            trapdoor: trapdoor.into(),
+            nullifier: nullifier.into(),
         }
     }
 }
@@ -88,12 +87,12 @@ impl ConstraintSynthesizer<CircuitField> for DepositRelation {
         self,
         cs: ConstraintSystemRef<CircuitField>,
     ) -> Result<(), SynthesisError> {
-        let note = FpVar::new_input(ns!(cs, "note"), || Ok(&self.note))?;
-        let token_id = FpVar::new_input(ns!(cs, "token id"), || Ok(&self.token_id))?;
-        let token_amount = FpVar::new_input(ns!(cs, "token amount"), || Ok(&self.token_amount))?;
+        let note = FpVar::new_input(ns!(cs, "note"), || Ok(&self.note.0))?;
+        let token_id = FpVar::new_input(ns!(cs, "token id"), || Ok(&self.token_id.0))?;
+        let token_amount = FpVar::new_input(ns!(cs, "token amount"), || Ok(&self.token_amount.0))?;
 
-        let trapdoor = FpVar::new_witness(ns!(cs, "trapdoor"), || Ok(&self.trapdoor))?;
-        let nullifier = FpVar::new_witness(ns!(cs, "nullifier"), || Ok(&self.nullifier))?;
+        let trapdoor = FpVar::new_witness(ns!(cs, "trapdoor"), || Ok(&self.trapdoor.0))?;
+        let nullifier = FpVar::new_witness(ns!(cs, "nullifier"), || Ok(&self.nullifier.0))?;
 
         check_note(&token_id, &token_amount, &trapdoor, &nullifier, &note)
     }
@@ -101,7 +100,7 @@ impl ConstraintSynthesizer<CircuitField> for DepositRelation {
 
 impl GetPublicInput<CircuitField> for DepositRelation {
     fn public_input(&self) -> Vec<CircuitField> {
-        vec![self.note, self.token_id, self.token_amount]
+        vec![self.note.0, self.token_id.0, self.token_amount.0]
     }
 }
 
@@ -116,17 +115,17 @@ mod tests {
     use crate::relations::shielder::note::compute_note;
 
     fn get_circuit_and_input() -> (DepositRelation, [CircuitField; 3]) {
-        let token_id: FrontendTokenId = 1;
-        let token_amount: FrontendTokenAmount = 10;
-        let trapdoor: FrontendTrapdoor = 17;
-        let nullifier: FrontendNullifier = 19;
+        let token_id = FrontendTokenId(1);
+        let token_amount = FrontendTokenAmount(10);
+        let trapdoor = FrontendTrapdoor(17);
+        let nullifier = FrontendNullifier(19);
         let note = compute_note(token_id, token_amount, trapdoor, nullifier);
 
         let circuit = DepositRelation::new(note, token_id, token_amount, trapdoor, nullifier);
         let input = [
-            CircuitField::from(BigInteger256::new(note)),
-            CircuitField::from(token_id),
-            CircuitField::from(token_amount),
+            BackendNote::from(note).0,
+            BackendTokenId::from(token_id).0,
+            BackendTokenAmount::from(token_amount).0,
         ];
 
         (circuit, input)
