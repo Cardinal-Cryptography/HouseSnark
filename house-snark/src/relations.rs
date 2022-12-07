@@ -1,4 +1,3 @@
-use anyhow::Result as AnyResult;
 use clap::{Args, Subcommand};
 use relations::{
     CircuitField, ConstraintSynthesizer, ConstraintSystemRef, DepositRelation, FrontendAccount,

@@ -1,7 +1,7 @@
-use clap::{Args, Parser, Subcommand, ValueEnum};
+use clap::ValueEnum;
 use relations::{
-    serialize, CanonicalDeserialize, CanonicalSerialize, CircuitField, Groth16, Marlin,
-    NonUniversalSystem, ProvingSystem, RawKeys, UniversalSystem, GM17,
+    serialize, CanonicalDeserialize, Groth16, Marlin, NonUniversalSystem, ProvingSystem, RawKeys,
+    UniversalSystem, GM17,
 };
 
 use crate::relations::Relation;
