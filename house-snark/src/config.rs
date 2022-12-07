@@ -4,7 +4,7 @@ use anyhow::{Error, Result};
 use clap::{Args, Parser, Subcommand, ValueEnum};
 
 use crate::{
-    environment::{NonUniversalProvingSystem, SomeProvingSystem, UniversalProvingSystem},
+    proving_systems::{AnyProvingSystem, NonUniversalProvingSystem, UniversalProvingSystem},
     relations::Relation,
 };
 
@@ -84,18 +84,18 @@ pub struct GenerateProofCmd {
     ///
     /// Accepts either `NonUniversalProvingSystem` or `UniversalProvingSystem`.
     #[clap(long, short, value_enum, default_value = "groth16", value_parser = parse_some_system)]
-    pub system: SomeProvingSystem,
+    pub system: AnyProvingSystem,
 
     /// Path to a file containing proving key.
     #[clap(long, short)]
     pub proving_key_file: PathBuf,
 }
 
-fn parse_some_system(system: &str) -> Result<SomeProvingSystem> {
+fn parse_some_system(system: &str) -> Result<AnyProvingSystem> {
     let maybe_universal =
-        UniversalProvingSystem::from_str(system, true).map(SomeProvingSystem::Universal);
+        UniversalProvingSystem::from_str(system, true).map(AnyProvingSystem::Universal);
     let maybe_non_universal =
-        NonUniversalProvingSystem::from_str(system, true).map(SomeProvingSystem::NonUniversal);
+        NonUniversalProvingSystem::from_str(system, true).map(AnyProvingSystem::NonUniversal);
     maybe_universal.or(maybe_non_universal).map_err(Error::msg)
 }
 
