@@ -7,6 +7,7 @@ use house_snark::{
 };
 use inquire::{CustomType, Select};
 use rand::Rng;
+use tracing::debug;
 
 use crate::{
     app_state::{AppState, Deposit},
@@ -50,14 +51,14 @@ pub(super) fn do_withdraw(
         Some(recipient) => recipient,
     };
     let recipient_bytes: [u8; 32] = recipient.clone().into();
-    println!("recipient_bytes: {:?}", recipient_bytes);
+    debug!(?recipient_bytes, "recipient_bytes");
 
     let merkle_root = contract.get_merkle_root(&connection);
     let merkle_path = contract
         .get_merkle_path(&connection, leaf_idx)
         .expect("Path does not exist");
 
-    println!("retrieved merkle path {:?}", merkle_path);
+    debug!(?merkle_path, "retrieved merkle path");
 
     let mut rng = rand::thread_rng();
     let new_trapdoor: Trapdoor = rng.gen::<u64>();

@@ -16,6 +16,7 @@ use aleph_client::{
 use anyhow::{anyhow, Result};
 use contract_transcode::Value;
 use house_snark::bytes_from_note;
+use tracing::{debug, error, info};
 
 use crate::{MerklePath, MerkleRoot, Note, Nullifier, TokenAmount, TokenId};
 
@@ -54,7 +55,7 @@ impl Shielder {
                 &[contract_clone.as_ref()],
                 Some(cancel_rx),
                 |event_or_error| {
-                    println!("{:?}", event_or_error);
+                    debug!("{:?}", event_or_error);
                     if let Ok(ContractEvent { ident, data, .. }) = event_or_error {
                         if Some(String::from("Deposited")) == ident {
                             let event_note: Value = data.get("note").unwrap().clone();
@@ -80,7 +81,7 @@ impl Shielder {
             &*format!("0x{}", hex::encode(proof)),
         ];
 
-        println!("Calling deposit tx with arguments {:?}", &args);
+        debug!("Calling deposit tx with arguments {:?}", &args);
 
         self.contract
             .contract_exec(connection, "deposit", &args)
@@ -93,7 +94,7 @@ impl Shielder {
         cancel_tx.send(()).unwrap();
 
         if let Ok(leaf_idx) = leaf_rx.try_recv() {
-            println!("Successfully deposited tokens.");
+            info!("Successfully deposited tokens.");
             Ok(leaf_idx as u32)
         } else {
             Err(anyhow!(
@@ -128,7 +129,7 @@ impl Shielder {
                 &[&contract_ptr],
                 Some(cancel_rx),
                 |event_or_error| {
-                    println!("{:?}", event_or_error);
+                    debug!("{:?}", event_or_error);
                     if let Ok(ContractEvent { ident, data, .. }) = event_or_error {
                         if Some(String::from("Withdrawn")) == ident {
                             let event_note: Value = data.get("new_note").unwrap().clone();
@@ -160,7 +161,7 @@ impl Shielder {
             &*format!("0x{}", hex::encode(proof)),
         ];
 
-        println!("Calling withdraw tx with arguments {:?}", &args);
+        debug!("Calling withdraw tx with arguments {:?}", &args);
 
         self.contract
             .contract_exec(connection, "withdraw", &args)
@@ -173,7 +174,7 @@ impl Shielder {
         cancel_tx.send(()).unwrap();
 
         if let Ok(leaf_idx) = leaf_rx.try_recv() {
-            println!("Successfully withdrawn tokens.");
+            info!("Successfully withdrawn tokens.");
             Ok(leaf_idx as u32)
         } else {
             Err(anyhow!(
@@ -248,7 +249,7 @@ impl Shielder {
                 &[&contract_ptr],
                 Some(cancel_rx),
                 |event_or_error| {
-                    println!("{:?}", event_or_error);
+                    debug!("{:?}", event_or_error);
                     if let Ok(ContractEvent { ident, data, .. }) = event_or_error {
                         if Some(String::from("TokenRegistered")) == ident {
                             let event_token_id = data.get("token_id").unwrap().clone();
@@ -280,12 +281,13 @@ impl Shielder {
         cancel_tx.send(()).unwrap();
 
         if signal_rx.try_recv().is_ok() {
-            println!(
+            info!(
                 "Successfuly registered ${:?} token contract under {:?} token id",
                 &token_address_copy, &token_id
             );
             Ok(())
         } else {
+            error!(?token_id, token_address=?token_address_copy, "failed to observed expected event");
             Err(anyhow!("Failed to observe expected event."))
         }
     }
