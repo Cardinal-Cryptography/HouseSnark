@@ -42,6 +42,7 @@ impl AnyProvingSystem {
                 let proof = <Groth16 as ProvingSystem>::prove(&pk, relation);
                 serialize(&proof)
             }
+
             AnyProvingSystem::NonUniversal(NonUniversalProvingSystem::GM17) => {
                 let pk = <<GM17 as ProvingSystem>::ProvingKey>::deserialize(&*proving_key)
                     .expect("Failed to deserialize proving key");

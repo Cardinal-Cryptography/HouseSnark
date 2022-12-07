@@ -259,16 +259,20 @@ impl GetPublicInput<CircuitField> for Relation {
             Relation::Xor(args @ XorArgs { .. }) => {
                 <XorArgs as Into<XorRelation>>::into(args.to_owned()).public_input()
             }
+
             Relation::LinearEquation(args @ LinearEquationArgs { .. }) => {
                 <LinearEquationArgs as Into<LinearEquationRelation>>::into(args.to_owned())
                     .public_input()
             }
+
             Relation::MerkleTree(args @ MerkleTreeArgs { .. }) => {
                 <MerkleTreeArgs as Into<MerkleTreeRelation>>::into(args.to_owned()).public_input()
             }
+
             Relation::Deposit(args @ DepositArgs { .. }) => {
                 <DepositArgs as Into<DepositRelation>>::into(*args).public_input()
             }
+
             Relation::Withdraw(args @ WithdrawArgs { .. }) => {
                 <WithdrawArgs as Into<WithdrawRelation>>::into(args.to_owned()).public_input()
             }
