@@ -1,5 +1,8 @@
 use clap::{Args, Parser, Subcommand, ValueEnum};
-use relations::{CircuitField, RawKeys};
+use relations::{
+    serialize, CanonicalDeserialize, CanonicalSerialize, CircuitField, Groth16, Marlin,
+    ProvingSystem, RawKeys, UniversalSystem, GM17,
+};
 
 use crate::relations::Relation;
 
@@ -25,26 +28,55 @@ pub enum AnyProvingSystem {
 
 impl AnyProvingSystem {
     pub fn id(&self) -> String {
-        todo!()
+        match self {
+            AnyProvingSystem::NonUniversal(s) => s.id(),
+            AnyProvingSystem::Universal(s) => s.id(),
+        }
     }
 
     pub fn prove(&self, relation: Relation, proving_key: Vec<u8>) -> Vec<u8> {
-        todo!()
+        match self {
+            AnyProvingSystem::NonUniversal(NonUniversalProvingSystem::Groth16) => {
+                let pk = <<Groth16 as ProvingSystem>::ProvingKey>::deserialize(&*proving_key)
+                    .expect("Failed to deserialize proving key");
+                let proof = <Groth16 as ProvingSystem>::prove(&pk, relation);
+                serialize(&proof)
+            }
+            AnyProvingSystem::NonUniversal(NonUniversalProvingSystem::Gm17) => {
+                let pk = <<GM17 as ProvingSystem>::ProvingKey>::deserialize(&*proving_key)
+                    .expect("Failed to deserialize proving key");
+                let proof = <GM17 as ProvingSystem>::prove(&pk, relation);
+                serialize(&proof)
+            }
+            AnyProvingSystem::Universal(UniversalProvingSystem::Marlin) => {
+                let pk = <<Marlin as ProvingSystem>::ProvingKey>::deserialize(&*proving_key)
+                    .expect("Failed to deserialize proving key");
+                let proof = <Marlin as ProvingSystem>::prove(&pk, relation);
+                serialize(&proof)
+            }
+        }
     }
 }
 
 impl UniversalProvingSystem {
     pub fn id(&self) -> String {
-        todo!()
+        format!("{:?}", self).to_lowercase()
     }
 
     /// Generates proving and verifying key for `circuit` using `srs`. Returns serialized keys.
     pub fn generate_keys(&self, relation: Relation, srs: Vec<u8>) -> RawKeys {
-        // match self {
-        //     UniversalProvingSystem::Marlin => self._generate_keys::<_, Marlin>(circuit, srs),
-        // }
+        match self {
+            UniversalProvingSystem::Marlin => {
+                let srs = <<Marlin as UniversalSystem>::Srs>::deserialize(&*srs)
+                    .expect("Failed to deserialize srs");
+                let (pk, vk) = <Marlin as UniversalSystem>::generate_keys(relation, &srs);
 
-        todo!()
+                RawKeys {
+                    pk: serialize(&pk),
+                    vk: serialize(&vk),
+                }
+            }
+        }
     }
 
     pub fn generate_srs(

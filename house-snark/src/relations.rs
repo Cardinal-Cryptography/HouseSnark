@@ -1,9 +1,10 @@
+use anyhow::Result as AnyResult;
 use clap::{Args, Subcommand};
 use relations::{
-    CircuitField, DepositRelation, FrontendAccount, FrontendLeafIndex, FrontendMerklePath,
-    FrontendMerkleRoot, FrontendNote, FrontendNullifier, FrontendTokenAmount, FrontendTokenId,
-    FrontendTrapdoor, GetPublicInput, LinearEquationRelation, MerkleTreeRelation, WithdrawRelation,
-    XorRelation,
+    CircuitField, ConstraintSynthesizer, ConstraintSystemRef, DepositRelation, FrontendAccount,
+    FrontendLeafIndex, FrontendMerklePath, FrontendMerkleRoot, FrontendNote, FrontendNullifier,
+    FrontendTokenAmount, FrontendTokenId, FrontendTrapdoor, GetPublicInput, LinearEquationRelation,
+    MerkleTreeRelation, SynthesisError, WithdrawRelation, XorRelation,
 };
 
 use crate::parser::{
@@ -219,6 +220,36 @@ impl Relation {
             Relation::MerkleTree(_) => String::from("merkle_tree"),
             Relation::Deposit(_) => String::from("deposit"),
             Relation::Withdraw(_) => String::from("withdraw"),
+        }
+    }
+}
+
+impl ConstraintSynthesizer<CircuitField> for Relation {
+    fn generate_constraints(
+        self,
+        cs: ConstraintSystemRef<CircuitField>,
+    ) -> Result<(), SynthesisError> {
+        match self {
+            Relation::Xor(args @ XorArgs { .. }) => {
+                <XorArgs as Into<XorRelation>>::into(args).generate_constraints(cs)
+            }
+
+            Relation::LinearEquation(args @ LinearEquationArgs { .. }) => {
+                <LinearEquationArgs as Into<LinearEquationRelation>>::into(args)
+                    .generate_constraints(cs)
+            }
+
+            Relation::MerkleTree(args @ MerkleTreeArgs { .. }) => {
+                <MerkleTreeArgs as Into<MerkleTreeRelation>>::into(args).generate_constraints(cs)
+            }
+
+            Relation::Deposit(args @ DepositArgs { .. }) => {
+                <DepositArgs as Into<DepositRelation>>::into(args).generate_constraints(cs)
+            }
+
+            Relation::Withdraw(args @ WithdrawArgs { .. }) => {
+                <WithdrawArgs as Into<WithdrawRelation>>::into(args).generate_constraints(cs)
+            }
         }
     }
 }
