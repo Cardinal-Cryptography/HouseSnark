@@ -775,6 +775,7 @@ checksum = "a3f87b73ce11b1619a3c6332f45341e0047173771e8b8b73f87bfeefb7b56244"
 [[package]]
 name = "relations"
 version = "0.1.0"
+source = "git+https://github.com/Cardinal-Cryptography/aleph-node.git?branch=crate-relations#6531efd8e9428e04727c91b9d3aa0ed1b7211315"
 dependencies = [
  "ark-bls12-381",
  "ark-crypto-primitives",

@@ -10,4 +10,5 @@ clap = { version = "4.0", features = ["derive"] }
 color-eyre = "0.6"
 env_logger = "0.9.0"
 log = "0.4"
-relations = { path = "/home/filip/CloudStation/aleph/aleph-node/relations" }
+relations = { git = "https://github.com/Cardinal-Cryptography/aleph-node.git", branch = "crate-relations" }
+# relations = { path = "/home/filip/CloudStation/aleph/aleph-node/relations" }
