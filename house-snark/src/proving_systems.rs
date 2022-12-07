@@ -1,7 +1,7 @@
 use clap::{Args, Parser, Subcommand, ValueEnum};
 use relations::{
     serialize, CanonicalDeserialize, CanonicalSerialize, CircuitField, Groth16, Marlin,
-    ProvingSystem, RawKeys, UniversalSystem, GM17,
+    NonUniversalSystem, ProvingSystem, RawKeys, UniversalSystem, GM17,
 };
 
 use crate::relations::Relation;
@@ -16,7 +16,7 @@ pub enum UniversalProvingSystem {
 #[derive(Copy, Clone, Eq, PartialEq, Hash, Debug, ValueEnum)]
 pub enum NonUniversalProvingSystem {
     Groth16,
-    Gm17,
+    GM17,
 }
 
 /// Any proving system.
@@ -42,7 +42,7 @@ impl AnyProvingSystem {
                 let proof = <Groth16 as ProvingSystem>::prove(&pk, relation);
                 serialize(&proof)
             }
-            AnyProvingSystem::NonUniversal(NonUniversalProvingSystem::Gm17) => {
+            AnyProvingSystem::NonUniversal(NonUniversalProvingSystem::GM17) => {
                 let pk = <<GM17 as ProvingSystem>::ProvingKey>::deserialize(&*proving_key)
                     .expect("Failed to deserialize proving key");
                 let proof = <GM17 as ProvingSystem>::prove(&pk, relation);
@@ -85,21 +85,40 @@ impl UniversalProvingSystem {
         num_variables: usize,
         degree: usize,
     ) -> Vec<u8> {
-        todo!()
+        match self {
+            UniversalProvingSystem::Marlin => {
+                let srs = <Marlin as UniversalSystem>::generate_srs(
+                    num_constraints,
+                    num_variables,
+                    degree,
+                );
+                serialize(&srs)
+            }
+        }
     }
 }
 
 impl NonUniversalProvingSystem {
     pub fn id(&self) -> String {
-        todo!()
+        format!("{:?}", self).to_lowercase()
     }
 
     pub fn generate_keys(&self, circuit: Relation) -> RawKeys {
-        // match self {
-        //     NonUniversalProvingSystem::Groth16 => self._generate_keys::<_, Groth16>(circuit),
-        //     NonUniversalProvingSystem::Gm17 => self._generate_keys::<_, GM17>(circuit),
-        // }
-
-        todo!()
+        match self {
+            NonUniversalProvingSystem::Groth16 => {
+                let (pk, vk) = <Groth16 as NonUniversalSystem>::generate_keys(circuit);
+                RawKeys {
+                    pk: serialize(&pk),
+                    vk: serialize(&vk),
+                }
+            }
+            NonUniversalProvingSystem::GM17 => {
+                let (pk, vk) = <GM17 as NonUniversalSystem>::generate_keys(circuit);
+                RawKeys {
+                    pk: serialize(&pk),
+                    vk: serialize(&vk),
+                }
+            }
+        }
     }
 }
